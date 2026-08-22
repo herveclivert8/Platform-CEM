@@ -1,25 +1,60 @@
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from "react-i18next";
+import { HeartHandshake, Mail, MapPin } from "lucide-react";
 
 export function Footer() {
-  const { t } = useTranslation()
-  const year = new Date().getFullYear()
+  const { t } = useTranslation();
 
   return (
-    <footer className="border-t border-gray-200 bg-white">
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-6 text-sm text-gray-500 sm:flex-row sm:px-6 lg:px-8">
-        <div className="flex gap-4">
-          <a href="/a-propos" className="hover:text-brand-600">
-            {t('footer.about')}
-          </a>
-          <a href="/contact" className="hover:text-brand-600">
-            {t('footer.contact')}
-          </a>
-          <a href="/mentions-legales" className="hover:text-brand-600">
-            {t('footer.legal')}
-          </a>
+    <footer className="border-t border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-950">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 text-white">
+                <HeartHandshake className="h-5 w-5" aria-hidden />
+              </span>
+              <span className="font-bold tracking-tight text-slate-900 dark:text-white">
+                Club Excellence Madagascar
+              </span>
+            </div>
+            <p className="mt-4 max-w-xs text-sm text-slate-500 dark:text-slate-400">
+              {t("footer.association")}
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+              {t("nav.pillars")}
+            </h3>
+            <ul className="mt-4 space-y-2.5 text-sm text-slate-500 dark:text-slate-400">
+              <li>Éducation & Livres</li>
+              <li>Aide Sociale</li>
+              <li>Éducation par le Sport</li>
+              <li>Entrepreneuriat & Partenariats</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Contact</h3>
+            <ul className="mt-4 space-y-2.5 text-sm text-slate-500 dark:text-slate-400">
+              <li className="flex items-start gap-2">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                {t("footer.address")}
+              </li>
+              <li className="flex items-center gap-2">
+                <Mail className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                contact@cem-madagascar.org
+              </li>
+            </ul>
+          </div>
         </div>
-        <p>{t('footer.copyright', { year })}</p>
+
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-slate-100 pt-6 text-xs text-slate-400 sm:flex-row dark:border-slate-800">
+          <p>
+            © {new Date().getFullYear()} Club Excellence Madagascar — {t("footer.rights")}
+          </p>
+        </div>
       </div>
     </footer>
-  )
+  );
 }

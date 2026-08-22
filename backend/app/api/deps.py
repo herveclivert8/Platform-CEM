@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import decode_token
 from app.db.session import get_db
-from app.models.user import User
+from app.models.user import User, UserRole
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -30,3 +30,13 @@ async def get_current_user(
         raise unauthorized
 
     return user
+
+
+def require_role(allowed_roles: list[str | UserRole]):
+    async def role_checker(current_user: User = Depends(get_current_user)) -> User:
+        role_values = [r.value if isinstance(r, UserRole) else r for r in allowed_roles]
+        if current_user.role.value not in role_values:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
+        return current_user
+
+    return role_checker

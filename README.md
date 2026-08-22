@@ -5,7 +5,7 @@ Stack : **React + Tailwind CSS** (frontend), **FastAPI** (backend), **PostgreSQL
 ## Prérequis
 
 - Node.js 20+
-- Python 3.12 (⚠️ éviter 3.14 pour l'instant : plusieurs dépendances backend — `pydantic-core`, `asyncpg` — n'ont pas encore de wheels précompilés pour cette version sur Windows, ce qui déclenche une compilation Rust qui échoue sans Visual Studio Build Tools)
+- Python 3.12
 - Docker Desktop (pour PostgreSQL en local) — ou une instance PostgreSQL déjà installée
 
 ## 1. Base de données

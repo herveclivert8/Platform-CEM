@@ -1,50 +1,130 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+"""
+Endpoints pour les publications (bilans/rapports formels par antenne)
+RÈGLE CRITIQUE: Isolation stricte par branche!
+"""
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy import select
 
-from app.db.session import get_db
-from app.models.publication import Publication
-from app.schemas.publication import PublicationRead
+from app.api.deps import get_db, get_current_user
+from app.models import Publication, User
+from app.schemas.publication import (
+    Publication as PublicationSchema,
+    PublicationCreate,
+    PublicationUpdate,
+)
+from app.core.permissions import verify_branch_access
 
-router = APIRouter(prefix="/publications", tags=["publications"])
+router = APIRouter(prefix="/branches", tags=["publications"])
 
 
-def _to_read(publication: Publication) -> PublicationRead:
-    return PublicationRead(
-        id=publication.id,
-        title=publication.title,
-        title_en=publication.title_en,
-        description=publication.description,
-        description_en=publication.description_en,
-        file_url=publication.file_url,
-        thumbnail_url=publication.thumbnail_url,
-        format=publication.format,
-        contributors_count=len(publication.contributors),
-        updated_at=publication.updated_at,
-        created_at=publication.created_at,
+# ============================================
+# PUBLICATIONS - CRUD par BRANCH
+# ============================================
+
+@router.post("/{branch_id}/publications", response_model=PublicationSchema, status_code=status.HTTP_201_CREATED)
+async def create_publication(
+    branch_id: int,
+    data: PublicationCreate,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Créer une publication dans une branche
+    Accessible: Admin de la branche + Super Admin
+
+    ISOLATION: Admin ne peut créer que dans sa branche
+    """
+    # ✅ VÉRIFICATION CRITIQUE D'ISOLATION
+    await verify_branch_access(user, branch_id)
+
+    # Créer la publication (l'auteur devient contributeur)
+    publication = Publication(
+        branch_id=branch_id,
+        contributors=[user],
+        **data.dict(),
     )
+    db.add(publication)
+    await db.commit()
+    await db.refresh(publication)
+
+    return PublicationSchema.from_orm(publication)
 
 
-@router.get("", response_model=list[PublicationRead])
-async def list_publications(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(Publication)
-        .options(selectinload(Publication.contributors))
-        .order_by(Publication.updated_at.desc())
-    )
-    publications = result.scalars().all()
-    return [_to_read(p) for p in publications]
+@router.put("/publications/{pub_id}", response_model=PublicationSchema)
+async def update_publication(
+    pub_id: int,
+    data: PublicationUpdate,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Modifier une publication
 
-
-@router.get("/{publication_id}", response_model=PublicationRead)
-async def get_publication(publication_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(Publication)
-        .options(selectinload(Publication.contributors))
-        .where(Publication.id == publication_id)
-    )
+    ISOLATION STRICTE: seul l'Admin de la branche concernée (ou le Super Admin) peut modifier.
+    """
+    query = select(Publication).where(Publication.id == pub_id)
+    result = await db.execute(query)
     publication = result.scalar_one_or_none()
-    if publication is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Publication introuvable")
-    return _to_read(publication)
+
+    if not publication:
+        raise HTTPException(status_code=404, detail="Publication not found")
+
+    # ✅ VÉRIFICATION CRITIQUE D'ISOLATION
+    await verify_branch_access(user, publication.branch_id)
+
+    update_data = data.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(publication, key, value)
+
+    await db.commit()
+    await db.refresh(publication)
+
+    return PublicationSchema.from_orm(publication)
+
+
+@router.delete("/publications/{pub_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_publication(
+    pub_id: int,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Supprimer une publication
+
+    ISOLATION STRICTE: seul l'Admin de la branche concernée (ou le Super Admin) peut supprimer.
+    """
+    query = select(Publication).where(Publication.id == pub_id)
+    result = await db.execute(query)
+    publication = result.scalar_one_or_none()
+
+    if not publication:
+        raise HTTPException(status_code=404, detail="Publication not found")
+
+    # ✅ VÉRIFICATION CRITIQUE D'ISOLATION
+    await verify_branch_access(user, publication.branch_id)
+
+    await db.delete(publication)
+    await db.commit()
+
+    return None
+
+
+@router.get("/publications/{pub_id}")
+async def get_publication(
+    pub_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Récupérer une publication
+    Accessible: Public
+    """
+    query = select(Publication).where(Publication.id == pub_id)
+    result = await db.execute(query)
+    publication = result.scalar_one_or_none()
+
+    if not publication:
+        raise HTTPException(status_code=404, detail="Publication not found")
+
+    return PublicationSchema.from_orm(publication)

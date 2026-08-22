@@ -1,65 +1,74 @@
 {
   "nav": {
-    "home": "Home",
-    "projects": "Projects",
-    "resources": "Resources",
-    "events": "Events",
-    "login": "Sign In",
-    "logout": "Log Out"
+    "pillars": "Our Pillars",
+    "branches": "Our Branches",
+    "network": "Network & Partners",
+    "model": "Our Paris/Mada Model",
+    "law": "Non-profit — Paris",
+    "donate": "Support CEM",
+    "admin": "Admin Area"
   },
   "hero": {
-    "title": "LOCAL CO-DEVELOPMENT PLATFORM",
-    "subtitle": "Research, Action & Community Impact",
-    "searchPlaceholder": "Search a project, expertise, area..."
+    "badge": "Facilitator of Sustainable Development & Education",
+    "title": "Fostering excellence and sustainable development in Madagascar.",
+    "subtitle": "A committed network between the diaspora and the field for education, social support, entrepreneurship, and sport-based inclusion.",
+    "cta_primary": "Donate now",
+    "cta_secondary": "Discover our branches"
   },
-  "sections": {
-    "recentProjects": "Recent Projects",
-    "publications": "Publications & Studies",
-    "callsForParticipation": "Calls for Participation",
-    "ideasMixer": "Idea Mixer"
+  "bento": {
+    "education_label": "Books & school supplies distributed",
+    "enterprise_label": "Projects & artisans supported",
+    "transparency_label": "Headquarters — Non-profit",
+    "transparency_value": "Paris (75007)",
+    "urgent_label": "Priority appeal"
   },
-  "card": {
-    "contributors": "Contributors",
-    "updated": "Last updated",
-    "daysAgo": "{{count}} day",
-    "daysAgo_other": "{{count}} days"
+  "map": {
+    "title": "Our branches",
+    "subtitle": "A network spanning the diaspora and the field, from Madagascar to France.",
+    "empty": "No active branch at the moment."
+  },
+  "partners": {
+    "title": "They trust us",
+    "subtitle": "Institutions, foundations and schools partnering with the CEM network."
+  },
+  "hub": {
+    "official_badge": "Official Regional Branch",
+    "search_placeholder": "Search another branch…",
+    "tabs": {
+      "projects": "Projects & Distributions",
+      "team": "Team & Contact",
+      "reports": "Reports & News"
+    },
+    "kpi": {
+      "posts_education": "Education updates",
+      "posts_social": "Social support updates",
+      "posts_sport": "Sport updates",
+      "posts_enterprise": "Entrepreneurship updates"
+    },
+    "donation_sidebar_title": "Support this branch",
+    "other_branches": "Discover other branches"
+  },
+  "donation": {
+    "title": "Make a donation",
+    "step1_title": "Choose an amount",
+    "step2_title": "Your details",
+    "step3_title": "Thank you for your support!",
+    "custom_amount": "Other amount",
+    "email_label": "Email address",
+    "confirm": "Confirm donation",
+    "impact_prefix": "is about",
+    "impact_books": "school books distributed",
+    "close": "Close",
+    "success_message": "Your generosity makes a real difference for our branches."
   },
   "footer": {
-    "about": "About",
-    "contact": "Contact",
-    "legal": "Legal Notice",
-    "copyright": "Copyright © {{year}} - Legal Notice"
+    "association": "Club Excellence Madagascar — French non-profit (loi 1901)",
+    "address": "31 Avenue de Ségur, 75007 Paris, France",
+    "rights": "All rights reserved."
   },
-  "auth": {
-    "login": {
-      "title": "Sign In",
-      "submit": "Sign in",
-      "noAccount": "Don't have an account yet?",
-      "registerLink": "Create an account",
-      "google": "Continue with Google"
-    },
-    "register": {
-      "title": "Create an account",
-      "submit": "Create my account",
-      "hasAccount": "Already have an account?",
-      "loginLink": "Sign in"
-    },
-    "fields": {
-      "email": "Email address",
-      "password": "Password",
-      "fullName": "Full name"
-    },
-    "errors": {
-      "invalidCredentials": "Incorrect email or password",
-      "emailTaken": "This email is already in use",
-      "generic": "Something went wrong, please try again"
-    }
-  },
-  "common": {
-    "loading": "Loading...",
-    "error": "Something went wrong"
-  },
-  "stub": {
-    "comingSoon": "This page is under construction."
+  "not_found": {
+    "title": "Page not found",
+    "subtitle": "This page doesn't exist anymore.",
+    "back_home": "Back to home"
   }
 }

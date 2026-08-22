@@ -10,13 +10,9 @@ class UserRead(BaseModel):
 
     id: int
     email: EmailStr
-    full_name: str
+    first_name: str
+    last_name: str
     avatar_url: str | None
     role: UserRole
+    branch_id: int | None
     created_at: datetime
-
-
-class UserRegister(BaseModel):
-    email: EmailStr
-    password: str
-    full_name: str

@@ -1,27 +1,98 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
-@theme {
-  --color-brand-50: #eef4ff;
-  --color-brand-100: #d9e6ff;
-  --color-brand-500: #1d4ed8;
-  --color-brand-600: #1a41b8;
-  --color-brand-700: #16358f;
-  --color-brand-900: #0f2359;
-  --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+* {
+  border-color: theme(colors.slate.200 / 80%);
 }
 
 html,
-body,
-#root {
-  min-height: 100svh;
+body {
+  font-family:
+    "Inter",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
 }
 
 body {
-  margin: 0;
-  color-scheme: light;
-  background: #f7f8fa;
+  @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100;
 }
 
-.scrollbar-thin {
-  scrollbar-width: thin;
+::selection {
+  @apply bg-emerald-500/20 text-emerald-900;
+}
+
+:focus-visible {
+  @apply outline-none ring-2 ring-emerald-500 ring-offset-2 ring-offset-white;
+}
+
+.dark :focus-visible {
+  @apply ring-offset-slate-950;
+}
+
+/* Leaflet map container needs an explicit height, and default popups look dated -
+   we restyle the essentials to match the design system. */
+.leaflet-container {
+  font-family: inherit;
+  background: theme(colors.slate.100);
+}
+
+.dark .leaflet-container {
+  background: theme(colors.slate.900);
+}
+
+.leaflet-popup-content-wrapper {
+  @apply rounded-xl shadow-lg border border-slate-200/80;
+}
+
+.marker-pulse {
+  position: relative;
+}
+
+.marker-pulse::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  background: theme(colors.emerald.500 / 40%);
+  animation: marker-pulse 2s ease-out infinite;
+}
+
+@keyframes marker-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
 }

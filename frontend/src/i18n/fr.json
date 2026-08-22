@@ -1,65 +1,74 @@
 {
   "nav": {
-    "home": "Accueil",
-    "projects": "Projets",
-    "resources": "Ressources",
-    "events": "Événements",
-    "login": "Se Connecter",
-    "logout": "Déconnexion"
+    "pillars": "Nos Piliers",
+    "branches": "Nos Antennes",
+    "network": "Réseau & Partenaires",
+    "model": "Notre Modèle Paris/Mada",
+    "law": "Loi 1901 — Paris",
+    "donate": "Soutenir le CEM",
+    "admin": "Espace Admin"
   },
   "hero": {
-    "title": "PLATEFORME DE CO-DÉVELOPPEMENT LOCAL",
-    "subtitle": "Recherche, Action & Impact Communautaire",
-    "searchPlaceholder": "Rechercher un projet, une expertise, une zone..."
+    "badge": "Facilitateur de Développement Durable & Éducation",
+    "title": "Faire émerger l'excellence et le développement durable à Madagascar.",
+    "subtitle": "Un réseau engagé entre la diaspora et le terrain pour l'instruction, l'aide sociale, l'entrepreneuriat et l'insertion par le sport.",
+    "cta_primary": "Faire un don",
+    "cta_secondary": "Découvrir nos antennes"
   },
-  "sections": {
-    "recentProjects": "Projets Récents",
-    "publications": "Publications & Études",
-    "callsForParticipation": "Appels à Participation",
-    "ideasMixer": "Mélangeur d'Idées"
+  "bento": {
+    "education_label": "Livres & ouvrages distribués",
+    "enterprise_label": "Projets & artisans soutenus",
+    "transparency_label": "Siège — Loi 1901",
+    "transparency_value": "Paris (75007)",
+    "urgent_label": "Appel prioritaire"
   },
-  "card": {
-    "contributors": "Contributeurs",
-    "updated": "Dernière mise à jour",
-    "daysAgo": "{{count}} jour",
-    "daysAgo_other": "{{count}} jours"
+  "map": {
+    "title": "Nos antennes",
+    "subtitle": "Un réseau entre la diaspora et le terrain, de Madagascar à la France.",
+    "empty": "Aucune antenne active pour le moment."
+  },
+  "partners": {
+    "title": "Ils nous font confiance",
+    "subtitle": "Institutions, fondations et écoles partenaires du réseau CEM."
+  },
+  "hub": {
+    "official_badge": "Antenne Régionale Officielle",
+    "search_placeholder": "Rechercher une autre antenne…",
+    "tabs": {
+      "projects": "Projets & Distributions",
+      "team": "Équipe & Contact",
+      "reports": "Rapports & Actualités"
+    },
+    "kpi": {
+      "posts_education": "Actualités Éducation",
+      "posts_social": "Actualités Aide Sociale",
+      "posts_sport": "Actualités Sport",
+      "posts_enterprise": "Actualités Entrepreneuriat"
+    },
+    "donation_sidebar_title": "Soutenir cette antenne",
+    "other_branches": "Découvrir d'autres antennes"
+  },
+  "donation": {
+    "title": "Faire un don",
+    "step1_title": "Choisissez un montant",
+    "step2_title": "Vos coordonnées",
+    "step3_title": "Merci pour votre soutien !",
+    "custom_amount": "Autre montant",
+    "email_label": "Adresse email",
+    "confirm": "Confirmer le don",
+    "impact_prefix": "équivaut à environ",
+    "impact_books": "livres scolaires distribués",
+    "close": "Fermer",
+    "success_message": "Votre générosité fait une réelle différence pour nos antennes."
   },
   "footer": {
-    "about": "À propos",
-    "contact": "Contact",
-    "legal": "Mentions Légales",
-    "copyright": "Copyright © {{year}} - Mentions Légales"
+    "association": "Club Excellence Madagascar — Association loi 1901",
+    "address": "31 Avenue de Ségur, 75007 Paris, France",
+    "rights": "Tous droits réservés."
   },
-  "auth": {
-    "login": {
-      "title": "Se Connecter",
-      "submit": "Se connecter",
-      "noAccount": "Pas encore de compte ?",
-      "registerLink": "Créer un compte",
-      "google": "Continuer avec Google"
-    },
-    "register": {
-      "title": "Créer un compte",
-      "submit": "Créer mon compte",
-      "hasAccount": "Déjà un compte ?",
-      "loginLink": "Se connecter"
-    },
-    "fields": {
-      "email": "Adresse e-mail",
-      "password": "Mot de passe",
-      "fullName": "Nom complet"
-    },
-    "errors": {
-      "invalidCredentials": "Email ou mot de passe incorrect",
-      "emailTaken": "Cet email est déjà utilisé",
-      "generic": "Une erreur est survenue, veuillez réessayer"
-    }
-  },
-  "common": {
-    "loading": "Chargement...",
-    "error": "Une erreur est survenue"
-  },
-  "stub": {
-    "comingSoon": "Cette page est en cours de construction."
+  "not_found": {
+    "title": "Page introuvable",
+    "subtitle": "Cette page n'existe pas ou plus.",
+    "back_home": "Retour à l'accueil"
   }
 }

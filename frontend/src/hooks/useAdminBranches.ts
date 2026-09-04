@@ -2,6 +2,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { mapBranch, type Branch, type BranchDto } from "../types/branch";
 
+export interface TeamMemberInput {
+  name: string;
+  role: string;
+  photo_url?: string;
+}
+
 export interface BranchInput {
   name: string;
   country: string;
@@ -13,6 +19,8 @@ export interface BranchInput {
   contact_email?: string;
   contact_phone?: string;
   description?: string;
+  logo_url?: string;
+  team_members?: TeamMemberInput[];
 }
 
 export function useCreateBranch() {

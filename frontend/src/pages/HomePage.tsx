@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Hero } from "../components/home/Hero";
 import { BentoGrid } from "../components/home/BentoGrid";
+import { ModelSection } from "../components/home/ModelSection";
 import { PartnersCarousel } from "../components/home/PartnersCarousel";
 import { Skeleton } from "../components/ui/Skeleton";
 
@@ -24,6 +25,7 @@ export function HomePage() {
       >
         <MadagascarMap />
       </Suspense>
+      <ModelSection />
       <PartnersCarousel />
     </>
   );

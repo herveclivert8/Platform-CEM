@@ -5,18 +5,20 @@ Endpoints pour les branches (antennes)
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sqlalchemy import select, func
 
 from app.api.deps import get_db, get_current_user
-from app.models import Branch, Publication, User
+from app.models import Branch, Publication, TeamMember, User
 from app.schemas.branch import (
     Branch as BranchSchema,
     BranchCreate,
     BranchUpdate,
     BranchWithStats,
     BranchListResponse,
+    BranchManagerRead,
 )
-from app.core.permissions import verify_super_admin_only
+from app.core.permissions import verify_super_admin_only, verify_branch_access
 
 router = APIRouter(prefix="/branches", tags=["branches"])
 
@@ -61,24 +63,29 @@ async def get_branch(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Récupérer les détails d'une branche avec statistiques
+    Récupérer les détails d'une branche avec statistiques, responsable et équipe
     Accessible: Public
     """
-    # Récupérer la branche
-    query = select(Branch).where(Branch.id == branch_id)
+    # Récupérer la branche (avec responsable et équipe pour l'aperçu de l'annuaire)
+    query = (
+        select(Branch)
+        .options(selectinload(Branch.manager), selectinload(Branch.team_members))
+        .where(Branch.id == branch_id)
+    )
     result = await db.execute(query)
     branch = result.scalar_one_or_none()
-    
+
     if not branch:
         raise HTTPException(status_code=404, detail="Branch not found")
-    
+
     # Compter les publications
     pub_count = await db.scalar(
         select(func.count(Publication.id)).where(Publication.branch_id == branch_id)
     )
-    
+
     response = BranchWithStats.from_orm(branch)
     response.publication_count = pub_count or 0
+    response.manager = BranchManagerRead.from_orm(branch.manager) if branch.manager else None
     return response
 
 
@@ -137,13 +144,20 @@ async def create_branch(
     Accessible: Super Admin only
     """
     await verify_super_admin_only(user)
-    
+
     # Créer la branche
-    branch = Branch(**data.dict())
+    branch_data = data.dict(exclude={"team_members"})
+    branch = Branch(
+        **branch_data,
+        team_members=[
+            TeamMember(name=m.name, role=m.role, photo_url=m.photo_url, position=i)
+            for i, m in enumerate(data.team_members)
+        ],
+    )
     db.add(branch)
     await db.commit()
     await db.refresh(branch)
-    
+
     return BranchSchema.from_orm(branch)
 
 
@@ -156,26 +170,38 @@ async def update_branch(
 ):
     """
     Modifier une branche
-    Accessible: Super Admin only
+    Accessible: Super Admin, ou Admin de cette antenne (profil : photo, adresse,
+    contact, résumé, équipe)
     """
-    await verify_super_admin_only(user)
-    
+    await verify_branch_access(user, branch_id)
+
     # Récupérer la branche
-    query = select(Branch).where(Branch.id == branch_id)
+    query = (
+        select(Branch)
+        .options(selectinload(Branch.team_members))
+        .where(Branch.id == branch_id)
+    )
     result = await db.execute(query)
     branch = result.scalar_one_or_none()
-    
+
     if not branch:
         raise HTTPException(status_code=404, detail="Branch not found")
-    
+
     # Modifier
-    update_data = data.dict(exclude_unset=True)
+    update_data = data.dict(exclude_unset=True, exclude={"team_members"})
     for key, value in update_data.items():
         setattr(branch, key, value)
-    
+
+    if data.team_members is not None:
+        branch.team_members.clear()
+        for i, m in enumerate(data.team_members):
+            branch.team_members.append(
+                TeamMember(name=m.name, role=m.role, photo_url=m.photo_url, position=i)
+            )
+
     await db.commit()
     await db.refresh(branch)
-    
+
     return BranchSchema.from_orm(branch)
 
 

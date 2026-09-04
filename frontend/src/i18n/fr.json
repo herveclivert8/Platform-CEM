@@ -1,10 +1,9 @@
 {
   "nav": {
-    "pillars": "Nos Piliers",
+    "home": "Accueil",
     "branches": "Nos Antennes",
     "network": "Réseau & Partenaires",
     "model": "Notre Modèle Paris/Mada",
-    "law": "Loi 1901 — Paris",
     "donate": "Soutenir le CEM",
     "admin": "Espace Admin"
   },
@@ -27,9 +26,33 @@
     "subtitle": "Un réseau entre la diaspora et le terrain, de Madagascar à la France.",
     "empty": "Aucune antenne active pour le moment."
   },
+  "model": {
+    "title": "Notre Modèle",
+    "subtitle": "Un pont entre la diaspora et le terrain : chaque antenne joue un rôle précis dans la même chaîne d'impact.",
+    "diaspora_title": "Depuis la diaspora",
+    "diaspora_text": "En France, nos antennes mobilisent la communauté : collectes de livres, financement des projets et mise en réseau de partenaires et d'artisans malgaches.",
+    "diaspora_count": "antenne(s) en France",
+    "terrain_title": "Sur le terrain",
+    "terrain_text": "À Madagascar, nos antennes exécutent les actions concrètes : distribution, aide sociale, insertion par le sport et accompagnement des porteurs de projet.",
+    "terrain_count": "antenne(s) à Madagascar"
+  },
+  "pillars": {
+    "EDUCATION": "Éducation & Livres",
+    "SOCIAL": "Aide Sociale",
+    "SPORT": "Éducation par le Sport",
+    "ENTERPRISE": "Entrepreneuriat & Partenariats"
+  },
   "partners": {
     "title": "Ils nous font confiance",
-    "subtitle": "Institutions, fondations et écoles partenaires du réseau CEM."
+    "subtitle": "Institutions, fondations et écoles partenaires du réseau CEM.",
+    "categories": {
+      "public_institutions": "Institutions publiques",
+      "schools": "Établissements scolaires",
+      "corporate_foundations": "Fondations d'entreprise",
+      "local_associations": "Associations locales",
+      "international_ngos": "ONG internationales",
+      "diaspora_network": "Réseau diaspora"
+    }
   },
   "hub": {
     "official_badge": "Antenne Régionale Officielle",
@@ -39,6 +62,7 @@
       "team": "Équipe & Contact",
       "reports": "Rapports & Actualités"
     },
+    "filter_all": "Tous",
     "kpi": {
       "posts_education": "Actualités Éducation",
       "posts_social": "Actualités Aide Sociale",
@@ -46,7 +70,8 @@
       "posts_enterprise": "Actualités Entrepreneuriat"
     },
     "donation_sidebar_title": "Soutenir cette antenne",
-    "other_branches": "Découvrir d'autres antennes"
+    "other_branches": "Découvrir d'autres antennes",
+    "no_posts": "Aucune actualité publiée pour cette antenne pour le moment."
   },
   "donation": {
     "title": "Faire un don",
@@ -64,7 +89,8 @@
   "footer": {
     "association": "Club Excellence Madagascar — Association loi 1901",
     "address": "31 Avenue de Ségur, 75007 Paris, France",
-    "rights": "Tous droits réservés."
+    "rights": "Tous droits réservés.",
+    "pillars_title": "Nos valeurs"
   },
   "not_found": {
     "title": "Page introuvable",

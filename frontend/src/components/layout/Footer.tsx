@@ -1,8 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { HeartHandshake, Mail, MapPin } from "lucide-react";
+import { ALL_PILLARS } from "../../types/post";
+import { usePillarLabels } from "../../hooks/usePillarLabels";
+import { SocialLinks } from "./SocialLinks";
 
 export function Footer() {
   const { t } = useTranslation();
+  const pillarLabels = usePillarLabels();
 
   return (
     <footer className="border-t border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-950">
@@ -20,17 +24,19 @@ export function Footer() {
             <p className="mt-4 max-w-xs text-sm text-slate-500 dark:text-slate-400">
               {t("footer.association")}
             </p>
+            <div className="mt-5">
+              <SocialLinks />
+            </div>
           </div>
 
           <div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-              {t("nav.pillars")}
+              {t("footer.pillars_title")}
             </h3>
             <ul className="mt-4 space-y-2.5 text-sm text-slate-500 dark:text-slate-400">
-              <li>Éducation & Livres</li>
-              <li>Aide Sociale</li>
-              <li>Éducation par le Sport</li>
-              <li>Entrepreneuriat & Partenariats</li>
+              {ALL_PILLARS.map((p) => (
+                <li key={p}>{pillarLabels[p]}</li>
+              ))}
             </ul>
           </div>
 

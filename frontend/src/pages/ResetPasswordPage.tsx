@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle2, KeyRound } from "lucide-react";
 import { AuthShell } from "../components/auth/AuthShell";
 import { Button } from "../components/ui/Button";
+import { PasswordInput } from "../components/ui/PasswordInput";
 import { useResetPassword } from "../hooks/useAuth";
 
 export function ResetPasswordPage() {
@@ -48,8 +49,7 @@ export function ResetPasswordPage() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="password"
+          <PasswordInput
             required
             minLength={8}
             placeholder="Nouveau mot de passe"
@@ -57,8 +57,7 @@ export function ResetPasswordPage() {
             onChange={(e) => setNewPassword(e.target.value)}
             className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition-colors focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
           />
-          <input
-            type="password"
+          <PasswordInput
             required
             minLength={8}
             placeholder="Confirmer le mot de passe"

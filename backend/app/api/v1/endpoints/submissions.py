@@ -14,6 +14,7 @@ from app.schemas.project_submission import (
     ProjectSubmissionCreate,
     ProjectSubmissionListResponse,
 )
+from app.services.notification_service import get_branch_notification_recipients, send_batch_notification
 
 router = APIRouter(prefix="/branches", tags=["submissions"])
 
@@ -29,13 +30,25 @@ async def create_submission(
     db: AsyncSession = Depends(get_db),
 ):
     """Soumettre un dossier de projet à une antenne. Accessible: Public."""
-    if not await db.get(Branch, branch_id):
+    branch = await db.get(Branch, branch_id)
+    if not branch:
         raise HTTPException(status_code=404, detail="Branch not found")
 
     submission = ProjectSubmission(branch_id=branch_id, **data.dict())
     db.add(submission)
     await db.commit()
     await db.refresh(submission)
+
+    recipient_ids = await get_branch_notification_recipients(db, branch_id)
+    await send_batch_notification(
+        recipient_ids,
+        title="Nouvelle candidature de projet",
+        message=f"{submission.applicant_name} a soumis un projet pour {branch.name}.",
+        notification_type="info",
+        action_url="/admin/submissions",
+        icon="submission",
+        db=db,
+    )
 
     return ProjectSubmissionSchema.from_orm(submission)
 

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogIn } from "lucide-react";
+import { ArrowLeft, LogIn } from "lucide-react";
 import { AuthShell } from "../components/auth/AuthShell";
 import { Button } from "../components/ui/Button";
+import { PasswordInput } from "../components/ui/PasswordInput";
 import { useLogin } from "../hooks/useAuth";
 
 export function LoginPage() {
@@ -23,7 +24,16 @@ export function LoginPage() {
   };
 
   return (
-    <AuthShell title="Espace Admin" subtitle="Connectez-vous pour accéder au back-office.">
+    <>
+      <Link
+        to="/"
+        className="fixed left-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white sm:left-6 sm:top-6"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        Retour à l'accueil
+      </Link>
+
+      <AuthShell title="Espace Admin" subtitle="Connectez-vous pour accéder au back-office.">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -48,9 +58,8 @@ export function LoginPage() {
               Mot de passe oublié ?
             </Link>
           </div>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
             required
             autoComplete="current-password"
             value={password}
@@ -73,6 +82,7 @@ export function LoginPage() {
           {login.isPending ? "Connexion…" : "Se connecter"}
         </Button>
       </form>
-    </AuthShell>
+      </AuthShell>
+    </>
   );
 }

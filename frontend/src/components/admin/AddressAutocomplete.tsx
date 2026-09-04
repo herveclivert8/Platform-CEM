@@ -53,21 +53,21 @@ export function AddressAutocomplete({ onSelect }: AddressAutocompleteProps) {
 
   return (
     <div className="relative">
-      <div className="flex items-center gap-2.5 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5">
-        <MapPin className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+      <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800">
+        <MapPin className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder="Rechercher une ville (ex: Tamatave)…"
-          className="w-full bg-transparent text-sm text-white placeholder:text-slate-500 outline-none"
+          className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none dark:text-white dark:placeholder:text-slate-500"
         />
-        {loading && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-slate-500" aria-hidden />}
+        {loading && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-slate-400 dark:text-slate-500" aria-hidden />}
       </div>
 
       {open && results.length > 0 && (
-        <div className="absolute z-40 mt-1.5 w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-800 shadow-xl">
+        <div className="absolute z-40 mt-1.5 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800">
           {results.map((result, i) => (
             <button
               key={i}
@@ -84,7 +84,7 @@ export function AddressAutocomplete({ onSelect }: AddressAutocompleteProps) {
                 setQuery(result.display_name);
                 setOpen(false);
               }}
-              className="block w-full px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-slate-700/60"
+              className="block w-full px-4 py-2.5 text-left text-sm text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700/60"
             >
               {result.display_name}
             </button>

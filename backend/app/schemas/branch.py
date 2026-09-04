@@ -15,6 +15,33 @@ class BranchStatus(str, Enum):
     PENDING = "pending"
 
 
+class TeamMemberInput(BaseModel):
+    """Schema pour créer/remplacer un membre d'équipe (écriture)"""
+    name: str = Field(..., min_length=1, max_length=255)
+    role: str = Field(..., min_length=1, max_length=255)
+    photo_url: Optional[str] = Field(None, max_length=512)
+
+
+class TeamMember(TeamMemberInput):
+    """Schema de réponse pour un membre d'équipe (lecture)"""
+    id: int
+    position: int = 0
+
+    class Config:
+        from_attributes = True
+
+
+class BranchManagerRead(BaseModel):
+    """Aperçu du responsable (Admin d'Antenne) d'une branche"""
+    id: int
+    full_name: str
+    email: str
+    avatar_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 class BranchBase(BaseModel):
     """Base schema pour branch"""
     name: str = Field(..., min_length=1, max_length=255)
@@ -34,7 +61,7 @@ class BranchBase(BaseModel):
 
 class BranchCreate(BranchBase):
     """Schema pour créer une branch"""
-    pass
+    team_members: list[TeamMemberInput] = []
 
 
 class BranchUpdate(BaseModel):
@@ -52,6 +79,7 @@ class BranchUpdate(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     status: Optional[BranchStatus] = None
+    team_members: Optional[list[TeamMemberInput]] = None
 
 
 class Branch(BranchBase):
@@ -66,10 +94,12 @@ class Branch(BranchBase):
 
 
 class BranchWithStats(Branch):
-    """Branch avec statistiques"""
+    """Branch avec statistiques, responsable et équipe (détail complet - GET /branches/{id})"""
     publication_count: int = 0
     visitor_count: int = 0
     admin_count: int = 0
+    manager: Optional[BranchManagerRead] = None
+    team_members: list[TeamMember] = []
 
 
 class BranchListResponse(BaseModel):

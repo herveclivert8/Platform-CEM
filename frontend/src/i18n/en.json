@@ -1,10 +1,9 @@
 {
   "nav": {
-    "pillars": "Our Pillars",
+    "home": "Home",
     "branches": "Our Branches",
     "network": "Network & Partners",
     "model": "Our Paris/Mada Model",
-    "law": "Non-profit — Paris",
     "donate": "Support CEM",
     "admin": "Admin Area"
   },
@@ -27,9 +26,33 @@
     "subtitle": "A network spanning the diaspora and the field, from Madagascar to France.",
     "empty": "No active branch at the moment."
   },
+  "model": {
+    "title": "Our Model",
+    "subtitle": "A bridge between the diaspora and the field: each branch plays a specific role in the same chain of impact.",
+    "diaspora_title": "From the diaspora",
+    "diaspora_text": "In France, our branches mobilize the community: book collections, project funding, and networking with partners and Malagasy artisans.",
+    "diaspora_count": "branch(es) in France",
+    "terrain_title": "On the ground",
+    "terrain_text": "In Madagascar, our branches carry out the concrete actions: distribution, social support, sport-based inclusion, and support for project leaders.",
+    "terrain_count": "branch(es) in Madagascar"
+  },
+  "pillars": {
+    "EDUCATION": "Education & Books",
+    "SOCIAL": "Social Support",
+    "SPORT": "Sport-Based Education",
+    "ENTERPRISE": "Entrepreneurship & Partnerships"
+  },
   "partners": {
     "title": "They trust us",
-    "subtitle": "Institutions, foundations and schools partnering with the CEM network."
+    "subtitle": "Institutions, foundations and schools partnering with the CEM network.",
+    "categories": {
+      "public_institutions": "Public institutions",
+      "schools": "Schools",
+      "corporate_foundations": "Corporate foundations",
+      "local_associations": "Local associations",
+      "international_ngos": "International NGOs",
+      "diaspora_network": "Diaspora network"
+    }
   },
   "hub": {
     "official_badge": "Official Regional Branch",
@@ -39,6 +62,7 @@
       "team": "Team & Contact",
       "reports": "Reports & News"
     },
+    "filter_all": "All",
     "kpi": {
       "posts_education": "Education updates",
       "posts_social": "Social support updates",
@@ -46,7 +70,8 @@
       "posts_enterprise": "Entrepreneurship updates"
     },
     "donation_sidebar_title": "Support this branch",
-    "other_branches": "Discover other branches"
+    "other_branches": "Discover other branches",
+    "no_posts": "No news published for this branch yet."
   },
   "donation": {
     "title": "Make a donation",
@@ -64,7 +89,8 @@
   "footer": {
     "association": "Club Excellence Madagascar — French non-profit (loi 1901)",
     "address": "31 Avenue de Ségur, 75007 Paris, France",
-    "rights": "All rights reserved."
+    "rights": "All rights reserved.",
+    "pillars_title": "Our Values"
   },
   "not_found": {
     "title": "Page not found",

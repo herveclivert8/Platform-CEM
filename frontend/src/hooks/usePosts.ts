@@ -24,3 +24,15 @@ export function useBranchPosts(branchId: number | undefined, params: BranchPosts
     staleTime: 30_000,
   });
 }
+
+export function usePost(postId: number | undefined) {
+  return useQuery({
+    queryKey: ["post", postId],
+    queryFn: async () => {
+      const { data } = await api.get<PostDto>(`/posts/${postId}`);
+      return mapPost(data);
+    },
+    enabled: postId !== undefined,
+    staleTime: 30_000,
+  });
+}

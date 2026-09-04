@@ -9,10 +9,9 @@ import {
   MapPin,
   Users,
   ScrollText,
-  LogOut,
+  Share2,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import { useLogout } from "../../hooks/useAuth";
 import { ScopeSelector } from "./ScopeSelector";
 
 const NAV_ITEMS = [
@@ -23,35 +22,38 @@ const NAV_ITEMS = [
   { to: "/admin/settings", label: "Paramètres", icon: Settings },
 ];
 
+const BRANCH_ADMIN_ITEMS = [{ to: "/admin/my-branch", label: "Mon antenne", icon: MapPin }];
+
 const SUPER_ADMIN_ITEMS = [
   { to: "/admin/branches", label: "Antennes", icon: MapPin },
   { to: "/admin/accounts", label: "Comptes admin", icon: Users },
   { to: "/admin/audit", label: "Journal d'audit", icon: ScrollText },
+  { to: "/admin/social-links", label: "Réseaux sociaux", icon: Share2 },
 ];
 
 export function Sidebar() {
   const user = useAuthStore((s) => s.user);
-  const logout = useLogout();
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
+  const isBranchAdmin = user?.role === "BRANCH_ADMIN";
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     clsx(
       "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-200",
       isActive
-        ? "bg-emerald-500/15 text-emerald-400"
-        : "text-slate-400 hover:bg-slate-800 hover:text-slate-100",
+        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+        : "text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100",
     );
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r border-slate-800 bg-slate-900">
-      <div className="flex h-16 items-center gap-2.5 border-b border-slate-800 px-5">
+    <aside className="flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex h-16 items-center gap-2.5 border-b border-slate-200 px-5 dark:border-slate-800">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white">
           <HeartHandshake className="h-4.5 w-4.5" aria-hidden />
         </span>
-        <span className="text-sm font-bold tracking-tight text-white">CEM Admin</span>
+        <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">CEM Admin</span>
       </div>
 
-      <div className="border-b border-slate-800 p-4">
+      <div className="border-b border-slate-200 p-4 dark:border-slate-800">
         <ScopeSelector />
       </div>
 
@@ -63,9 +65,17 @@ export function Sidebar() {
           </NavLink>
         ))}
 
+        {isBranchAdmin &&
+          BRANCH_ADMIN_ITEMS.map((item) => (
+            <NavLink key={item.to} to={item.to} className={linkClass}>
+              <item.icon className="h-4 w-4" aria-hidden />
+              {item.label}
+            </NavLink>
+          ))}
+
         {isSuperAdmin && (
           <>
-            <p className="mt-5 px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+            <p className="mt-5 px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-600">
               Super Admin
             </p>
             {SUPER_ADMIN_ITEMS.map((item) => (
@@ -77,23 +87,6 @@ export function Sidebar() {
           </>
         )}
       </nav>
-
-      <div className="border-t border-slate-800 p-3">
-        <div className="mb-2 px-3">
-          <p className="truncate text-sm font-medium text-slate-200">
-            {user?.firstName} {user?.lastName}
-          </p>
-          <p className="truncate text-xs text-slate-500">{user?.email}</p>
-        </div>
-        <button
-          type="button"
-          onClick={logout}
-          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-red-400"
-        >
-          <LogOut className="h-4 w-4" aria-hidden />
-          Déconnexion
-        </button>
-      </div>
     </aside>
   );
 }

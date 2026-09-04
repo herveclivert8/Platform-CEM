@@ -1,5 +1,19 @@
 export type BranchStatus = "active" | "inactive" | "pending";
 
+export interface TeamMember {
+  id: number;
+  name: string;
+  role: string;
+  photoUrl: string | null;
+}
+
+export interface BranchManager {
+  id: number;
+  fullName: string;
+  email: string;
+  avatarUrl: string | null;
+}
+
 export interface Branch {
   id: number;
   cityName: string;
@@ -18,9 +32,26 @@ export interface Branch {
   status: BranchStatus;
   publicationCount?: number;
   createdAt: string;
+  /** Only populated by the single-branch fetch (GET /branches/:id), absent from the paginated list. */
+  manager?: BranchManager | null;
+  teamMembers?: TeamMember[];
 }
 
 /** DTO shape actually returned by the FastAPI backend (snake_case). */
+export interface TeamMemberDto {
+  id: number;
+  name: string;
+  role: string;
+  photo_url: string | null;
+}
+
+export interface BranchManagerDto {
+  id: number;
+  full_name: string;
+  email: string;
+  avatar_url: string | null;
+}
+
 export interface BranchDto {
   id: number;
   name: string;
@@ -39,6 +70,8 @@ export interface BranchDto {
   status: BranchStatus;
   publication_count?: number;
   created_at: string;
+  manager?: BranchManagerDto | null;
+  team_members?: TeamMemberDto[];
 }
 
 export function mapBranch(dto: BranchDto): Branch {
@@ -60,5 +93,19 @@ export function mapBranch(dto: BranchDto): Branch {
     status: dto.status,
     publicationCount: dto.publication_count,
     createdAt: dto.created_at,
+    manager: dto.manager
+      ? {
+          id: dto.manager.id,
+          fullName: dto.manager.full_name,
+          email: dto.manager.email,
+          avatarUrl: dto.manager.avatar_url,
+        }
+      : (dto.manager as null | undefined),
+    teamMembers: dto.team_members?.map((m) => ({
+      id: m.id,
+      name: m.name,
+      role: m.role,
+      photoUrl: m.photo_url,
+    })),
   };
 }

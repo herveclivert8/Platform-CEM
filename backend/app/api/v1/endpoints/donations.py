@@ -13,6 +13,7 @@ from app.api.deps import get_db, get_current_user
 from app.models import Branch, Donation, User
 from app.models.user import UserRole
 from app.schemas.donation import Donation as DonationSchema, DonationCreate, DonationListResponse
+from app.services.notification_service import get_branch_notification_recipients, send_batch_notification
 
 router = APIRouter(prefix="/donations", tags=["donations"])
 
@@ -23,13 +24,28 @@ async def create_donation(
     db: AsyncSession = Depends(get_db),
 ):
     """Enregistrer un don. Accessible: Public."""
-    if data.branch_id is not None and not await db.get(Branch, data.branch_id):
-        raise HTTPException(status_code=404, detail="Branch not found")
+    branch = None
+    if data.branch_id is not None:
+        branch = await db.get(Branch, data.branch_id)
+        if not branch:
+            raise HTTPException(status_code=404, detail="Branch not found")
 
     donation = Donation(**data.dict())
     db.add(donation)
     await db.commit()
     await db.refresh(donation)
+
+    recipient_ids = await get_branch_notification_recipients(db, donation.branch_id)
+    branch_label = f" — {branch.name}" if branch else ""
+    await send_batch_notification(
+        recipient_ids,
+        title="Nouveau don reçu",
+        message=f"{donation.amount}€ de {donation.donor_email}{branch_label}.",
+        notification_type="success",
+        action_url="/admin/donations",
+        icon="donation",
+        db=db,
+    )
 
     return DonationSchema.from_orm(donation)
 

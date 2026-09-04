@@ -3,8 +3,9 @@ import { Drawer } from "./Drawer";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageDropzone } from "./ImageDropzone";
 import { Button } from "../ui/Button";
-import { PILLAR_LABELS, type Pillar, type Post, type PostStatus } from "../../types/post";
+import { ALL_PILLARS, type Pillar, type Post, type PostStatus } from "../../types/post";
 import { useCreatePost, useUpdatePost } from "../../hooks/useAdminPosts";
+import { usePillarLabels } from "../../hooks/usePillarLabels";
 
 interface PostDrawerProps {
   open: boolean;
@@ -12,8 +13,6 @@ interface PostDrawerProps {
   branchId: number | undefined;
   post?: Post;
 }
-
-const PILLARS = Object.keys(PILLAR_LABELS) as Pillar[];
 
 export function PostDrawer({ open, onClose, branchId, post }: PostDrawerProps) {
   return (
@@ -46,6 +45,7 @@ function PostForm({
   const [images, setImages] = useState<string[]>(post?.images ?? []);
   const createPost = useCreatePost(branchId);
   const updatePost = useUpdatePost(post?.id);
+  const pillarLabels = usePillarLabels();
 
   const save = async (status: PostStatus) => {
     const payload = { title, content, pillar, status, images };
@@ -63,55 +63,55 @@ function PostForm({
   return (
     <div className="space-y-5">
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-slate-400">Titre</label>
+        <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">Titre</label>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Titre de l'actualité"
-          className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
         />
       </div>
 
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-slate-400">Pilier</label>
+        <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">Pilier</label>
         <div className="grid grid-cols-2 gap-2">
-          {PILLARS.map((p) => (
+          {ALL_PILLARS.map((p) => (
             <button
               key={p}
               type="button"
               onClick={() => setPillar(p)}
               className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
                 pillar === p
-                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
-                  : "border-slate-700 text-slate-400 hover:border-slate-600"
+                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                  : "border-slate-200 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600"
               }`}
             >
-              {PILLAR_LABELS[p]}
+              {pillarLabels[p]}
             </button>
           ))}
         </div>
       </div>
 
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-slate-400">Contenu</label>
+        <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">Contenu</label>
         <RichTextEditor value={content} onChange={setContent} placeholder="Rédigez votre actualité…" />
       </div>
 
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-slate-400">Images</label>
+        <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">Images</label>
         <ImageDropzone images={images} onChange={setImages} />
       </div>
 
       {hasError && (
-        <p className="text-sm text-red-400">
+        <p className="text-sm text-red-600 dark:text-red-400">
           Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.
         </p>
       )}
 
-      <div className="flex gap-2.5 border-t border-slate-800 pt-5">
+      <div className="flex gap-2.5 border-t border-slate-200 pt-5 dark:border-slate-800">
         <Button
           variant="ghost"
-          className="flex-1 justify-center border border-slate-700"
+          className="flex-1 justify-center border border-slate-200 dark:border-slate-700"
           disabled={!title || !content || isPending}
           onClick={() => save("DRAFT")}
         >

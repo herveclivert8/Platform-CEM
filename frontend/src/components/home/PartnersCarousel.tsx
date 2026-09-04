@@ -2,12 +2,12 @@ import { useTranslation } from "react-i18next";
 import { Landmark, GraduationCap, Building2, Users, Globe2, HeartHandshake } from "lucide-react";
 
 const PARTNER_CATEGORIES = [
-  { icon: Landmark, label: "Institutions publiques" },
-  { icon: GraduationCap, label: "Établissements scolaires" },
-  { icon: Building2, label: "Fondations d'entreprise" },
-  { icon: Users, label: "Associations locales" },
-  { icon: Globe2, label: "ONG internationales" },
-  { icon: HeartHandshake, label: "Réseau diaspora" },
+  { icon: Landmark, key: "public_institutions" },
+  { icon: GraduationCap, key: "schools" },
+  { icon: Building2, key: "corporate_foundations" },
+  { icon: Users, key: "local_associations" },
+  { icon: Globe2, key: "international_ngos" },
+  { icon: HeartHandshake, key: "diaspora_network" },
 ];
 
 export function PartnersCarousel() {
@@ -30,11 +30,11 @@ export function PartnersCarousel() {
         <div className="flex w-max animate-[marquee_28s_linear_infinite] gap-4 px-4">
           {items.map((item, i) => (
             <div
-              key={`${item.label}-${i}`}
+              key={`${item.key}-${i}`}
               className="flex items-center gap-2.5 rounded-xl border border-slate-200/80 bg-white px-5 py-3 text-sm font-medium text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
             >
               <item.icon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
-              {item.label}
+              {t(`partners.categories.${item.key}`)}
             </div>
           ))}
         </div>

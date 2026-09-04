@@ -7,10 +7,10 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const toneClasses = {
-  slate: "bg-slate-100 text-slate-500 border-slate-200",
+  slate: "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
   emerald:
-    "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 backdrop-blur-sm",
-  orange: "bg-orange-50 text-orange-600 border-orange-200",
+    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30 backdrop-blur-sm",
+  orange: "bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/30",
   glass: "bg-white/10 text-white border-white/20 backdrop-blur-sm",
 };
 

@@ -1,4 +1,5 @@
-import { FileText, Download } from "lucide-react";
+import { Link } from "react-router-dom";
+import { FileText, Download, ArrowRight } from "lucide-react";
 import { Card, IconBadge } from "../ui/Card";
 import { Skeleton } from "../ui/Skeleton";
 import { useBranchPosts } from "../../hooks/usePosts";
@@ -62,11 +63,21 @@ export function ReportsTab({ branchId }: { branchId: number }) {
         ) : !posts || posts.items.length === 0 ? (
           <p className="mt-3 text-sm text-slate-400">Aucune actualité pour le moment.</p>
         ) : (
-          <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {posts.items.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
+          <>
+            <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {posts.items.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+            {posts.total > posts.items.length && (
+              <Link
+                to={`/antennes/${branchId}/actualites`}
+                className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
+              >
+                Voir toutes les actualités <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            )}
+          </>
         )}
       </div>
     </div>

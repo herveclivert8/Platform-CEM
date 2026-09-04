@@ -10,8 +10,8 @@ export function AuditPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-extrabold tracking-tight text-white">Journal d'audit</h1>
-      <p className="mt-1 text-sm text-slate-400">Historique des opérations sensibles (30 derniers jours).</p>
+      <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Journal d'audit</h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Historique des opérations sensibles (30 derniers jours).</p>
 
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
@@ -24,9 +24,9 @@ export function AuditPage() {
             {statsLoading ? (
               <Skeleton className="h-8 w-14" />
             ) : (
-              <p className="text-2xl font-extrabold tracking-tight text-white">{item.value ?? 0}</p>
+              <p className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{item.value ?? 0}</p>
             )}
-            <p className="mt-1 text-xs font-medium text-slate-400">{item.label}</p>
+            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">{item.label}</p>
           </Card>
         ))}
       </div>
@@ -39,7 +39,7 @@ export function AuditPage() {
             ))}
           </div>
         ) : !log || log.items.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-500">
+          <p className="mt-4 text-sm text-slate-400 dark:text-slate-500">
             Aucun événement enregistré pour le moment (le journal d'audit n'est pas encore alimenté côté backend).
           </p>
         ) : (
@@ -48,10 +48,10 @@ export function AuditPage() {
               <Card key={entry.id} hoverable={false} className="flex items-center gap-4 p-4">
                 <IconBadge icon={<ScrollText className="h-4 w-4" aria-hidden />} tone="slate" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-slate-200">
+                  <p className="text-sm text-slate-700 dark:text-slate-200">
                     <span className="font-semibold">{entry.action}</span> · {entry.resource_type}
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     {entry.user_email} — {new Date(entry.created_at).toLocaleString("fr-FR")}
                   </p>
                 </div>

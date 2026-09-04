@@ -1,6 +1,8 @@
 export type Pillar = "EDUCATION" | "SOCIAL" | "SPORT" | "ENTERPRISE";
 export type PostStatus = "DRAFT" | "PUBLISHED";
 
+export const ALL_PILLARS: Pillar[] = ["EDUCATION", "SOCIAL", "SPORT", "ENTERPRISE"];
+
 export interface Post {
   id: number;
   branchId: number;
@@ -70,10 +72,3 @@ export function mapPaginated<TDto, T>(
     totalPages: dto.total_pages,
   };
 }
-
-export const PILLAR_LABELS: Record<Pillar, string> = {
-  EDUCATION: "Éducation & Livres",
-  SOCIAL: "Aide Sociale",
-  SPORT: "Éducation par le Sport",
-  ENTERPRISE: "Entrepreneuriat & Partenariats",
-};

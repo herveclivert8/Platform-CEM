@@ -33,14 +33,14 @@ export function CreateAccountDrawer({ open, onClose }: { open: boolean; onClose:
       {createAccount.isSuccess ? (
         <div className="space-y-4">
           <Badge tone="emerald">Compte créé</Badge>
-          <p className="text-sm text-slate-300">
+          <p className="text-sm text-slate-600 dark:text-slate-300">
             Mot de passe temporaire à communiquer à l'admin (il pourra le modifier depuis Paramètres) :
           </p>
-          <div className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 font-mono text-sm text-emerald-400">
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm text-emerald-600 dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-400">
             {createAccount.data?.temporary_password}
           </div>
           {!createAccount.data?.welcome_email_sent && (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-400 dark:text-slate-500">
               L'email de bienvenue n'a pas pu être envoyé (SMTP non configuré) — communiquez ce mot de passe manuellement.
             </p>
           )}
@@ -56,14 +56,14 @@ export function CreateAccountDrawer({ open, onClose }: { open: boolean; onClose:
               placeholder="Prénom"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
             />
             <input
               required
               placeholder="Nom"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
             />
           </div>
           <input
@@ -72,13 +72,13 @@ export function CreateAccountDrawer({ open, onClose }: { open: boolean; onClose:
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
           />
           <select
             required
             value={branchId}
             onChange={(e) => setBranchId(Number(e.target.value))}
-            className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
           >
             <option value="">Antenne à attribuer…</option>
             {branchesData?.items.map((b) => (
@@ -89,7 +89,7 @@ export function CreateAccountDrawer({ open, onClose }: { open: boolean; onClose:
           </select>
 
           {createAccount.isError && (
-            <p className="text-sm text-red-400">Cet email existe peut-être déjà.</p>
+            <p className="text-sm text-red-600 dark:text-red-400">Cet email existe peut-être déjà.</p>
           )}
 
           <Button type="submit" variant="secondary" className="w-full justify-center" disabled={createAccount.isPending}>

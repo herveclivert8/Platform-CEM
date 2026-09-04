@@ -5,8 +5,11 @@ from app.models.project_submission import ProjectSubmission
 from app.models.password_reset_token import PasswordResetToken
 from app.models.user import OAuthProvider, User, UserRole
 from app.models.branch import Branch
+from app.models.team_member import TeamMember
 from app.models.audit import AuditLog
 from app.models.statistic import Statistic
+from app.models.settings import AssociationSettings
+from app.models.notification import Notification
 
 __all__ = [
     "Publication",
@@ -23,6 +26,9 @@ __all__ = [
     "User",
     "UserRole",
     "Branch",
+    "TeamMember",
     "AuditLog",
     "Statistic",
+    "AssociationSettings",
+    "Notification",
 ]

@@ -7,6 +7,11 @@ import { useAdminSubmissions } from "../../hooks/useAdminSubmissions";
 import { useAdminDonations } from "../../hooks/useAdminDonations";
 import { useSuperAdminStatistics } from "../../hooks/useSuperAdminStats";
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  return hour >= 5 && hour < 18 ? "Bonjour" : "Bonsoir";
+}
+
 function StatCard({
   icon: Icon,
   label,
@@ -24,9 +29,9 @@ function StatCard({
       {loading ? (
         <Skeleton className="mt-3 h-8 w-14" />
       ) : (
-        <p className="mt-3 text-2xl font-extrabold tracking-tight text-white">{value}</p>
+        <p className="mt-3 text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{value}</p>
       )}
-      <p className="mt-1 text-xs font-medium text-slate-400">{label}</p>
+      <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">{label}</p>
     </Card>
   );
 }
@@ -44,10 +49,14 @@ export function DashboardPage() {
   const draftCount = posts?.filter((p) => p.status === "DRAFT").length ?? 0;
   const donationTotal = donations?.reduce((sum, d) => sum + d.amount, 0) ?? 0;
 
+  const greetingName = isSuperAdmin ? "Super Admin" : user?.firstName;
+
   return (
     <div>
-      <h1 className="text-2xl font-extrabold tracking-tight text-white">Dashboard</h1>
-      <p className="mt-1 text-sm text-slate-400">
+      <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+        {getGreeting()}, {greetingName} !
+      </h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         {isSuperAdmin ? "Vue consolidée de toutes les antennes." : `Antenne de ${user?.branchName}.`}
       </p>
 
@@ -65,7 +74,7 @@ export function DashboardPage() {
 
       {isSuperAdmin && (
         <div className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
             Vue globale
           </h2>
           <div className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-4">

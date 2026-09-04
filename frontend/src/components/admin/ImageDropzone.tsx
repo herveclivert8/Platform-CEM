@@ -55,15 +55,17 @@ export function ImageDropzone({ images, onChange }: ImageDropzoneProps) {
         }}
         onClick={() => inputRef.current?.click()}
         className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors ${
-          dragOver ? "border-emerald-500 bg-emerald-500/5" : "border-slate-700 hover:border-slate-600"
+          dragOver
+            ? "border-emerald-500 bg-emerald-500/5"
+            : "border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600"
         }`}
       >
         {uploading ? (
-          <Loader2 className="h-6 w-6 animate-spin text-emerald-400" aria-hidden />
+          <Loader2 className="h-6 w-6 animate-spin text-emerald-600 dark:text-emerald-400" aria-hidden />
         ) : (
-          <ImagePlus className="h-6 w-6 text-slate-500" aria-hidden />
+          <ImagePlus className="h-6 w-6 text-slate-400 dark:text-slate-500" aria-hidden />
         )}
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           {uploading ? "Envoi en cours…" : "Glissez des images ici, ou cliquez pour parcourir"}
         </p>
         <input
@@ -77,7 +79,7 @@ export function ImageDropzone({ images, onChange }: ImageDropzoneProps) {
       </div>
 
       {error && (
-        <p className="mt-2 text-sm text-red-400">
+        <p className="mt-2 text-sm text-red-600 dark:text-red-400">
           Échec de l'envoi d'une image. Vérifiez le format (JPEG/PNG/GIF/WebP, 5 Mo max) et réessayez.
         </p>
       )}
@@ -85,7 +87,7 @@ export function ImageDropzone({ images, onChange }: ImageDropzoneProps) {
       {images.length > 0 && (
         <div className="mt-3 grid grid-cols-3 gap-2.5">
           {images.map((url, i) => (
-            <div key={url} className="group relative aspect-square overflow-hidden rounded-lg border border-slate-700">
+            <div key={url} className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
               <img src={url} alt="" className="h-full w-full object-cover" />
               <button
                 type="button"

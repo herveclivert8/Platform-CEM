@@ -87,6 +87,12 @@ class Branch(Base):
         cascade="all, delete-orphan",
     )
 
+    team_members: Mapped[list["TeamMember"]] = relationship(
+        back_populates="branch",
+        cascade="all, delete-orphan",
+        order_by="TeamMember.position",
+    )
+
     manager: Mapped["User | None"] = relationship(foreign_keys=[manager_id])
 
     def __repr__(self) -> str:

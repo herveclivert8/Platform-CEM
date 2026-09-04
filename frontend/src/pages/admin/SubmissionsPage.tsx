@@ -8,8 +8,8 @@ export function SubmissionsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-extrabold tracking-tight text-white">Dossiers Entrepreneurs</h1>
-      <p className="mt-1 text-sm text-slate-400">
+      <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Dossiers Entrepreneurs</h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Candidatures de porteurs de projet et artisans soumises à l'antenne.
       </p>
 
@@ -20,7 +20,7 @@ export function SubmissionsPage() {
           ))}
         </div>
       ) : !submissions || submissions.length === 0 ? (
-        <p className="mt-8 text-sm text-slate-500">Aucun dossier reçu pour le moment.</p>
+        <p className="mt-8 text-sm text-slate-400 dark:text-slate-500">Aucun dossier reçu pour le moment.</p>
       ) : (
         <div className="mt-6 space-y-3">
           {submissions.map((s) => (
@@ -28,15 +28,15 @@ export function SubmissionsPage() {
               <div className="flex items-start gap-3">
                 <IconBadge icon={<User className="h-4 w-4" aria-hidden />} tone="orange" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-white">{s.applicantName}</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{s.applicantName}</p>
                   <a
                     href={`mailto:${s.email}`}
-                    className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-400"
+                    className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400"
                   >
                     <Mail className="h-3 w-3" /> {s.email}
                   </a>
-                  <p className="mt-2.5 text-sm text-slate-300">{s.projectSummary}</p>
-                  <p className="mt-2.5 text-xs text-slate-500">
+                  <p className="mt-2.5 text-sm text-slate-600 dark:text-slate-300">{s.projectSummary}</p>
+                  <p className="mt-2.5 text-xs text-slate-400 dark:text-slate-500">
                     {new Date(s.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
                   </p>
                 </div>

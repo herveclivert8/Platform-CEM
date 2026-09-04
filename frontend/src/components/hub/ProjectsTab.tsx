@@ -1,15 +1,19 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import clsx from "clsx";
-import { PILLAR_LABELS, type Pillar } from "../../types/post";
+import { useTranslation } from "react-i18next";
+import { ArrowRight } from "lucide-react";
+import { ALL_PILLARS, type Pillar } from "../../types/post";
 import { useBranchPosts } from "../../hooks/usePosts";
+import { usePillarLabels } from "../../hooks/usePillarLabels";
 import { PostCard } from "./PostCard";
 import { Skeleton } from "../ui/Skeleton";
 
-const PILLARS = Object.keys(PILLAR_LABELS) as Pillar[];
-
 export function ProjectsTab({ branchId }: { branchId: number }) {
+  const { t } = useTranslation();
   const [pillar, setPillar] = useState<Pillar | undefined>(undefined);
-  const { data, isLoading } = useBranchPosts(branchId, { pillar, pageSize: 12 });
+  const { data, isLoading } = useBranchPosts(branchId, { pillar, pageSize: 6 });
+  const pillarLabels = usePillarLabels();
 
   return (
     <div>
@@ -24,9 +28,9 @@ export function ProjectsTab({ branchId }: { branchId: number }) {
               : "border-slate-200 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:text-slate-400",
           )}
         >
-          Tous
+          {t("hub.filter_all")}
         </button>
-        {PILLARS.map((p) => (
+        {ALL_PILLARS.map((p) => (
           <button
             key={p}
             type="button"
@@ -38,7 +42,7 @@ export function ProjectsTab({ branchId }: { branchId: number }) {
                 : "border-slate-200 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:text-slate-400",
             )}
           >
-            {PILLAR_LABELS[p]}
+            {pillarLabels[p]}
           </button>
         ))}
       </div>
@@ -50,15 +54,23 @@ export function ProjectsTab({ branchId }: { branchId: number }) {
           ))}
         </div>
       ) : !data || data.items.length === 0 ? (
-        <p className="mt-8 text-sm text-slate-400">
-          Aucune actualité publiée pour cette antenne pour le moment.
-        </p>
+        <p className="mt-8 text-sm text-slate-400">{t("hub.no_posts")}</p>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {data.items.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
-        </div>
+        <>
+          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {data.items.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
+          {data.total > data.items.length && (
+            <Link
+              to={`/antennes/${branchId}/actualites`}
+              className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
+            >
+              Voir toutes les actualités <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          )}
+        </>
       )}
     </div>
   );

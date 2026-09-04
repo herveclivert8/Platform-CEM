@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Menu, X, ShieldCheck, HeartHandshake } from "lucide-react";
-import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageDropdown } from "./LanguageDropdown";
@@ -12,18 +11,26 @@ export function Navbar() {
   const { t } = useTranslation();
   const openDonation = useDonationUiStore((s) => s.open);
   const [scrolled, setScrolled] = useState(false);
+  const [showCta, setShowCta] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    // The navbar CTA duplicates the page's own hero CTA (or, on the branch hub
+    // pages, the donation sidebar/bottom bar) if it's visible right away - so it
+    // only appears once the user has scrolled past that first screen, where it
+    // earns its keep as the one persistently-reachable "donate" action.
+    const onScroll = () => {
+      setScrolled(window.scrollY > 8);
+      setShowCta(window.scrollY > 320);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const navLinks = [
-    { label: t("nav.pillars"), href: "/#piliers" },
-    { label: t("nav.branches"), href: "/#antennes" },
+  const navLinks: { label: string; href?: string; to?: string }[] = [
+    { label: t("nav.home"), to: "/" },
+    { label: t("nav.branches"), to: "/antennes" },
     { label: t("nav.network"), href: "/#partenaires" },
     { label: t("nav.model"), href: "/#modele" },
   ];
@@ -47,30 +54,37 @@ export function Navbar() {
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="rounded-lg px-3.5 py-2 text-sm font-medium text-slate-600 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-            >
-              {link.label}
-            </a>
-          ))}
+          {navLinks.map((link) => {
+            const className =
+              "rounded-lg px-3.5 py-2 text-sm font-medium text-slate-600 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white";
+            return link.to ? (
+              <Link key={link.to} to={link.to} className={className}>
+                {link.label}
+              </Link>
+            ) : (
+              <a key={link.href} href={link.href} className={className}>
+                {link.label}
+              </a>
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-2">
-          <Badge tone="slate" className="hidden md:inline-flex">
-            {t("nav.law")}
-          </Badge>
-
           <div className="hidden items-center gap-1 sm:flex">
             <LanguageDropdown />
             <ThemeToggle />
           </div>
 
-          <Button variant="primary" size="sm" onClick={() => openDonation()} className="hidden sm:inline-flex">
-            {t("nav.donate")}
-          </Button>
+          {showCta && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => openDonation()}
+              className="hidden animate-fade-in-up sm:inline-flex"
+            >
+              {t("nav.donate")}
+            </Button>
+          )}
 
           <Link
             to="/login"
@@ -94,16 +108,29 @@ export function Navbar() {
       {mobileOpen && (
         <div className="border-t border-slate-200/80 bg-white px-4 py-4 animate-fade-in-up lg:hidden dark:border-slate-800 dark:bg-slate-950">
           <nav className="flex flex-col gap-1">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className="rounded-lg px-3.5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
-              >
-                {link.label}
-              </a>
-            ))}
+            {navLinks.map((link) => {
+              const className =
+                "rounded-lg px-3.5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800";
+              return link.to ? (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setMobileOpen(false)}
+                  className={className}
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={className}
+                >
+                  {link.label}
+                </a>
+              );
+            })}
             <Link
               to="/login"
               onClick={() => setMobileOpen(false)}

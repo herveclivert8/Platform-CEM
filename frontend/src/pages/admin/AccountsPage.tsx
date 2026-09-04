@@ -18,8 +18,8 @@ export function AccountsPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-white">Comptes admin</h1>
-          <p className="mt-1 text-sm text-slate-400">Créez et gérez les comptes Admin d'Antenne.</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Comptes admin</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Créez et gérez les comptes Admin d'Antenne.</p>
         </div>
         <Button variant="secondary" icon={<Plus className="h-4 w-4" />} onClick={() => setDrawerOpen(true)}>
           Nouveau compte
@@ -48,14 +48,14 @@ export function AccountsPage() {
               />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
                     {account.firstName} {account.lastName}
                   </p>
                   <Badge tone={account.role === "SUPER_ADMIN" ? "orange" : "emerald"}>
                     {account.role === "SUPER_ADMIN" ? "Super Admin" : account.branchName ?? "Antenne"}
                   </Badge>
                 </div>
-                <p className="text-xs text-slate-500">{account.email}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">{account.email}</p>
               </div>
               {account.id !== currentUser?.id && (
                 <button
@@ -64,7 +64,7 @@ export function AccountsPage() {
                     window.confirm(`Supprimer le compte de ${account.firstName} ${account.lastName} ?`) &&
                     deleteAccount.mutate(account.id)
                   }
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                   aria-label="Supprimer"
                 >
                   <Trash2 className="h-4 w-4" />

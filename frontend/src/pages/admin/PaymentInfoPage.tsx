@@ -137,8 +137,8 @@ export function PaymentInfoPage() {
               <ul className="mt-1 space-y-0.5">
                 {TEST_CARD_OUTCOMES.map((card) => (
                   <li key={card.number} className="flex justify-between gap-2">
-                    <span className="font-mono">{card.number}</span>
-                    <span>{card.label}</span>
+                    <span className="whitespace-nowrap font-mono">{card.number}</span>
+                    <span className="text-right">{card.label}</span>
                   </li>
                 ))}
               </ul>

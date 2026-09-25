@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { CheckCircle2, CreditCard, Landmark, MailCheck, Plus, RotateCcw, Search, ShieldCheck, Trash2 } from "lucide-react";
+import { CheckCircle2, CreditCard, Landmark, MailCheck, Plus, RotateCcw, Search, ShieldCheck, Smartphone, Trash2 } from "lucide-react";
 import clsx from "clsx";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
@@ -229,7 +229,13 @@ export function DonationsPage() {
                     <OperatorMark operator={d.mobileOperator} />
                   ) : (
                     <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                      {d.paymentMethod === "CARD" ? <CreditCard className="h-4 w-4" /> : <Landmark className="h-4 w-4" />}
+                      {d.paymentMethod === "CARD" ? (
+                        <CreditCard className="h-4 w-4" />
+                      ) : d.paymentMethod === "MOBILE_MONEY" ? (
+                        <Smartphone className="h-4 w-4" />
+                      ) : (
+                        <Landmark className="h-4 w-4" />
+                      )}
                     </span>
                   )}
                 </span>

@@ -157,7 +157,7 @@ export function MobileMoneyStep({ amount, branchId, options, onSuccess }: Mobile
                 clearError("phone");
               }}
               placeholder="034 12 345 67"
-              className={clsx(fieldClass, "font-mono", errors.phone && fieldErrorClass)}
+              className={clsx(fieldClass, "font-mono placeholder:font-sans", errors.phone && fieldErrorClass)}
             />
           </Field>
           <Field label={t("donation.mm_sent_amount")} htmlFor="mm-amount" error={errors.amount}>
@@ -197,7 +197,7 @@ export function MobileMoneyStep({ amount, branchId, options, onSuccess }: Mobile
               clearError("reference");
             }}
             placeholder={t("donation.mm_reference_placeholder")}
-            className={clsx(fieldClass, "font-mono uppercase placeholder:normal-case", errors.reference && fieldErrorClass)}
+            className={clsx(fieldClass, "font-mono uppercase placeholder:font-sans placeholder:normal-case", errors.reference && fieldErrorClass)}
           />
         </Field>
 

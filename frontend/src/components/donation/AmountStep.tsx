@@ -50,7 +50,7 @@ export function AmountStep({
                   onClick={() => onMethodChange(m)}
                   aria-pressed={active}
                   className={clsx(
-                    "relative flex flex-col items-start gap-2 rounded-xl border-2 p-3.5 text-left transition-all",
+                    "relative flex flex-col items-start gap-2 rounded-xl border-2 p-3.5 pr-9 text-left transition-all",
                     active
                       ? "border-emerald-600 bg-emerald-50/60 shadow-sm dark:border-emerald-500 dark:bg-emerald-500/10"
                       : "border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600",

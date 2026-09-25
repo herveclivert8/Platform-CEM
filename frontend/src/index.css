@@ -48,6 +48,10 @@ body {
 .leaflet-container {
   font-family: inherit;
   background: theme(colors.slate.100);
+  /* Leaflet stacks its panes/controls at z-index 400-1000: contain them inside the map
+     so they never cover the sticky navbar, dropdowns or modals. */
+  isolation: isolate;
+  z-index: 0;
 }
 
 .dark .leaflet-container {

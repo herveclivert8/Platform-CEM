@@ -10,6 +10,7 @@ import {
   Users,
   ScrollText,
   Share2,
+  Wallet,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { ScopeSelector } from "./ScopeSelector";
@@ -18,7 +19,7 @@ const NAV_ITEMS = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/admin/posts", label: "Mes Publications", icon: Newspaper },
   { to: "/admin/submissions", label: "Dossiers Entrepreneurs", icon: Briefcase },
-  { to: "/admin/donations", label: "Dons reçus", icon: HeartHandshake },
+  { to: "/admin/donations", label: "Dons", icon: HeartHandshake },
   { to: "/admin/settings", label: "Paramètres", icon: Settings },
 ];
 
@@ -29,6 +30,7 @@ const SUPER_ADMIN_ITEMS = [
   { to: "/admin/accounts", label: "Comptes admin", icon: Users },
   { to: "/admin/audit", label: "Journal d'audit", icon: ScrollText },
   { to: "/admin/social-links", label: "Réseaux sociaux", icon: Share2 },
+  { to: "/admin/payment-info", label: "Coordonnées de paiement", icon: Wallet },
 ];
 
 export function Sidebar() {

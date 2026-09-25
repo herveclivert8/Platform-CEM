@@ -1,9 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import {
   mapProjectSubmission,
   type ProjectSubmission,
   type ProjectSubmissionDto,
+  type ProjectSubmissionInput,
 } from "../types/submission";
 import type { PaginatedDto } from "../types/post";
 import { useAdminScopeStore } from "../store/adminScopeStore";
@@ -40,5 +41,31 @@ export function useAdminSubmissions() {
         .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
     },
     enabled: targetBranchIds.length > 0,
+  });
+}
+
+/** Admin-side entry of a dossier received outside the site (phone, email, in person). */
+export function useAdminCreateSubmission(branchId: number | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation<ProjectSubmission, unknown, ProjectSubmissionInput>({
+    mutationFn: async (input) => {
+      const { data } = await api.post<ProjectSubmissionDto>(`/branches/${branchId}/submissions`, {
+        applicant_name: input.applicantName,
+        email: input.email,
+        project_summary: input.projectSummary,
+      });
+      return mapProjectSubmission(data);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-submissions"] }),
+  });
+}
+
+export function useDeleteSubmission() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (submission: ProjectSubmission) => {
+      await api.delete(`/branches/${submission.branchId}/submissions/${submission.id}`);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-submissions"] }),
   });
 }

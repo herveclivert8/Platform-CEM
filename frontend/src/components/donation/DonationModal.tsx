@@ -1,35 +1,64 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { X, BookOpen, Heart, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Heart, X } from "lucide-react";
 import clsx from "clsx";
 import { Button } from "../ui/Button";
-import { useCreateDonation } from "../../hooks/useDonations";
+import { AmountStep } from "./AmountStep";
+import { PRESET_AMOUNTS, type DonationMethod } from "./donationConstants";
+import { CardPaymentStep } from "./CardPaymentStep";
+import { MobileMoneyStep } from "./MobileMoneyStep";
+import { DonationSuccess } from "./DonationSuccess";
+import { Spinner } from "./donationUi";
+import { usePaymentOptions } from "../../hooks/useDonations";
 import { useDonationUiStore } from "../../store/donationUiStore";
+import { CURRENCY_BY_METHOD, formatAmount, type DonationReceipt, type PaymentOptions } from "../../types/donation";
 
-const PRESET_AMOUNTS = [10, 20, 50, 100];
-const EUR_PER_BOOK = 2;
+type Step = "amount" | "payment" | "success";
+const STEPS: Step[] = ["amount", "payment", "success"];
+
+function availableMethods(options: PaymentOptions | undefined): DonationMethod[] {
+  if (!options) return [];
+  const methods: DonationMethod[] = [];
+  if (options.card.enabled) methods.push("CARD");
+  if (options.mobileMoney.accounts.length > 0) methods.push("MOBILE_MONEY");
+  return methods;
+}
 
 export function DonationModal() {
   const { t } = useTranslation();
   const { isOpen: open, branchId, branchName, close: onClose } = useDonationUiStore();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [amount, setAmount] = useState<number>(20);
+  const { data: options, isFetching, isError, refetch } = usePaymentOptions();
+  const [step, setStep] = useState<Step>("amount");
+  const [method, setMethod] = useState<DonationMethod | null>(null);
+  const [presetAmount, setPresetAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState("");
-  const [email, setEmail] = useState("");
-  const createDonation = useCreateDonation();
+  const [receipt, setReceipt] = useState<DonationReceipt | null>(null);
+  const [receiptEmail, setReceiptEmail] = useState<string | undefined>(undefined);
+
+  const methods = availableMethods(options);
+  const selectedMethod = method && methods.includes(method) ? method : (methods[0] ?? null);
+  const amount = customAmount
+    ? Number(customAmount)
+    : (presetAmount ?? (selectedMethod ? PRESET_AMOUNTS[selectedMethod][1] : 0));
+
+  // The modal stays mounted while closed: reload the payment options each time it opens,
+  // in case an admin just changed them.
+  useEffect(() => {
+    if (open) refetch();
+  }, [open, refetch]);
 
   useEffect(() => {
-    if (!open) {
-      const timeout = setTimeout(() => {
-        setStep(1);
-        setAmount(20);
-        setCustomAmount("");
-        setEmail("");
-        createDonation.reset();
-      }, 300);
-      return () => clearTimeout(timeout);
-    }
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (open) return;
+    const timeout = setTimeout(() => {
+      setStep("amount");
+      setMethod(null);
+      setPresetAmount(null);
+      setCustomAmount("");
+      setReceipt(null);
+      setReceiptEmail(undefined);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -44,156 +73,168 @@ export function DonationModal() {
 
   if (!open) return null;
 
-  const effectiveAmount = customAmount ? Number(customAmount) : amount;
-  const impactBooks = Math.max(1, Math.round(effectiveAmount / EUR_PER_BOOK));
+  const loading = isFetching && methods.length === 0;
+  const stepIndex = STEPS.indexOf(step);
 
-  const handleConfirm = async () => {
-    await createDonation.mutateAsync({
-      branchId,
-      amount: effectiveAmount,
-      donorEmail: email,
-    });
-    setStep(3);
+  const changeMethod = (m: DonationMethod) => {
+    setMethod(m);
+    setPresetAmount(null);
+    setCustomAmount("");
+  };
+
+  const handleSuccess = (donationReceipt: DonationReceipt, email?: string) => {
+    setReceipt(donationReceipt);
+    setReceiptEmail(email);
+    setStep("success");
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-fade-in-up"
-        onClick={onClose}
-        aria-hidden
-      />
+    <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-fade-in-up" onClick={onClose} aria-hidden />
 
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="donation-modal-title"
-        className="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xl animate-fade-in-up dark:border-slate-800 dark:bg-slate-900"
+        className="relative flex max-h-[100dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl animate-fade-in-up dark:bg-slate-900 sm:max-h-[calc(100dvh-2rem)] sm:max-w-[500px] sm:rounded-2xl sm:border sm:border-slate-200/80 sm:dark:border-slate-800"
       >
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
-          <h2 id="donation-modal-title" className="flex items-center gap-2 text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-            <Heart className="h-5 w-5 text-orange-600" aria-hidden />
-            {t("donation.title")}
-            {branchName && (
-              <span className="text-sm font-normal text-slate-400">— {branchName}</span>
+        {/* Header */}
+        <div className="border-b border-slate-100 px-5 pb-4 pt-4 dark:border-slate-800 sm:px-6">
+          <div className="flex items-center gap-3">
+            {step === "payment" ? (
+              <button
+                type="button"
+                onClick={() => setStep("amount")}
+                aria-label={t("donation.back")}
+                className="-ml-1.5 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+            ) : (
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400">
+                <Heart className="h-4 w-4" aria-hidden />
+              </span>
             )}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t("donation.close") ?? "Fermer"}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
-          >
-            <X className="h-4 w-4" />
-          </button>
+            <div className="min-w-0 flex-1">
+              <h2 id="donation-modal-title" className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
+                {t("donation.title")}
+              </h2>
+              <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                {branchName ? t("donation.for_branch", { branch: branchName }) : "Club Excellence Madagascar"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t("donation.close")}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Progress */}
+          {selectedMethod && (
+            <ol className="mt-4 grid grid-cols-3 gap-2" aria-label={t("donation.progress")}>
+              {STEPS.map((s, i) => (
+                <li key={s}>
+                  <span
+                    className={clsx(
+                      "block h-1 rounded-full transition-colors duration-300",
+                      i <= stepIndex ? "bg-emerald-600" : "bg-slate-200 dark:bg-slate-700",
+                    )}
+                  />
+                  <span
+                    className={clsx(
+                      "mt-1.5 block text-[11px] font-medium",
+                      i === stepIndex ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500",
+                    )}
+                    aria-current={i === stepIndex ? "step" : undefined}
+                  >
+                    {t(`donation.step_${s}`)}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
         </div>
 
-        <div className="px-6 py-6">
-          {step === 1 && (
-            <div className="space-y-5 animate-fade-in-up">
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                {t("donation.step1_title")}
+        {/* Order summary (payment step) */}
+        {step === "payment" && selectedMethod && (
+          <div className="flex items-center justify-between gap-3 bg-slate-50 px-5 py-3 dark:bg-slate-800/50 sm:px-6">
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t("donation.your_donation")}</p>
+              <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
+                {branchName ? `CEM — ${branchName}` : "Club Excellence Madagascar"}
               </p>
-              <div className="grid grid-cols-4 gap-2.5">
-                {PRESET_AMOUNTS.map((preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => {
-                      setAmount(preset);
-                      setCustomAmount("");
-                    }}
-                    className={clsx(
-                      "rounded-xl border px-3 py-3 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5",
-                      !customAmount && amount === preset
-                        ? "border-orange-600 bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400"
-                        : "border-slate-200 text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:text-slate-300",
-                    )}
-                  >
-                    {preset}€
-                  </button>
-                ))}
-              </div>
-              <input
-                type="number"
-                min={1}
-                placeholder={t("donation.custom_amount") ?? ""}
-                value={customAmount}
-                onChange={(e) => setCustomAmount(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition-colors focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-              />
-
-              <div className="flex items-center gap-2.5 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
-                <BookOpen className="h-4 w-4 shrink-0" aria-hidden />
-                <span>
-                  {effectiveAmount || 0}€ {t("donation.impact_prefix")}{" "}
-                  <strong>{impactBooks}</strong> {t("donation.impact_books")}
-                </span>
-              </div>
-
-              <Button
-                variant="primary"
-                className="w-full justify-center"
-                disabled={!effectiveAmount || effectiveAmount <= 0}
-                onClick={() => setStep(2)}
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-extrabold tabular-nums tracking-tight text-slate-900 dark:text-white">
+                {formatAmount(amount, CURRENCY_BY_METHOD[selectedMethod])}
+              </p>
+              <button
+                type="button"
+                onClick={() => setStep("amount")}
+                className="text-xs font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
               >
-                {t("donation.confirm")}
-              </Button>
+                {t("donation.edit")}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Body */}
+        <div key={step} className="overflow-y-auto px-5 py-6 animate-fade-in-up sm:px-6">
+          {loading && (
+            <div className="flex justify-center py-10 text-slate-400">
+              <Spinner className="h-6 w-6" />
             </div>
           )}
 
-          {step === 2 && (
-            <div className="space-y-5 animate-fade-in-up">
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                {t("donation.step2_title")}
+          {!loading && !selectedMethod && (
+            <div className="space-y-4 py-4 text-center">
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                {isError ? t("donation.load_error") : t("donation.unavailable")}
               </p>
-              <div>
-                <label htmlFor="donor-email" className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                  {t("donation.email_label")}
-                </label>
-                <input
-                  id="donor-email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="vous@exemple.com"
-                  className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition-colors focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                />
-              </div>
-
-              {createDonation.isError && (
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  Une erreur est survenue. Merci de réessayer.
-                </p>
+              {isError && (
+                <Button variant="ghost" onClick={() => refetch()}>
+                  {t("donation.retry")}
+                </Button>
               )}
-
-              <Button
-                variant="primary"
-                className="w-full justify-center"
-                disabled={!email || createDonation.isPending}
-                onClick={handleConfirm}
-              >
-                {createDonation.isPending ? "…" : t("donation.confirm")}
-              </Button>
             </div>
           )}
 
-          {step === 3 && (
-            <div className="flex flex-col items-center gap-3 py-4 text-center animate-fade-in-up">
-              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
-                <CheckCircle2 className="h-8 w-8" aria-hidden />
-              </span>
-              <h3 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-                {t("donation.step3_title")}
-              </h3>
-              <p className="max-w-xs text-sm text-slate-500 dark:text-slate-400">
-                {t("donation.success_message")}
-              </p>
-              <Button variant="ghost" onClick={onClose} className="mt-2">
-                {t("donation.close")}
-              </Button>
-            </div>
+          {!loading && options && selectedMethod && step === "amount" && (
+            <AmountStep
+              options={options}
+              methods={methods}
+              method={selectedMethod}
+              onMethodChange={changeMethod}
+              amount={amount}
+              customAmount={customAmount}
+              onPresetChange={(value) => {
+                setPresetAmount(value);
+                setCustomAmount("");
+              }}
+              onCustomAmountChange={setCustomAmount}
+              onContinue={() => setStep("payment")}
+            />
+          )}
+
+          {options && step === "payment" && selectedMethod === "CARD" && (
+            <CardPaymentStep
+              amount={amount}
+              branchId={branchId}
+              onSuccess={(r, email) => handleSuccess(r, email)}
+            />
+          )}
+
+          {options && step === "payment" && selectedMethod === "MOBILE_MONEY" && (
+            <MobileMoneyStep amount={amount} branchId={branchId} options={options.mobileMoney} onSuccess={(r) => handleSuccess(r)} />
+          )}
+
+          {step === "success" && receipt && (
+            <DonationSuccess receipt={receipt} branchName={branchName} emailSentTo={receiptEmail} onClose={onClose} />
           )}
         </div>
       </div>

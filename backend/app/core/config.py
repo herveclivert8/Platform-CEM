@@ -75,6 +75,18 @@ class Settings(BaseSettings):
     # Frontend (liens dans les emails : réinitialisation de mot de passe, etc.)
     FRONTEND_URL: str = "http://localhost:5173"
 
+    # Emails (SMTP). Sans SMTP_USER, les emails ne partent pas : leur contenu est écrit dans les logs.
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    FROM_EMAIL: str = "noreply@cem.mg"
+    FROM_NAME: str = "Club Excellence Madagascar"
+
+    # Paiement par carte : "simulation" (aucun paiement réel, refusé en production) ou "disabled".
+    # Un vrai prestataire (Stripe...) s'ajoute dans app/services/payments.py.
+    CARD_PAYMENT_PROVIDER: str = "simulation"
+
     # Upload de fichiers
     STORAGE_TYPE: str = "local"
     ALLOWED_IMAGE_EXTENSIONS: List[str] = Field(default=["jpg", "jpeg", "png", "gif", "webp"])

@@ -20,6 +20,7 @@ import { MyBranchPage } from "./pages/admin/MyBranchPage";
 import { AccountsPage } from "./pages/admin/AccountsPage";
 import { AuditPage } from "./pages/admin/AuditPage";
 import { SocialLinksPage } from "./pages/admin/SocialLinksPage";
+import { PaymentInfoPage } from "./pages/admin/PaymentInfoPage";
 
 const BranchesDirectoryPage = lazy(() =>
   import("./pages/BranchesDirectoryPage").then((m) => ({ default: m.BranchesDirectoryPage })),
@@ -107,6 +108,7 @@ export const router = createBrowserRouter([
               { path: "accounts", element: <AccountsPage /> },
               { path: "audit", element: <AuditPage /> },
               { path: "social-links", element: <SocialLinksPage /> },
+              { path: "payment-info", element: <PaymentInfoPage /> },
             ],
           },
         ],

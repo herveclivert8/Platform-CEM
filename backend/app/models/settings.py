@@ -21,6 +21,12 @@ class AssociationSettings(Base):
     linkedin_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     youtube_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
 
+    # Comptes Mobile Money (en Ar) affichés aux donateurs. Un opérateur sans numéro n'est pas proposé.
+    mobile_money_holder: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    mvola_number: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    orange_money_number: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    airtel_money_number: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

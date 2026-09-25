@@ -3,10 +3,11 @@ import asyncio
 from app.core.security import hash_password
 from app.db.session import AsyncSessionLocal
 from app.models.branch import Branch
-from app.models.donation import Donation
+from app.models.donation import Donation, DonationStatus, MobileOperator, PaymentMethod
 from app.models.post import Post, PostImage, Pillar, PostStatus
 from app.models.project_submission import ProjectSubmission
 from app.models.publication import Publication, PublicationFormat
+from app.models.settings import AssociationSettings
 from app.models.user import User, UserRole
 
 
@@ -193,11 +194,45 @@ async def seed() -> None:
         db.add_all(submissions)
 
         donations = [
-            Donation(branch_id=branches[1].id, amount=20.0, donor_email="donateur1@example.com"),
-            Donation(branch_id=branches[2].id, amount=50.0, donor_email="donateur3@example.com"),
-            Donation(branch_id=None, amount=100.0, donor_email="donateur2@example.com"),
+            Donation(
+                branch_id=branches[1].id, amount=20.0, currency="EUR", donor_email="donateur1@example.com",
+                donor_name="Hery Andriamanana", payment_method=PaymentMethod.CARD,
+                transaction_reference="sim_pi_demo0001", status=DonationStatus.CONFIRMED,
+            ),
+            Donation(
+                branch_id=None, amount=100.0, currency="EUR", donor_email="donateur2@example.com",
+                payment_method=PaymentMethod.CARD, transaction_reference="sim_pi_demo0002",
+                status=DonationStatus.CONFIRMED,
+            ),
+            Donation(
+                branch_id=branches[0].id, amount=50000.0, declared_amount=50000.0, currency="MGA",
+                donor_email="donateur3@example.mg", donor_name="Lova Rakoto", donor_phone="0340000001",
+                payment_method=PaymentMethod.MOBILE_MONEY, mobile_operator=MobileOperator.MVOLA.value,
+                transaction_reference="DEMO123456789", status=DonationStatus.PENDING,
+            ),
+            Donation(
+                branch_id=branches[0].id, amount=20000.0, declared_amount=20000.0, currency="MGA",
+                donor_email="donateur4@example.mg", donor_phone="0320000002",
+                payment_method=PaymentMethod.MOBILE_MONEY, mobile_operator=MobileOperator.ORANGE_MONEY.value,
+                transaction_reference="PP260925.DEMO.A1", status=DonationStatus.CONFIRMED,
+            ),
+            Donation(
+                branch_id=branches[1].id, amount=10000.0, declared_amount=10000.0, currency="MGA",
+                donor_email="donateur5@example.mg", donor_phone="0340000003",
+                payment_method=PaymentMethod.MOBILE_MONEY, mobile_operator=MobileOperator.MVOLA.value,
+                transaction_reference="DEMO987654321", status=DonationStatus.REJECTED,
+                rejection_reason="Référence introuvable dans l'historique MVola",
+            ),
         ]
         db.add_all(donations)
+
+        # Numéros FICTIFS pour la démo : à remplacer dans l'admin (Coordonnées de paiement)
+        settings = await db.get(AssociationSettings, 1) or AssociationSettings(id=1)
+        settings.mobile_money_holder = "CLUB EXCELLENCE MADAGASCAR (DÉMO)"
+        settings.mvola_number = "034 00 000 00"
+        settings.orange_money_number = "032 00 000 00"
+        settings.airtel_money_number = "033 00 000 00"
+        db.add(settings)
 
         await db.commit()
         print("Seed terminé avec succès.")

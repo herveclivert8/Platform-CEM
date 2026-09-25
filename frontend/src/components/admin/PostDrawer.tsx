@@ -6,6 +6,7 @@ import { Button } from "../ui/Button";
 import { ALL_PILLARS, type Pillar, type Post, type PostStatus } from "../../types/post";
 import { useCreatePost, useUpdatePost } from "../../hooks/useAdminPosts";
 import { usePillarLabels } from "../../hooks/usePillarLabels";
+import { useBranches } from "../../hooks/useBranches";
 
 interface PostDrawerProps {
   open: boolean;
@@ -43,7 +44,12 @@ function PostForm({
   const [content, setContent] = useState(post?.content ?? "");
   const [pillar, setPillar] = useState<Pillar>(post?.pillar ?? "EDUCATION");
   const [images, setImages] = useState<string[]>(post?.images ?? []);
-  const createPost = useCreatePost(branchId);
+  // No target branch (Super Admin scoped to "all branches"): the form asks for one.
+  const needsBranchChoice = !post && branchId === undefined;
+  const [chosenBranchId, setChosenBranchId] = useState<number | undefined>(undefined);
+  const { data: branchesData } = useBranches();
+  const targetBranchId = needsBranchChoice ? chosenBranchId : branchId;
+  const createPost = useCreatePost(targetBranchId);
   const updatePost = useUpdatePost(post?.id);
   const pillarLabels = usePillarLabels();
 
@@ -59,9 +65,29 @@ function PostForm({
 
   const isPending = createPost.isPending || updatePost.isPending;
   const hasError = createPost.isError || updatePost.isError;
+  const canSave = Boolean(title && content && targetBranchId !== undefined) && !isPending;
 
   return (
     <div className="space-y-5">
+      {needsBranchChoice && (
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">Antenne</label>
+          <select
+            required
+            value={chosenBranchId ?? ""}
+            onChange={(e) => setChosenBranchId(e.target.value ? Number(e.target.value) : undefined)}
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+          >
+            <option value="">Antenne de publication…</option>
+            {branchesData?.items.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.cityName}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div>
         <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">Titre</label>
         <input
@@ -112,7 +138,7 @@ function PostForm({
         <Button
           variant="ghost"
           className="flex-1 justify-center border border-slate-200 dark:border-slate-700"
-          disabled={!title || !content || isPending}
+          disabled={!canSave}
           onClick={() => save("DRAFT")}
         >
           Enregistrer en brouillon
@@ -120,7 +146,7 @@ function PostForm({
         <Button
           variant="secondary"
           className="flex-1 justify-center"
-          disabled={!title || !content || isPending}
+          disabled={!canSave}
           onClick={() => save("PUBLISHED")}
         >
           {isPending ? "…" : "Publier"}

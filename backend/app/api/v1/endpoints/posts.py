@@ -127,6 +127,8 @@ async def create_post(
     Accessible: Admin de la branche + Super Admin.
     """
     await verify_branch_access(user, branch_id)
+    if not await db.get(Branch, branch_id):
+        raise HTTPException(status_code=404, detail="Branch not found")
 
     post = Post(
         branch_id=branch_id,

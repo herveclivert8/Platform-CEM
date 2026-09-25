@@ -88,3 +88,23 @@ async def list_submissions(
         page_size=page_size,
         total_pages=((total or 0) + page_size - 1) // page_size,
     )
+
+
+@router.delete("/{branch_id}/submissions/{submission_id}", status_code=204)
+async def delete_submission(
+    branch_id: int,
+    submission_id: int,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Supprimer un dossier. Accessible: Admin de la branche + Super Admin."""
+    await verify_branch_access(user, branch_id)
+
+    submission = await db.get(ProjectSubmission, submission_id)
+    if not submission or submission.branch_id != branch_id:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    await db.delete(submission)
+    await db.commit()
+
+    return None

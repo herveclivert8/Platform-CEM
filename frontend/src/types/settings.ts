@@ -27,3 +27,28 @@ export interface SocialLinksInput {
   linkedinUrl?: string;
   youtubeUrl?: string;
 }
+
+export interface PaymentInfo {
+  mobileMoneyHolder: string | null;
+  mvolaNumber: string | null;
+  orangeMoneyNumber: string | null;
+  airtelMoneyNumber: string | null;
+}
+
+export interface PaymentInfoDto {
+  mobile_money_holder: string | null;
+  mvola_number: string | null;
+  orange_money_number: string | null;
+  airtel_money_number: string | null;
+}
+
+export function mapPaymentInfo(dto: PaymentInfoDto): PaymentInfo {
+  return {
+    mobileMoneyHolder: dto.mobile_money_holder,
+    mvolaNumber: dto.mvola_number,
+    orangeMoneyNumber: dto.orange_money_number,
+    airtelMoneyNumber: dto.airtel_money_number,
+  };
+}
+
+export type PaymentInfoInput = { [K in keyof PaymentInfo]: string };

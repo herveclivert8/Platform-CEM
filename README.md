@@ -5,70 +5,196 @@ Stack : **React + Tailwind CSS** (frontend), **FastAPI** (backend), **PostgreSQL
 ## Prérequis
 
 - Node.js 20+
-- Python 3.12
-- Docker Desktop (pour PostgreSQL en local) — ou une instance PostgreSQL déjà installée
+- **Python 3.12** — les versions plus récentes (3.13, 3.14) ne sont pas supportées : `pillow==10.4.0` n'a pas de paquet pré-compilé pour elles et l'installation échoue. Si votre système a une autre version, utilisez [uv](https://docs.astral.sh/uv/) (voir ci-dessous).
+- Docker (Docker Desktop sous Windows/macOS, Docker Engine sous Linux) — ou une instance PostgreSQL déjà installée
 
-## 1. Base de données
+Il faut **trois terminaux** : base de données, backend, frontend.
+
+## 1. Base de données (PostgreSQL)
 
 ```bash
 docker compose up -d
+docker compose ps        # le service "db" doit être "healthy"
 ```
 
-Démarre PostgreSQL sur `localhost:5432` (utilisateur `cem`, mot de passe `cem`, base `cem`).
+Démarre PostgreSQL sur `localhost:5432` (utilisateur `cem`, mot de passe `cem`, base `cem`). Les données sont conservées dans un volume Docker ; `docker compose down` arrête la base sans les effacer.
+
+> **Linux — `permission denied ... /var/run/docker.sock`** : votre utilisateur n'est pas dans le groupe `docker`.
+> ```bash
+> sudo usermod -aG docker $USER
+> ```
+> Puis **déconnectez-vous et reconnectez-vous** (ou redémarrez). Vérifiez avec `id` que `docker` apparaît dans la liste des groupes.
 
 ## 2. Backend (FastAPI)
 
+### Installation (une seule fois)
+
+**Linux / macOS**
+
 ```bash
 cd backend
-python -m venv .venv
-./.venv/Scripts/activate      # PowerShell : .venv\Scripts\Activate.ps1
+python3.12 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-copy .env.example .env        # puis éditez .env si besoin (voir OAuth ci-dessous)
+cp .env.example .env           # puis éditez SECRET_KEY
+```
 
-alembic upgrade head           # applique le schéma de base de données
-python -m app.seed             # peuple des données de démonstration
+Si `python3.12` n'est pas installé, utilisez uv à la place des lignes `venv` / `pip` :
 
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh   # puis ouvrez un nouveau terminal
+uv venv --python 3.12 .venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
+```
+
+**Windows (PowerShell)**
+
+```powershell
+cd backend
+py -3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+copy .env.example .env
+```
+
+### Base de données et données de démo (une seule fois)
+
+```bash
+alembic upgrade head           # crée les tables
+python -m app.seed             # ajoute les données de démonstration
+```
+
+> `app.seed` s'exécute **une seule fois**, sur une base vide : le relancer crée des doublons.
+
+**Après chaque `git pull`**, appliquez les éventuelles nouvelles migrations (sinon le backend plante sur des colonnes manquantes) :
+
+```bash
+alembic upgrade head
+```
+
+### Lancement
+
+```bash
+cd backend
+source .venv/bin/activate      # Windows : .venv\Scripts\Activate.ps1
 uvicorn app.main:app --reload --port 8000
 ```
 
 L'API est disponible sur http://localhost:8000, documentation interactive sur http://localhost:8000/docs.
 
+Le message `Redis connection failed` au démarrage est normal : Redis est optionnel (`USE_REDIS=false` par défaut).
+
 ### Comptes de démonstration (créés par `app.seed`)
 
 | Email | Mot de passe | Rôle |
 |---|---|---|
-| fanja@cem.mg | password123 | contributor |
-| tojo@cem.mg | password123 | contributor |
-| admin@cem.mg | password123 | admin |
+| super.admin@cem-madagascar.org | SuperAdmin123! | super admin |
+| antananarivo@cem-madagascar.org | BranchAdmin123! | admin d'antenne (Antananarivo) |
+| fianarantsoa@cem-madagascar.org | BranchAdmin123! | admin d'antenne (Fianarantsoa) |
+| paris@cem-madagascar.org | BranchAdmin123! | admin d'antenne (Paris) |
+| lyon@cem-madagascar.org | BranchAdmin123! | admin d'antenne (Lyon) |
 
-### Connexion Google (OAuth)
+### Variables d'environnement
 
-La connexion Google est déjà câblée côté backend et frontend, mais nécessite vos propres identifiants :
+Fichier `backend/.env`, créé à partir de [`backend/.env.example`](backend/.env.example). Il contient des secrets : il est ignoré par git et ne doit jamais être publié.
 
-1. Créez un client OAuth 2.0 sur [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
-2. Ajoutez `http://localhost:8000/api/v1/auth/oauth/google/callback` comme URI de redirection autorisée.
-3. Renseignez `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` dans `backend/.env`.
+| Variable | Obligatoire | Rôle |
+|---|---|---|
+| `DATABASE_URL` | oui | Connexion PostgreSQL (valeur de `.env.example` = base Docker) |
+| `SECRET_KEY` | oui | Signature des jetons de connexion. Générez-en une : `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
+| `ENVIRONMENT` | non | `development` (défaut) ou `production` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `FROM_EMAIL`, `FROM_NAME` | non | Envoi des emails (voir ci-dessous) |
+| `CARD_PAYMENT_PROVIDER` | non | `simulation` (défaut) ou `disabled` — voir [Dons](#dons) |
+| `USE_REDIS`, `REDIS_URL` | non | Cache Redis (désactivé par défaut) |
 
-Sans ces identifiants, l'inscription/connexion par email + mot de passe fonctionne normalement ; seul le bouton « Continuer avec Google » échouera.
+Redémarrez le backend après toute modification de `.env`.
+
+### Emails (SMTP)
+
+Le backend envoie des emails de remerciement aux donateurs et des liens de réinitialisation de mot de passe.
+
+- **Sans SMTP configuré** (par défaut) : aucun email ne part. Leur contenu s'affiche dans le terminal du backend, sous `[EMAIL NON ENVOYÉ — SMTP non configuré]` — pratique en développement.
+- **Pour envoyer de vrais emails**, ajoutez dans `backend/.env` (exemple Gmail) :
+
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=adresse.du.club@gmail.com
+SMTP_PASSWORD=mot-de-passe-d-application
+FROM_EMAIL=adresse.du.club@gmail.com
+FROM_NAME=Club Excellence Madagascar
+```
+
+> Avec Gmail, `SMTP_PASSWORD` est un **mot de passe d'application** (compte Google → Sécurité → Validation en deux étapes → Mots de passe des applications), pas le mot de passe habituel. Pour un volume important, préférez un service dédié (Brevo, Mailjet…).
 
 ## 3. Frontend (React + Tailwind)
 
 ```bash
 cd frontend
-npm install
+npm install                    # une seule fois
 npm run dev
 ```
 
-Disponible sur http://localhost:5173 (le dev-server proxie automatiquement `/api` vers `http://localhost:8000`).
+Disponible sur http://localhost:5173. Le serveur de dev redirige automatiquement `/api` et `/uploads` vers le backend (`http://localhost:8000`).
+
+> Si la console affiche `http proxy error ... ECONNREFUSED` (ou des erreurs **502** dans le navigateur), c'est que le backend n'est pas lancé.
+
+## Dons
+
+Le bouton « Faire un don » (page d'accueil, pages d'antenne) propose deux moyens de paiement.
+
+### Carte bancaire (€) — simulée pour l'instant
+
+Le don est payé en ligne et **confirmé automatiquement** ; le donateur reçoit un email de remerciement. Comme sur Stripe, le numéro de carte ne quitte jamais le navigateur : seul un jeton est envoyé au serveur.
+
+Tant qu'aucun prestataire réel n'est branché, le paiement est **simulé** (`CARD_PAYMENT_PROVIDER=simulation`) : aucun argent ne circule, et seules ces cartes de test sont acceptées (date d'expiration future, CVC quelconque) :
+
+| Carte | Résultat |
+|---|---|
+| `4242 4242 4242 4242` | Paiement accepté |
+| `5555 5555 5555 4444` | Paiement accepté (Mastercard) |
+| `4000 0000 0000 0002` | Carte refusée |
+| `4000 0000 0000 9995` | Fonds insuffisants |
+
+La simulation est **automatiquement désactivée si `ENVIRONMENT=production`**. Pour de vrais paiements, ajoutez un prestataire dans [`backend/app/services/payments.py`](backend/app/services/payments.py) et remplacez `tokenizeCard` dans [`frontend/src/lib/payments/card.ts`](frontend/src/lib/payments/card.ts) par le SDK du prestataire.
+
+> ⚠️ Stripe n'accepte pas les structures enregistrées à Madagascar : il faut une entité dans un pays pris en charge (par exemple l'association en France), ou un autre prestataire.
+
+### Mobile Money (Ar) — MVola, Orange Money, Airtel Money
+
+Sans API opérateur : le site affiche le numéro et le nom du titulaire, le donateur envoie l'argent depuis son téléphone puis **déclare son paiement** (numéro qui a envoyé, référence reçue par SMS, montant). Le don est alors **« À vérifier »**.
+
+Dans **Admin → Dons**, l'admin retrouve la transaction dans l'historique du compte Mobile Money (référence, numéro, montant, date), puis :
+
+- **valide** le don (en corrigeant si besoin le montant ou la référence) → email de remerciement au donateur ;
+- ou le **rejette** avec un motif (aucun email).
+
+Il peut aussi enregistrer un paiement reçu sans déclaration (« Enregistrer un don reçu ») et supprimer un don non validé. Une même référence ne peut être déclarée qu'une fois par opérateur. Seuls les dons confirmés comptent dans les totaux.
+
+### Configuration
+
+Dans **Admin → Coordonnées de paiement** (super admin) : nom du titulaire et numéros MVola / Orange Money / Airtel Money. Un opérateur sans numéro n'est pas proposé aux donateurs.
+
+> Les données de démo (`app.seed`) contiennent des **numéros fictifs** : remplacez-les par les vrais comptes de l'association avant toute utilisation réelle.
 
 ## Structure du projet
 
-- `backend/app/` — API FastAPI (modèles SQLAlchemy, schémas Pydantic, endpoints, migrations Alembic)
-- `frontend/src/` — application React (pages, composants, i18n FR/EN, client API)
+- `backend/app/` — API FastAPI (modèles SQLAlchemy, schémas Pydantic, endpoints, services)
+- `backend/app/services/payments.py` — prestataire de paiement par carte (simulation)
+- `backend/alembic/` — migrations de base de données
+- `frontend/src/` — application React (pages publiques, espace `/admin`, composants, i18n, client API)
+- `frontend/src/components/donation/` — formulaire de don (carte et Mobile Money)
 - `docker-compose.yml` — service PostgreSQL pour le développement local
 
-## Périmètre de cette itération
+## Fonctionnalités
 
-Implémenté : page d'accueil complète (recherche, projets récents, publications, appels à participation, mélangeur d'idées), authentification email/mot de passe + Google OAuth, i18n FR/EN.
-
-Non implémenté (prochaines itérations) : pages complètes Projets / Ressources / Événements (routes stub actuellement), upload de fichiers réel pour les publications, modération du fil d'idées.
+- **Site public** : page d'accueil, annuaire et carte des antennes (`/antennes`), page de chaque antenne et ses actualités, formulaire de dépôt de dossier entrepreneur, dons par carte ou Mobile Money.
+- **Espace d'administration** (`/admin`) :
+  - actualités (le super admin choisit l'antenne de publication) ;
+  - dossiers entrepreneurs : consultation, ajout d'un dossier reçu hors du site, suppression ;
+  - dons : vérification et validation des dons Mobile Money, rejet motivé, saisie manuelle, suppression des dons non validés ;
+  - paramètres, profil de son antenne ;
+  - pour le super admin : antennes, comptes admin, journal d'audit, réseaux sociaux, coordonnées de paiement.
+- **Authentification** : email + mot de passe (JWT), mot de passe oublié / réinitialisation, deux niveaux de rôle (super admin, admin d'antenne).
+- **Langues** : français et anglais (site public).

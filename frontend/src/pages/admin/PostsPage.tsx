@@ -44,13 +44,8 @@ export function PostsPage() {
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Mes Publications</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Actualités, rapports de terrain et projets.</p>
         </div>
-        <Button
-          variant="secondary"
-          icon={<Plus className="h-4 w-4" />}
-          disabled={!targetBranchId}
-          onClick={openCreate}
-          title={!targetBranchId ? "Sélectionnez une antenne spécifique pour créer un post" : undefined}
-        >
+        {/* Pas d'antenne ciblée (Super Admin en vue "Toutes les antennes") : le formulaire la demande. */}
+        <Button variant="secondary" icon={<Plus className="h-4 w-4" />} onClick={openCreate}>
           Nouveau post
         </Button>
       </div>

@@ -5,6 +5,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useAdminPosts } from "../../hooks/useAdminPosts";
 import { useAdminSubmissions } from "../../hooks/useAdminSubmissions";
 import { useAdminDonations } from "../../hooks/useAdminDonations";
+import { formatConfirmedTotals } from "../../types/donation";
 import { useSuperAdminStatistics } from "../../hooks/useSuperAdminStats";
 
 function getGreeting(): string {
@@ -47,7 +48,7 @@ export function DashboardPage() {
 
   const publishedCount = posts?.filter((p) => p.status === "PUBLISHED").length ?? 0;
   const draftCount = posts?.filter((p) => p.status === "DRAFT").length ?? 0;
-  const donationTotal = donations?.reduce((sum, d) => sum + d.amount, 0) ?? 0;
+  const donationTotal = formatConfirmedTotals(donations);
 
   const greetingName = isSuperAdmin ? "Super Admin" : user?.firstName;
 
@@ -66,8 +67,8 @@ export function DashboardPage() {
         <StatCard icon={Briefcase} label="Dossiers reçus" value={submissions?.length ?? 0} loading={submissionsLoading} />
         <StatCard
           icon={HeartHandshake}
-          label="Total des dons"
-          value={`${donationTotal.toFixed(0)}€`}
+          label="Dons confirmés"
+          value={donationTotal}
           loading={donationsLoading}
         />
       </div>

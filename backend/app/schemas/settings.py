@@ -22,3 +22,21 @@ class SocialLinksUpdate(BaseModel):
     x_url: Optional[str] = Field(None, max_length=512)
     linkedin_url: Optional[str] = Field(None, max_length=512)
     youtube_url: Optional[str] = Field(None, max_length=512)
+
+
+class PaymentInfoRead(BaseModel):
+    """Comptes Mobile Money affichés aux donateurs"""
+    mobile_money_holder: Optional[str] = None
+    mvola_number: Optional[str] = None
+    orange_money_number: Optional[str] = None
+    airtel_money_number: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PaymentInfoUpdate(BaseModel):
+    mobile_money_holder: Optional[str] = Field(None, max_length=255)
+    mvola_number: Optional[str] = Field(None, max_length=255)
+    orange_money_number: Optional[str] = Field(None, max_length=255)
+    airtel_money_number: Optional[str] = Field(None, max_length=255)

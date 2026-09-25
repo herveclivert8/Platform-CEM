@@ -11,6 +11,8 @@ alembic==1.13.0
 
 # Security
 passlib[bcrypt]==1.7.4
+bcrypt==4.0.1  # passlib 1.7.4 est incompatible avec bcrypt >= 4.1 (le seed plante)
+itsdangerous>=2.1  # requis par SessionMiddleware (starlette) dans app/main.py
 python-jose[cryptography]==3.3.0
 PyJWT==2.13.0
 cryptography>=41.0.7
@@ -24,10 +26,7 @@ email-validator==2.1.0
 jinja2==3.1.4
 pillow==10.4.0
 
-# API Documentation
-python-multipart==0.0.6
-
-# CORS
+# Formulaires / upload (multipart)
 python-multipart==0.0.6
 
 # Redis (optionnel - for sessions, cache, rate limit)

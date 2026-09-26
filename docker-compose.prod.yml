@@ -1,0 +1,54 @@
+# Déploiement complet : PostgreSQL + API + site (nginx), sur un seul serveur.
+#   cp .env.prod.example .env.prod      # puis renseignez les valeurs
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+# Le site écoute sur le port HTTP_PORT (80 par défaut). Mettez un terminateur HTTPS devant
+# (Caddy, Traefik, nginx de l'hébergeur...) pour une mise en ligne publique.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cem
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans .env.prod}
+      POSTGRES_DB: cem
+    volumes:
+      - cem_prod_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cem"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://cem:${POSTGRES_PASSWORD}@db:5432/cem
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY manquant dans .env.prod}
+      ENVIRONMENT: production
+      USE_REDIS: "false"
+      CARD_PAYMENT_PROVIDER: ${CARD_PAYMENT_PROVIDER:-disabled}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@cem.mg}
+      FROM_NAME: ${FROM_NAME:-Club Excellence Madagascar}
+    volumes:
+      - cem_prod_uploads:/app/uploads
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${HTTP_PORT:-80}:80"
+
+volumes:
+  cem_prod_postgres:
+  cem_prod_uploads:

@@ -52,3 +52,38 @@ export function mapPaymentInfo(dto: PaymentInfoDto): PaymentInfo {
 }
 
 export type PaymentInfoInput = { [K in keyof PaymentInfo]: string };
+
+/** Home page cover; a null field means "use the site's default" (translations / default photo). */
+export interface HomeHero {
+  imageUrl: string | null;
+  badgeFr: string | null;
+  badgeEn: string | null;
+  titleFr: string | null;
+  titleEn: string | null;
+  subtitleFr: string | null;
+  subtitleEn: string | null;
+}
+
+export interface HomeHeroDto {
+  hero_image_url: string | null;
+  hero_badge_fr: string | null;
+  hero_badge_en: string | null;
+  hero_title_fr: string | null;
+  hero_title_en: string | null;
+  hero_subtitle_fr: string | null;
+  hero_subtitle_en: string | null;
+}
+
+export function mapHomeHero(dto: HomeHeroDto): HomeHero {
+  return {
+    imageUrl: dto.hero_image_url,
+    badgeFr: dto.hero_badge_fr,
+    badgeEn: dto.hero_badge_en,
+    titleFr: dto.hero_title_fr,
+    titleEn: dto.hero_title_en,
+    subtitleFr: dto.hero_subtitle_fr,
+    subtitleEn: dto.hero_subtitle_en,
+  };
+}
+
+export type HomeHeroInput = Record<keyof HomeHero, string>;

@@ -8,7 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.utils import formataddr
 import logging
 import smtplib
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime
 from jinja2 import Template
 

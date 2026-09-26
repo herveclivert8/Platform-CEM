@@ -31,22 +31,30 @@ export function BranchHubPage() {
     );
   }
 
+  const acceptsDonations = branch.status === "active";
+
   return (
-    <div className="pb-20 lg:pb-0">
+    <div className={acceptsDonations ? "pb-20 lg:pb-0" : undefined}>
       <HubHero branch={branch} />
       <KpiGrid branchId={branch.id} />
 
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 pt-6 sm:px-6 lg:grid-cols-[1fr_320px] lg:px-8">
+      <div
+        className={`mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 pt-6 sm:px-6 lg:px-8 ${
+          acceptsDonations ? "lg:grid-cols-[1fr_320px]" : ""
+        }`}
+      >
         <div className="min-w-0">
           <HubTabs branch={branch} />
         </div>
-        <div className="lg:py-16">
-          <DonationSidebar branch={branch} />
-        </div>
+        {acceptsDonations && (
+          <div className="lg:py-16">
+            <DonationSidebar branch={branch} />
+          </div>
+        )}
       </div>
 
       <OtherBranchesCarousel currentBranchId={branch.id} />
-      <BottomActionBar branch={branch} />
+      {acceptsDonations && <BottomActionBar branch={branch} />}
     </div>
   );
 }

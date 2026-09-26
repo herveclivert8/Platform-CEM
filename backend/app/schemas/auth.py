@@ -2,7 +2,7 @@
 Schémas Pydantic pour authentification
 """
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import Optional
 
 
@@ -11,13 +11,14 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "email": "admin@cem.mg",
                 "password": "SecurePassword123!",
             }
         }
+    )
 
 
 class CurrentUserResponse(BaseModel):
@@ -38,8 +39,8 @@ class LoginResponse(BaseModel):
     token_type: str = "bearer"
     user: CurrentUserResponse
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "access_token": "token_123_1234567890.123",
                 "refresh_token": "token_456_1234567890.456",
@@ -55,28 +56,31 @@ class LoginResponse(BaseModel):
                 },
             }
         }
+    )
 
 
 class RefreshTokenRequest(BaseModel):
     """Requête de refresh token"""
     refresh_token: str
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "refresh_token": "token_456_1234567890.456",
             }
         }
+    )
 
 
 class LogoutResponse(BaseModel):
     """Réponse logout"""
     message: str
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {"message": "Déconnecté avec succès"}
         }
+    )
 
 
 class ChangePasswordRequest(BaseModel):
@@ -99,3 +103,8 @@ class ResetPasswordRequest(BaseModel):
     """Réinitialisation de mot de passe via token"""
     token: str
     new_password: str = Field(..., min_length=8)
+
+
+class MessageResponse(BaseModel):
+    """Réponse simple : un message de confirmation"""
+    message: str

@@ -83,9 +83,11 @@ uvicorn app.main:app --reload --port 8000
 
 L'API est disponible sur http://localhost:8000, documentation interactive sur http://localhost:8000/docs.
 
-Le message `Redis connection failed` au démarrage est normal : Redis est optionnel (`USE_REDIS=false` par défaut).
+Redis est optionnel (`USE_REDIS=false` par défaut) : sans lui, la limite de requêtes est gérée en mémoire.
 
 ### Comptes de démonstration (créés par `app.seed`)
+
+La page de connexion n'est pas liée depuis le site public : les admins s'y rendent directement à l'adresse `/login` (par ex. http://localhost:5173/login). Une fois connecté, le lien « Espace Admin » apparaît dans la barre de navigation.
 
 | Email | Mot de passe | Rôle |
 |---|---|---|
@@ -106,7 +108,7 @@ Fichier `backend/.env`, créé à partir de [`backend/.env.example`](backend/.en
 | `ENVIRONMENT` | non | `development` (défaut) ou `production` |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `FROM_EMAIL`, `FROM_NAME` | non | Envoi des emails (voir ci-dessous) |
 | `CARD_PAYMENT_PROVIDER` | non | `simulation` (défaut) ou `disabled` — voir [Dons](#dons) |
-| `USE_REDIS`, `REDIS_URL` | non | Cache Redis (désactivé par défaut) |
+| `USE_REDIS`, `REDIS_URL` | non | Redis pour la limite de requêtes (désactivé par défaut ; `USE_REDIS=true` pour l'utiliser) |
 
 Redémarrez le backend après toute modification de `.env`.
 
@@ -140,11 +142,59 @@ Disponible sur http://localhost:5173. Le serveur de dev redirige automatiquement
 
 > Si la console affiche `http proxy error ... ECONNREFUSED` (ou des erreurs **502** dans le navigateur), c'est que le backend n'est pas lancé.
 
+## Tests et qualité
+
+Les tests du backend (authentification, permissions par antenne, dons, statut des antennes) tournent sur une base dédiée **`cem_test`**, entièrement effacée à chaque lancement. Ils refusent de démarrer sur une base dont le nom ne finit pas par `_test`.
+
+Créez-la une seule fois :
+
+```bash
+docker compose exec db createdb -U cem cem_test                                  # base Docker
+# ou, avec un PostgreSQL installé : CREATE DATABASE cem_test OWNER cem;
+```
+
+Puis, dans `backend/` (environnement virtuel activé) :
+
+```bash
+pip install -r requirements-dev.txt   # une seule fois : ajoute l'outil de lint (ruff)
+ruff check .                          # lint
+pytest                                # tests
+```
+
+Autre base : `TEST_DATABASE_URL=postgresql+asyncpg://user:mdp@hote:5432/xxx_test pytest`.
+
+Côté frontend : `npm run lint` puis `npm run build`.
+
+**Intégration continue** : à chaque push et pull request, GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) lance le lint et les tests du backend, le lint et le build du frontend, puis construit les deux images Docker. Le résultat s'affiche dans l'onglet *Actions* du dépôt et sur chaque pull request.
+
+## Déploiement (Docker)
+
+Chaque partie a son image : [`backend/Dockerfile`](backend/Dockerfile) (API, applique les migrations au démarrage) et [`frontend/Dockerfile`](frontend/Dockerfile) (site compilé, servi par nginx, qui relaie `/api` et `/uploads` vers l'API). [`docker-compose.prod.yml`](docker-compose.prod.yml) assemble base de données, API et site :
+
+```bash
+cp .env.prod.example .env.prod        # puis renseignez POSTGRES_PASSWORD et SECRET_KEY
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+```
+
+Le site est alors servi sur le port 80 (`HTTP_PORT` pour en changer). Pour une mise en ligne publique, placez un serveur HTTPS devant (Caddy, Traefik, ou le proxy de l'hébergeur). La base et les images envoyées sont conservées dans des volumes Docker.
+
+> Avant une vraie mise en production, voir les points de sécurité restants dans [ANALYSE.md](ANALYSE.md) (limite de requêtes, révocation des sessions…). Le paiement par carte y est désactivé (`CARD_PAYMENT_PROVIDER=disabled`) tant qu'aucun vrai prestataire n'est branché, et les données de démo ne sont pas chargées.
+
 ## Dons
 
 Le bouton « Faire un don » (page d'accueil, pages d'antenne) propose deux moyens de paiement.
 
-### Carte bancaire (€) — simulée pour l'instant
+Le donateur choisit d'abord la **devise** — **ariary** (par défaut), **euro** ou **dollar US** :
+
+| Devise | Moyens de paiement | Minimum par carte |
+|---|---|---|
+| Ariary (Ar) | Mobile Money ou carte | 5 000 Ar (100 Ar en Mobile Money) |
+| Euro (€) | carte | 1 € |
+| Dollar US ($) | carte | 1 $ |
+
+Chaque don garde sa devise ; les totaux de l'admin sont affichés devise par devise. Aucune conversion n'est faite par le site.
+
+### Carte bancaire (Ar, €, $) — simulée pour l'instant
 
 Le don est payé en ligne et **confirmé automatiquement** ; le donateur reçoit un email de remerciement. Comme sur Stripe, le numéro de carte ne quitte jamais le navigateur : seul un jeton est envoyé au serveur.
 
@@ -185,7 +235,10 @@ Dans **Admin → Coordonnées de paiement** (super admin) : nom du titulaire et 
 - `backend/alembic/` — migrations de base de données
 - `frontend/src/` — application React (pages publiques, espace `/admin`, composants, i18n, client API)
 - `frontend/src/components/donation/` — formulaire de don (carte et Mobile Money)
+- `backend/tests/` — tests automatiques (pytest)
 - `docker-compose.yml` — service PostgreSQL pour le développement local
+- `docker-compose.prod.yml`, `backend/Dockerfile`, `frontend/Dockerfile` — déploiement
+- `.github/workflows/ci.yml` — intégration continue (lint, tests, build)
 
 ## Fonctionnalités
 
@@ -195,6 +248,6 @@ Dans **Admin → Coordonnées de paiement** (super admin) : nom du titulaire et 
   - dossiers entrepreneurs : consultation, ajout d'un dossier reçu hors du site, suppression ;
   - dons : vérification et validation des dons Mobile Money, rejet motivé, saisie manuelle, suppression des dons non validés ;
   - paramètres, profil de son antenne ;
-  - pour le super admin : antennes, comptes admin, journal d'audit, réseaux sociaux, coordonnées de paiement.
+  - pour le super admin : couverture de la page d'accueil (photo, bandeau, titre et sous-titre en français et en anglais), antennes, comptes admin, journal d'audit, réseaux sociaux, coordonnées de paiement.
 - **Authentification** : email + mot de passe (JWT), mot de passe oublié / réinitialisation, deux niveaux de rôle (super admin, admin d'antenne).
 - **Langues** : français et anglais (site public).

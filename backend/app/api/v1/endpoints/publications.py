@@ -3,7 +3,7 @@ Endpoints pour les publications (bilans/rapports formels par antenne)
 RÈGLE CRITIQUE: Isolation stricte par branche!
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -43,13 +43,13 @@ async def create_publication(
     publication = Publication(
         branch_id=branch_id,
         contributors=[user],
-        **data.dict(),
+        **data.model_dump(),
     )
     db.add(publication)
     await db.commit()
     await db.refresh(publication)
 
-    return PublicationSchema.from_orm(publication)
+    return PublicationSchema.model_validate(publication)
 
 
 @router.put("/publications/{pub_id}", response_model=PublicationSchema)
@@ -69,19 +69,19 @@ async def update_publication(
     publication = result.scalar_one_or_none()
 
     if not publication:
-        raise HTTPException(status_code=404, detail="Publication not found")
+        raise HTTPException(status_code=404, detail="Publication introuvable")
 
     # ✅ VÉRIFICATION CRITIQUE D'ISOLATION
     await verify_branch_access(user, publication.branch_id)
 
-    update_data = data.dict(exclude_unset=True)
+    update_data = data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(publication, key, value)
 
     await db.commit()
     await db.refresh(publication)
 
-    return PublicationSchema.from_orm(publication)
+    return PublicationSchema.model_validate(publication)
 
 
 @router.delete("/publications/{pub_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -100,7 +100,7 @@ async def delete_publication(
     publication = result.scalar_one_or_none()
 
     if not publication:
-        raise HTTPException(status_code=404, detail="Publication not found")
+        raise HTTPException(status_code=404, detail="Publication introuvable")
 
     # ✅ VÉRIFICATION CRITIQUE D'ISOLATION
     await verify_branch_access(user, publication.branch_id)
@@ -125,6 +125,6 @@ async def get_publication(
     publication = result.scalar_one_or_none()
 
     if not publication:
-        raise HTTPException(status_code=404, detail="Publication not found")
+        raise HTTPException(status_code=404, detail="Publication introuvable")
 
-    return PublicationSchema.from_orm(publication)
+    return PublicationSchema.model_validate(publication)

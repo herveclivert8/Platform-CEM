@@ -1,5 +1,6 @@
 """
-Endpoints pour les réglages globaux de l'association (réseaux sociaux, coordonnées de paiement)
+Endpoints pour les réglages globaux de l'association (réseaux sociaux, coordonnées de paiement,
+couverture de la page d'accueil)
 """
 
 from fastapi import APIRouter, Depends
@@ -9,7 +10,14 @@ from app.api.deps import get_db, get_current_user
 from app.core.permissions import verify_super_admin_only
 from app.models.settings import AssociationSettings
 from app.models.user import User
-from app.schemas.settings import PaymentInfoRead, PaymentInfoUpdate, SocialLinksRead, SocialLinksUpdate
+from app.schemas.settings import (
+    HomeHeroRead,
+    HomeHeroUpdate,
+    PaymentInfoRead,
+    PaymentInfoUpdate,
+    SocialLinksRead,
+    SocialLinksUpdate,
+)
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
@@ -42,7 +50,7 @@ async def update_social_links(
     await verify_super_admin_only(user)
 
     settings = await _get_or_create_settings(db)
-    for key, value in data.dict(exclude_unset=True).items():
+    for key, value in data.model_dump(exclude_unset=True).items():
         setattr(settings, key, value)
 
     await db.commit()
@@ -66,8 +74,33 @@ async def update_payment_info(
     await verify_super_admin_only(user)
 
     settings = await _get_or_create_settings(db)
-    for key, value in data.dict(exclude_unset=True).items():
+    for key, value in data.model_dump(exclude_unset=True).items():
         # Un champ vidé dans le formulaire est stocké à NULL (= non affiché)
+        setattr(settings, key, value.strip() if isinstance(value, str) and value.strip() else None)
+
+    await db.commit()
+    await db.refresh(settings)
+    return settings
+
+
+@router.get("/home-hero", response_model=HomeHeroRead)
+async def get_home_hero(db: AsyncSession = Depends(get_db)):
+    """Récupérer la couverture personnalisée de la page d'accueil. Accessible: Public."""
+    return await _get_or_create_settings(db)
+
+
+@router.put("/home-hero", response_model=HomeHeroRead)
+async def update_home_hero(
+    data: HomeHeroUpdate,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Modifier la photo et les textes de couverture. Accessible: Super Admin only."""
+    await verify_super_admin_only(user)
+
+    settings = await _get_or_create_settings(db)
+    for key, value in data.model_dump(exclude_unset=True).items():
+        # Un champ vidé revient à la valeur par défaut du site
         setattr(settings, key, value.strip() if isinstance(value, str) and value.strip() else None)
 
     await db.commit()

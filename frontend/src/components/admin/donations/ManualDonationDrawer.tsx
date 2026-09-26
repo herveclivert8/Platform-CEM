@@ -5,7 +5,7 @@ import clsx from "clsx";
 import { Drawer } from "../Drawer";
 import { Button } from "../../ui/Button";
 import { OperatorMark } from "../../donation/donationUi";
-import { useBranches } from "../../../hooks/useBranches";
+import { useAdminBranchList } from "../../../hooks/useBranches";
 import { useRecordManualDonation } from "../../../hooks/useAdminDonations";
 import { useAuthStore } from "../../../store/authStore";
 import { OPERATOR_LABELS, normalizeMgPhone, type Donation, type MobileOperator } from "../../../types/donation";
@@ -34,7 +34,7 @@ export function ManualDonationDrawer({ open, onClose, defaultBranchId, onRecorde
 function ManualDonationForm({ defaultBranchId, onDone }: { defaultBranchId?: number; onDone: (donation: Donation) => void }) {
   const user = useAuthStore((s) => s.user);
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
-  const { data: branchesData } = useBranches();
+  const { data: branchesData } = useAdminBranchList();
   const record = useRecordManualDonation();
 
   const [branchId, setBranchId] = useState<string>(defaultBranchId ? String(defaultBranchId) : "");

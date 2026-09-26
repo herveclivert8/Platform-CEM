@@ -6,7 +6,7 @@ import { Button } from "../ui/Button";
 import { ALL_PILLARS, type Pillar, type Post, type PostStatus } from "../../types/post";
 import { useCreatePost, useUpdatePost } from "../../hooks/useAdminPosts";
 import { usePillarLabels } from "../../hooks/usePillarLabels";
-import { useBranches } from "../../hooks/useBranches";
+import { useAdminBranchList } from "../../hooks/useBranches";
 
 interface PostDrawerProps {
   open: boolean;
@@ -47,7 +47,7 @@ function PostForm({
   // No target branch (Super Admin scoped to "all branches"): the form asks for one.
   const needsBranchChoice = !post && branchId === undefined;
   const [chosenBranchId, setChosenBranchId] = useState<number | undefined>(undefined);
-  const { data: branchesData } = useBranches();
+  const { data: branchesData } = useAdminBranchList();
   const targetBranchId = needsBranchChoice ? chosenBranchId : branchId;
   const createPost = useCreatePost(targetBranchId);
   const updatePost = useUpdatePost(post?.id);

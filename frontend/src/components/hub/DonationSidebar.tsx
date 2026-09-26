@@ -4,6 +4,8 @@ import { Card, IconBadge } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { useDonationUiStore } from "../../store/donationUiStore";
 import type { Branch } from "../../types/branch";
+import { formatAmount } from "../../types/donation";
+import { PRICE_PER_BOOK } from "../donation/donationConstants";
 
 export function DonationSidebar({ branch }: { branch: Branch }) {
   const { t } = useTranslation();
@@ -19,7 +21,7 @@ export function DonationSidebar({ branch }: { branch: Branch }) {
 
       <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 px-3.5 py-2.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
         <BookOpen className="h-3.5 w-3.5 shrink-0" aria-hidden />
-        20€ ≈ 10 livres scolaires
+        {formatAmount(10 * PRICE_PER_BOOK.MGA, "MGA")} ≈ 10 livres scolaires
       </div>
 
       <Button

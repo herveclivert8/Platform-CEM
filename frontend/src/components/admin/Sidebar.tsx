@@ -11,6 +11,7 @@ import {
   ScrollText,
   Share2,
   Wallet,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { ScopeSelector } from "./ScopeSelector";
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
 const BRANCH_ADMIN_ITEMS = [{ to: "/admin/my-branch", label: "Mon antenne", icon: MapPin }];
 
 const SUPER_ADMIN_ITEMS = [
+  { to: "/admin/home-hero", label: "Page d'accueil", icon: ImageIcon },
   { to: "/admin/branches", label: "Antennes", icon: MapPin },
   { to: "/admin/accounts", label: "Comptes admin", icon: Users },
   { to: "/admin/audit", label: "Journal d'audit", icon: ScrollText },

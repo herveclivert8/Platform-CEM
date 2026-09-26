@@ -20,6 +20,7 @@ import { MyBranchPage } from "./pages/admin/MyBranchPage";
 import { AccountsPage } from "./pages/admin/AccountsPage";
 import { AuditPage } from "./pages/admin/AuditPage";
 import { SocialLinksPage } from "./pages/admin/SocialLinksPage";
+import { HomeHeroPage } from "./pages/admin/HomeHeroPage";
 import { PaymentInfoPage } from "./pages/admin/PaymentInfoPage";
 
 const BranchesDirectoryPage = lazy(() =>
@@ -107,6 +108,7 @@ export const router = createBrowserRouter([
               { path: "branches/:branchId", element: <BranchEditPage /> },
               { path: "accounts", element: <AccountsPage /> },
               { path: "audit", element: <AuditPage /> },
+              { path: "home-hero", element: <HomeHeroPage /> },
               { path: "social-links", element: <SocialLinksPage /> },
               { path: "payment-info", element: <PaymentInfoPage /> },
             ],

@@ -3,11 +3,21 @@ import { BookOpen, CreditCard, Lock, Smartphone } from "lucide-react";
 import clsx from "clsx";
 import { Button } from "../ui/Button";
 import { CardBrandMark, OperatorMark } from "./donationUi";
-import { POPULAR_INDEX, PRESET_AMOUNTS, PRICE_PER_BOOK, fieldClass, type DonationMethod } from "./donationConstants";
-import { CURRENCY_BY_METHOD, formatAmount, type PaymentOptions } from "../../types/donation";
+import {
+  POPULAR_INDEX,
+  PRESET_AMOUNTS,
+  PRICE_PER_BOOK,
+  fieldClass,
+  minimumAmount,
+  type DonationMethod,
+} from "./donationConstants";
+import { CURRENCY_SYMBOLS, formatAmount, type Currency, type PaymentOptions } from "../../types/donation";
 
 interface AmountStepProps {
   options: PaymentOptions;
+  currencies: Currency[];
+  currency: Currency;
+  onCurrencyChange: (currency: Currency) => void;
   methods: DonationMethod[];
   method: DonationMethod;
   onMethodChange: (method: DonationMethod) => void;
@@ -20,6 +30,9 @@ interface AmountStepProps {
 
 export function AmountStep({
   options,
+  currencies,
+  currency,
+  onCurrencyChange,
   methods,
   method,
   onMethodChange,
@@ -30,13 +43,41 @@ export function AmountStep({
   onContinue,
 }: AmountStepProps) {
   const { t } = useTranslation();
-  const currency = CURRENCY_BY_METHOD[method];
-  const minimum = method === "CARD" ? 1 : 100;
-  const valid = amount >= minimum;
-  const books = Math.max(1, Math.round(amount / PRICE_PER_BOOK[method]));
+  const minimum = minimumAmount(method, currency);
+  // The ariary has no subunit
+  const valid = amount >= minimum && (currency !== "MGA" || Number.isInteger(amount));
+  const books = Math.max(1, Math.round(amount / PRICE_PER_BOOK[currency]));
 
   return (
     <div className="space-y-6">
+      {currencies.length > 1 && (
+        <fieldset>
+          <legend className="mb-2.5 text-[13px] font-semibold text-slate-900 dark:text-white">{t("donation.currency_title")}</legend>
+          <div className="grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+            {currencies.map((c) => {
+              const active = c === currency;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => onCurrencyChange(c)}
+                  aria-pressed={active}
+                  className={clsx(
+                    "flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-sm font-semibold transition-all",
+                    active
+                      ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white"
+                      : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
+                  )}
+                >
+                  <span className="tabular-nums">{CURRENCY_SYMBOLS[c]}</span>
+                  <span className="font-medium">{t(`donation.currency_${c}`)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
+
       {methods.length > 1 && (
         <fieldset>
           <legend className="mb-2.5 text-[13px] font-semibold text-slate-900 dark:text-white">{t("donation.method_title")}</legend>
@@ -94,7 +135,7 @@ export function AmountStep({
       <fieldset>
         <legend className="mb-2.5 text-[13px] font-semibold text-slate-900 dark:text-white">{t("donation.step1_title")}</legend>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-          {PRESET_AMOUNTS[method].map((preset, i) => {
+          {PRESET_AMOUNTS[currency].map((preset, i) => {
             const active = !customAmount && amount === preset;
             return (
               <button
@@ -130,7 +171,7 @@ export function AmountStep({
             type="number"
             inputMode="decimal"
             min={minimum}
-            step={method === "CARD" ? "0.01" : "100"}
+            step={currency === "MGA" ? "100" : "0.01"}
             aria-label={t("donation.custom_amount")}
             placeholder={t("donation.custom_amount")}
             value={customAmount}
@@ -138,7 +179,7 @@ export function AmountStep({
             className={clsx(fieldClass, "pr-12 tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none")}
           />
           <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-semibold text-slate-400">
-            {currency === "MGA" ? "Ar" : "€"}
+            {CURRENCY_SYMBOLS[currency]}
           </span>
         </div>
         {customAmount && !valid && (

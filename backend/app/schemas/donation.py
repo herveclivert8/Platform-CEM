@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 
 class PaymentMethod(str, Enum):
@@ -78,14 +78,39 @@ class ManualDonationCreate(_MobileMoneyPayment):
     donor_email: Optional[EmailStr] = None
 
 
+class CardCurrency(str, Enum):
+    MGA = "MGA"
+    EUR = "EUR"
+    USD = "USD"
+
+
+# Montants minimum et maximum d'un don par carte, par devise
+CARD_CURRENCY_LIMITS: dict[CardCurrency, tuple[float, float]] = {
+    CardCurrency.MGA: (5_000, 500_000_000),
+    CardCurrency.EUR: (1, 100_000),
+    CardCurrency.USD: (1, 100_000),
+}
+
+
 class CardDonationCreate(BaseModel):
     branch_id: Optional[int] = None
-    # En euros
-    amount: float = Field(..., ge=1, le=100_000)
+    # EUR par défaut, pour les clients qui n'envoient pas encore de devise
+    currency: CardCurrency = CardCurrency.EUR
+    amount: float = Field(..., gt=0)
     donor_email: EmailStr
     donor_name: Optional[str] = Field(None, max_length=255)
     # Jeton produit par le navigateur : le numéro de carte n'est jamais envoyé au serveur
     payment_token: str = Field(..., min_length=1, max_length=255)
+
+    @model_validator(mode="after")
+    def check_amount_for_currency(self) -> "CardDonationCreate":
+        minimum, maximum = CARD_CURRENCY_LIMITS[self.currency]
+        if not minimum <= self.amount <= maximum:
+            bounds = " et ".join(f"{v:,.0f}".replace(",", " ") for v in (minimum, maximum))
+            raise ValueError(f"Montant hors limites pour {self.currency.value} : entre {bounds}")
+        if self.currency == CardCurrency.MGA and self.amount != int(self.amount):
+            raise ValueError("Un montant en ariary doit être un nombre entier")
+        return self
 
 
 class DonationConfirm(BaseModel):
@@ -113,8 +138,7 @@ class DonationPublic(BaseModel):
     donor_name: Optional[str] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Donation(BaseModel):
@@ -136,8 +160,7 @@ class Donation(BaseModel):
     thank_you_email_sent_at: Optional[datetime] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DonationListResponse(BaseModel):

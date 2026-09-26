@@ -4,7 +4,7 @@ Schémas Pydantic pour les réglages globaux de l'association
 
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SocialLinksRead(BaseModel):
@@ -13,8 +13,7 @@ class SocialLinksRead(BaseModel):
     linkedin_url: Optional[str] = None
     youtube_url: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SocialLinksUpdate(BaseModel):
@@ -31,8 +30,30 @@ class PaymentInfoRead(BaseModel):
     orange_money_number: Optional[str] = None
     airtel_money_number: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+
+class HomeHeroRead(BaseModel):
+    """Couverture de la page d'accueil ; un champ à null = valeur par défaut du site"""
+    hero_image_url: Optional[str] = None
+    hero_badge_fr: Optional[str] = None
+    hero_badge_en: Optional[str] = None
+    hero_title_fr: Optional[str] = None
+    hero_title_en: Optional[str] = None
+    hero_subtitle_fr: Optional[str] = None
+    hero_subtitle_en: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class HomeHeroUpdate(BaseModel):
+    hero_image_url: Optional[str] = Field(None, max_length=512)
+    hero_badge_fr: Optional[str] = Field(None, max_length=255)
+    hero_badge_en: Optional[str] = Field(None, max_length=255)
+    hero_title_fr: Optional[str] = Field(None, max_length=200)
+    hero_title_en: Optional[str] = Field(None, max_length=200)
+    hero_subtitle_fr: Optional[str] = Field(None, max_length=500)
+    hero_subtitle_en: Optional[str] = Field(None, max_length=500)
 
 
 class PaymentInfoUpdate(BaseModel):

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Drawer } from "./Drawer";
 import { Button } from "../ui/Button";
-import { useBranches } from "../../hooks/useBranches";
+import { useAdminBranchList } from "../../hooks/useBranches";
 import { useAdminCreateSubmission } from "../../hooks/useAdminSubmissions";
 
 const inputClass =
@@ -28,7 +28,7 @@ function SubmissionForm({ branchId, onDone }: { branchId: number | undefined; on
   const [email, setEmail] = useState("");
   const [projectSummary, setProjectSummary] = useState("");
   const [chosenBranchId, setChosenBranchId] = useState<number | undefined>(undefined);
-  const { data: branchesData } = useBranches();
+  const { data: branchesData } = useAdminBranchList();
   const needsBranchChoice = branchId === undefined;
   const targetBranchId = needsBranchChoice ? chosenBranchId : branchId;
   const createSubmission = useAdminCreateSubmission(targetBranchId);

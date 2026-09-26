@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronsUpDown, Check, MapPin, Globe2 } from "lucide-react";
 import clsx from "clsx";
 import { useAuthStore } from "../../store/authStore";
-import { useBranches } from "../../hooks/useBranches";
+import { useAdminBranchList } from "../../hooks/useBranches";
 import { useAdminScopeStore } from "../../store/adminScopeStore";
 
 export function ScopeSelector() {
   const user = useAuthStore((s) => s.user);
-  const { data } = useBranches();
+  const { data } = useAdminBranchList();
   const { selectedBranchId, setSelectedBranchId } = useAdminScopeStore();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);

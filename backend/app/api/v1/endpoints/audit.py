@@ -2,7 +2,7 @@
 Endpoints d'audit logging - Visualiser les logs d'opérations
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import desc, func
@@ -12,7 +12,7 @@ from app.api.deps import get_db, get_current_user
 from app.core.permissions import verify_super_admin_only
 from app.models.user import User
 from app.models.audit import AuditLog
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 
 
@@ -29,8 +29,7 @@ class AuditLogResponse(BaseModel):
     success: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AuditLogListResponse(BaseModel):
@@ -100,7 +99,7 @@ async def list_audit_logs(
     items = result.scalars().all()
 
     return AuditLogListResponse(
-        items=[AuditLogResponse.from_orm(item) for item in items],
+        items=[AuditLogResponse.model_validate(item) for item in items],
         total=total,
         page=page,
         page_size=page_size,
@@ -108,7 +107,15 @@ async def list_audit_logs(
     )
 
 
-@router.get("/stats", status_code=200)
+class AuditStats(BaseModel):
+    total_events: int
+    failed_logins: int
+    publications_created: int
+    admins_created: int
+    last_event: Optional[datetime] = None
+
+
+@router.get("/stats", response_model=AuditStats, status_code=200)
 async def get_audit_stats(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

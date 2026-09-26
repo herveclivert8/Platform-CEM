@@ -22,6 +22,7 @@ from app.core.email import email_service
 from app.core.permissions import verify_branch_access, verify_super_admin_only
 from app.db.session import AsyncSessionLocal
 from app.models import Branch, Donation, User
+from app.models.branch import BranchStatus
 from app.models.donation import (
     CURRENCY_BY_METHOD,
     MOBILE_OPERATOR_LABELS,
@@ -62,10 +63,14 @@ OPERATOR_NUMBER_FIELDS = {
 # Helpers
 # ============================================
 
+CURRENCY_SYMBOLS = {"EUR": "€", "USD": "$"}
+
+
 def format_amount(amount: float, currency: str) -> str:
     if currency == "MGA":
         return f"{amount:,.0f} Ar".replace(",", " ")
-    return f"{amount:,.2f} €".replace(",", " ").replace(".", ",")
+    symbol = CURRENCY_SYMBOLS.get(currency, currency)
+    return f"{amount:,.2f} {symbol}".replace(",", " ").replace(".", ",")
 
 
 def payment_label(donation: Donation) -> str:
@@ -91,7 +96,15 @@ async def _get_branch_or_404(db: AsyncSession, branch_id: int | None) -> Branch 
         return None
     branch = await db.get(Branch, branch_id)
     if not branch:
-        raise HTTPException(status_code=404, detail="Branch not found")
+        raise HTTPException(status_code=404, detail="Antenne introuvable")
+    return branch
+
+
+async def _get_open_branch_or_404(db: AsyncSession, branch_id: int | None) -> Branch | None:
+    """Comme _get_branch_or_404, mais refuse les dons publics à une antenne qui n'est pas active."""
+    branch = await _get_branch_or_404(db, branch_id)
+    if branch and branch.status != BranchStatus.ACTIVE:
+        raise HTTPException(status_code=409, detail="Cette antenne n'accepte pas de dons pour le moment.")
     return branch
 
 
@@ -191,9 +204,9 @@ async def donate_by_card(
     provider = get_card_provider()
     if provider is None:
         raise HTTPException(status_code=400, detail="Le paiement par carte n'est pas disponible pour le moment.")
-    branch = await _get_branch_or_404(db, data.branch_id)
+    branch = await _get_open_branch_or_404(db, data.branch_id)
 
-    currency = CURRENCY_BY_METHOD[PaymentMethodModel.CARD]
+    currency = data.currency.value
     result = await provider.charge(
         amount=data.amount,
         currency=currency,
@@ -222,7 +235,7 @@ async def donate_by_card(
 
     await _notify_admins(db, donation, branch, "Nouveau don par carte", "")
     background_tasks.add_task(_send_thank_you_email, donation.id)
-    return DonationPublic.from_orm(donation)
+    return DonationPublic.model_validate(donation)
 
 
 @router.post("/mobile-money", response_model=DonationPublic, status_code=201)
@@ -231,7 +244,7 @@ async def declare_mobile_money_donation(
     db: AsyncSession = Depends(get_db),
 ):
     """Déclarer un paiement Mobile Money déjà effectué (statut "à vérifier"). Accessible: Public."""
-    branch = await _get_branch_or_404(db, data.branch_id)
+    branch = await _get_open_branch_or_404(db, data.branch_id)
 
     settings = await db.get(AssociationSettings, SETTINGS_ID)
     operator = MobileOperatorModel(data.operator.value)
@@ -261,7 +274,7 @@ async def declare_mobile_money_donation(
         db, donation, branch, "Don Mobile Money à vérifier",
         f"Réf. {donation.transaction_reference} ({MOBILE_OPERATOR_LABELS[operator]}).",
     )
-    return DonationPublic.from_orm(donation)
+    return DonationPublic.model_validate(donation)
 
 
 # ============================================
@@ -296,7 +309,7 @@ async def list_donations(
     donations = result.scalars().all()
 
     return DonationListResponse(
-        items=[DonationSchema.from_orm(d) for d in donations],
+        items=[DonationSchema.model_validate(d) for d in donations],
         total=total or 0,
         page=page,
         page_size=page_size,
@@ -340,13 +353,13 @@ async def record_manual_donation(
     await db.refresh(donation)
 
     background_tasks.add_task(_send_thank_you_email, donation.id)
-    return DonationSchema.from_orm(donation)
+    return DonationSchema.model_validate(donation)
 
 
 async def _get_manageable_donation(db: AsyncSession, user: User, donation_id: int) -> Donation:
     donation = await db.get(Donation, donation_id)
     if not donation:
-        raise HTTPException(status_code=404, detail="Donation not found")
+        raise HTTPException(status_code=404, detail="Don introuvable")
     await _verify_can_manage(user, donation.branch_id)
     if donation.payment_method == PaymentMethodModel.CARD:
         raise HTTPException(status_code=400, detail="Un don par carte est confirmé par le prestataire de paiement.")
@@ -379,7 +392,7 @@ async def confirm_donation(
     await db.refresh(donation)
 
     background_tasks.add_task(_send_thank_you_email, donation.id)
-    return DonationSchema.from_orm(donation)
+    return DonationSchema.model_validate(donation)
 
 
 @router.post("/{donation_id}/reject", response_model=DonationSchema)
@@ -399,7 +412,7 @@ async def reject_donation(
     donation.status_updated_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(donation)
-    return DonationSchema.from_orm(donation)
+    return DonationSchema.model_validate(donation)
 
 
 @router.post("/{donation_id}/reopen", response_model=DonationSchema)
@@ -418,7 +431,7 @@ async def reopen_donation(
     donation.status_updated_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(donation)
-    return DonationSchema.from_orm(donation)
+    return DonationSchema.model_validate(donation)
 
 
 @router.delete("/{donation_id}", status_code=204)
@@ -433,7 +446,7 @@ async def delete_donation(
     """
     donation = await db.get(Donation, donation_id)
     if not donation:
-        raise HTTPException(status_code=404, detail="Donation not found")
+        raise HTTPException(status_code=404, detail="Don introuvable")
     await _verify_can_manage(user, donation.branch_id)
     if donation.status == DonationStatusModel.CONFIRMED:
         raise HTTPException(status_code=400, detail="Un don confirmé ne peut pas être supprimé.")

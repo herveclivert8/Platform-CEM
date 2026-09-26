@@ -74,13 +74,16 @@ Avec `DELETE /upload/{filename}` ([upload.py](backend/app/api/v1/endpoints/uploa
 
 ## 🟠 Priorité 2 — Fonctionnalités manquantes ou incomplètes
 
-### 10. Le statut d'une antenne ne se modifie pas
-Le champ `status` (actif, inactif, en attente) est absent du schéma de modification ([schemas/branch.py](backend/app/schemas/branch.py), `BranchUpdate`). Une fois créée, une antenne ne peut être ni désactivée ni mise en attente : seulement supprimée.
+### 10. ~~Le statut d'une antenne ne se modifie pas~~ — ✅ traité
+Le super admin choisit le statut dans la page de modification de l'antenne (un admin d'antenne ne peut pas le changer) :
+- **Active** : visible dans l'annuaire, reçoit dons et dossiers ;
+- **Inactive** : retirée de l'annuaire ; sa page reste consultable avec la mention « antenne inactive », sans dons ni dépôt de dossiers (refusés aussi par le serveur) ;
+- **En attente** : invisible pour le public (page, actualités) ; ses admins peuvent déjà préparer son contenu.
 
-### 11. Supprimer une antenne laisse des admins orphelins
-Ses admins restent dans la base sans antenne rattachée (`branch_id = NULL`). Ils peuvent toujours se connecter, mais ne voient rien.
+L'espace admin liste désormais les antennes de tous statuts (`GET /branches/admin`), et plus seulement les actives.
 
-**À faire :** empêcher la suppression tant que des admins y sont rattachés, ou les supprimer ou réaffecter en même temps.
+### 11. ~~Supprimer une antenne laisse des admins orphelins~~ — ✅ traité
+La suppression est refusée tant que des comptes admin sont rattachés à l'antenne. Le message de confirmation précise ce qui est effacé (posts, dossiers, équipe ; les dons sont conservés) et conseille de passer plutôt l'antenne en « Inactive ».
 
 ### 12. ~~L'envoi d'emails bloque le serveur~~ — ✅ en partie traité
 [email.py](backend/app/core/email.py) utilise `smtplib` de façon bloquante, sans délai maximum, dans du code asynchrone. Pendant l'envoi d'un email, le serveur ne répond plus à personne. Sans configuration SMTP, le lien de réinitialisation est perdu en silence.
@@ -107,38 +110,38 @@ Il n'y a ni recherche, ni filtre par pilier ou par statut dans l'admin, ni aper�
 
 ## 🟡 Priorité 3 — Qualité, maintenance et déploiement
 
-### 17. Il n'y a aucun test
-`pytest` est installé, mais il n'existe aucun fichier de test. À écrire en premier : les tests des permissions (un admin ne peut pas agir sur une autre antenne), de l'authentification et des dons.
+### 17. ~~Il n'y a aucun test~~ — ✅ traité
+39 tests dans `backend/tests/` (pytest), sur une base PostgreSQL dédiée recréée par les migrations Alembic : authentification (connexion, jetons, changement de mot de passe), permissions (un admin n'agit que sur son antenne, actions réservées au super admin), dons (carte dans les trois devises, montants invalides, carte refusée, Mobile Money, référence en double, validation et rejet par le bon admin) et statut des antennes.
 
-### 18. Il n'y a ni CI, ni procédure de déploiement
-Aucun Dockerfile pour l'application, aucune configuration de production, aucune vérification automatique (GitHub Actions).
+**Reste à faire :** tests du frontend, et tests des routes non couvertes (upload, notifications, paramètres, réinitialisation du mot de passe).
 
-**À faire :** ajouter un Dockerfile pour le backend et le frontend, et un pipeline qui lance le lint, les tests et le build à chaque push.
+### 18. ~~Il n'y a ni CI, ni procédure de déploiement~~ — ✅ traité
+- `backend/Dockerfile`, `frontend/Dockerfile` (nginx) et `docker-compose.prod.yml` (voir la section *Déploiement* du README) ;
+- GitHub Actions (`.github/workflows/ci.yml`) à chaque push et pull request : lint (ruff) et tests du backend, lint (oxlint) et build du frontend, construction des deux images ;
+- `ruff` configuré (`backend/ruff.toml`) ; les 20 imports inutilisés et deux erreurs signalées ont été corrigés ;
+- `requirements-dev.txt` remplacé : c'était une copie d'un autre environnement, incompatible avec `requirements.txt`.
 
-### 19. Du code mort à supprimer
-Ces fichiers ne sont branchés nulle part :
-- `backend/app/api/v1/endpoints/auth_legacy.py` — cassé, il utilise `user.last_login`, un champ qui n'existe pas ;
-- `backend/app/api/v1/endpoints/oauth.py` et `backend/app/services/oauth_google.py` ;
-- `backend/app/api/v1/endpoints/ws.py` ;
-- `backend/app/api/v1/endpoints/cities.py` ;
-- `backend/app/search/elasticsearch.py` ;
-- `backend/app/utils/sanitize.py` ;
-- le `SessionMiddleware` de [main.py](backend/app/main.py).
+**Reste à faire :** publier les images (registre) et automatiser la mise en ligne, une fois l'hébergement choisi ; HTTPS devant nginx.
 
-### 20. Des fichiers qui n'ont rien à faire dans git
-- `backend/dev.db` — ancienne base SQLite, alors que le projet utilise PostgreSQL ;
-- `backend/uploads/*` — images de test ;
-- le dossier vide `Platform-CEM/Platform-CEM/` ;
-- `backend/package-lock.json` — le backend est en Python.
+### 19. ~~Du code mort à supprimer~~ — ✅ traité
+Supprimés : `auth_legacy.py`, `oauth.py` et `oauth_google.py`, `ws.py`, `cities.py`, `search/elasticsearch.py`, `utils/sanitize.py`, le `SessionMiddleware` (et la dépendance `itsdangerous`, qui ne servait qu'à lui). Aussi supprimés, car morts eux aussi : `endpoints/search.py` (cassé, il importait des modèles supprimés), `core/rate_limit.py` (doublon inutilisé du middleware), le modèle et les schémas `city` et `search` (sans table en base).
 
-### 21. Des syntaxes obsolètes
-Le code utilise encore l'ancienne syntaxe de Pydantic v1 (`.dict()`, `.from_orm()`, `class Config`) et `@app.on_event`. Ça génère des avertissements aujourd'hui, et ça cassera lors des mises à jour.
+### 20. ~~Des fichiers qui n'ont rien à faire dans git~~ — ✅ traité
+`backend/dev.db` et les images de `backend/uploads/` (utilisées nulle part) ne sont plus suivis par git et sont ignorés ; le dossier vide `Platform-CEM/Platform-CEM/` est supprimé. `backend/package-lock.json` n'existait déjà plus.
 
-### 22. Redis est toujours sollicité
-Le backend essaie de se connecter à Redis même quand `USE_REDIS=false` ([main.py](backend/app/main.py), fonction `startup`), d'où le message `Redis connection failed` au démarrage.
+### 21. ~~Des syntaxes obsolètes~~ — ✅ traité
+Syntaxe Pydantic v2 partout (16 fichiers) : `.model_dump()`, `.model_validate()`, `model_config = ConfigDict(...)` ; `@app.on_event` remplacé par un `lifespan` dans [main.py](backend/app/main.py). Les tests passent sans aucun avertissement (60 auparavant), et `pytest.ini` ne masque plus les avertissements de dépréciation, pour repérer les suivants tout de suite.
 
-### 23. Les réponses d'erreur ne sont pas cohérentes
-Les messages mélangent français et anglais (« Branch not found », « Non authentifié »). Certaines routes renvoient des dictionnaires bruts sans format de réponse défini (`/super-admin/admins`, `/super-admin/statistics`, qui renvoie `"timestamp": "now"`).
+### 22. ~~Redis est toujours sollicité~~ — ✅ traité
+Le backend ne se connecte à Redis que si `USE_REDIS=true`, à l'adresse `REDIS_URL` (auparavant toujours `localhost`). Le message `Redis connection failed` a disparu du démarrage.
+
+### 23. ~~Les réponses d'erreur ne sont pas cohérentes~~ — ✅ traité
+- Tous les messages d'erreur du backend sont en français (14 messages anglais traduits, 27 occurrences), avec un vocabulaire commun : « Antenne introuvable », « Accès réservé au super admin »…
+- Réponses typées (schémas Pydantic, visibles dans la documentation `/docs`) pour `/super-admin/admins` (liste et création), `/super-admin/statistics`, `/super-admin/audit/stats`, `/notifications/unread-count`, `/auth/password/change` et `/auth/password/reset`.
+- `/super-admin/statistics` renvoie `generated_at`, une vraie date, à la place de `"timestamp": "now"`.
+- 6 tests ajoutés (45 au total), dont un qui vérifie les messages en français.
+
+**Reste à faire :** les messages de validation détaillés (erreurs 422, champ par champ) sont produits par Pydantic et restent en anglais (« Field required ») ; les anciennes routes `publications` ne sont pas typées.
 
 ---
 

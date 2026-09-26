@@ -1,13 +1,12 @@
 export type PaymentMethod = "CARD" | "MOBILE_MONEY" | "BANK_TRANSFER";
 export type DonationStatus = "PENDING" | "CONFIRMED" | "REJECTED";
 export type MobileOperator = "MVOLA" | "ORANGE_MONEY" | "AIRTEL_MONEY";
-export type Currency = "EUR" | "MGA";
+export type Currency = "MGA" | "EUR" | "USD";
 
-/** Currency imposed by the payment method: card in euros, Mobile Money in ariary. */
-export const CURRENCY_BY_METHOD: Record<Exclude<PaymentMethod, "BANK_TRANSFER">, Currency> = {
-  CARD: "EUR",
-  MOBILE_MONEY: "MGA",
-};
+/** Currencies offered to donors, in display order (the first one is the default). */
+export const DONATION_CURRENCIES: Currency[] = ["MGA", "EUR", "USD"];
+
+export const CURRENCY_SYMBOLS: Record<Currency, string> = { MGA: "Ar", EUR: "€", USD: "$" };
 
 export const OPERATOR_LABELS: Record<MobileOperator, string> = {
   MVOLA: "MVola",
@@ -17,7 +16,8 @@ export const OPERATOR_LABELS: Record<MobileOperator, string> = {
 
 export function formatAmount(amount: number, currency: string): string {
   if (currency === "MGA") return `${amount.toLocaleString("fr-FR", { maximumFractionDigits: 0 })} Ar`;
-  return `${amount.toLocaleString("fr-FR", { minimumFractionDigits: amount % 1 ? 2 : 0, maximumFractionDigits: 2 })} €`;
+  const symbol = CURRENCY_SYMBOLS[currency as Currency] ?? currency;
+  return `${amount.toLocaleString("fr-FR", { minimumFractionDigits: amount % 1 ? 2 : 0, maximumFractionDigits: 2 })} ${symbol}`;
 }
 
 /** Malagasy mobile number, as the backend expects it: "+261 34 12 345 67" -> "0341234567" (null if invalid). */
@@ -156,6 +156,7 @@ export interface PaymentOptionsDto {
 
 export interface CardDonationInput {
   branchId?: number;
+  currency: Currency;
   amount: number;
   donorEmail: string;
   donorName?: string;

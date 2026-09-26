@@ -28,6 +28,7 @@ export function useCardDonation() {
     mutationFn: async (input) => {
       const { data } = await api.post<DonationReceiptDto>("/donations/card", {
         branch_id: input.branchId ?? null,
+        currency: input.currency,
         amount: input.amount,
         donor_email: input.donorEmail,
         donor_name: input.donorName || null,

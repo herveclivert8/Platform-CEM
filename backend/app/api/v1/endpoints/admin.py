@@ -4,13 +4,12 @@ Gestion des admins et statistiques
 """
 
 import secrets
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
-from typing import Optional
 
 from app.api.deps import get_db, get_current_user
 from app.core.email import email_service
@@ -18,23 +17,21 @@ from app.core.security import hash_password
 from app.models import User, Branch, Publication, Post
 from app.models.user import UserRole
 from app.core.permissions import verify_super_admin_only
+from app.schemas.admin import (
+    AdminAccountListResponse,
+    AdminCreate,
+    AdminCreated,
+    GlobalStatistics,
+)
 
 router = APIRouter(prefix="/super-admin", tags=["admin"])
-
-
-class AdminCreate(BaseModel):
-    """Corps de requête pour la création d'un compte administrateur d'antenne"""
-    email: EmailStr
-    first_name: str
-    last_name: str
-    branch_id: int
 
 
 # ============================================
 # GESTION DES ADMINS
 # ============================================
 
-@router.get("/admins")
+@router.get("/admins", response_model=AdminAccountListResponse)
 async def list_admins(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -77,7 +74,7 @@ async def list_admins(
     }
 
 
-@router.post("/admins", status_code=status.HTTP_201_CREATED)
+@router.post("/admins", response_model=AdminCreated, status_code=status.HTTP_201_CREATED)
 async def create_admin(
     data: AdminCreate,
     user: User = Depends(get_current_user),
@@ -93,11 +90,11 @@ async def create_admin(
 
     query = select(User).where(User.email == data.email)
     if await db.scalar(query):
-        raise HTTPException(status_code=400, detail="Email already exists")
+        raise HTTPException(status_code=400, detail="Un compte existe déjà avec cet email")
 
     branch = await db.get(Branch, data.branch_id)
     if not branch:
-        raise HTTPException(status_code=404, detail="Branch not found")
+        raise HTTPException(status_code=404, detail="Antenne introuvable")
 
     # Mot de passe temporaire à communiquer au nouvel admin (à changer à la première connexion)
     temporary_password = secrets.token_urlsafe(12)
@@ -149,11 +146,11 @@ async def delete_admin(
     await verify_super_admin_only(user)
 
     if admin_id == user.id:
-        raise HTTPException(status_code=400, detail="You cannot delete your own account")
+        raise HTTPException(status_code=400, detail="Vous ne pouvez pas supprimer votre propre compte")
 
     admin = await db.get(User, admin_id)
     if not admin:
-        raise HTTPException(status_code=404, detail="Admin not found")
+        raise HTTPException(status_code=404, detail="Compte admin introuvable")
 
     # Détacher l'admin de l'antenne qu'il gère, le cas échéant
     managed_branches = await db.execute(select(Branch).where(Branch.manager_id == admin_id))
@@ -170,7 +167,7 @@ async def delete_admin(
 # STATISTIQUES
 # ============================================
 
-@router.get("/statistics")
+@router.get("/statistics", response_model=GlobalStatistics)
 async def get_global_statistics(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -193,5 +190,5 @@ async def get_global_statistics(
         "total_publications": total_publications or 0,
         "total_posts": total_posts or 0,
         "total_admins": total_admins or 0,
-        "timestamp": "now",
+        "generated_at": datetime.now(timezone.utc),
     }

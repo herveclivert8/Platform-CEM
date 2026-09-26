@@ -6,9 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
-from app.api.deps import get_db, get_current_user
-from app.core.permissions import verify_branch_access
+from app.api.deps import get_db, get_current_user, get_optional_user
+from app.core.permissions import can_access_branch, verify_branch_access
 from app.models import Branch, ProjectSubmission, User
+from app.models.branch import BranchStatus
 from app.schemas.project_submission import (
     ProjectSubmission as ProjectSubmissionSchema,
     ProjectSubmissionCreate,
@@ -27,14 +28,19 @@ router = APIRouter(prefix="/branches", tags=["submissions"])
 async def create_submission(
     branch_id: int,
     data: ProjectSubmissionCreate,
+    user: User | None = Depends(get_optional_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Soumettre un dossier de projet à une antenne. Accessible: Public."""
     branch = await db.get(Branch, branch_id)
     if not branch:
-        raise HTTPException(status_code=404, detail="Branch not found")
+        raise HTTPException(status_code=404, detail="Antenne introuvable")
+    # Le public ne peut déposer que sur une antenne active ; un admin peut toujours
+    # enregistrer un dossier reçu hors du site.
+    if branch.status != BranchStatus.ACTIVE and not can_access_branch(user, branch_id):
+        raise HTTPException(status_code=409, detail="Cette antenne n'accepte pas de dossiers pour le moment.")
 
-    submission = ProjectSubmission(branch_id=branch_id, **data.dict())
+    submission = ProjectSubmission(branch_id=branch_id, **data.model_dump())
     db.add(submission)
     await db.commit()
     await db.refresh(submission)
@@ -50,7 +56,7 @@ async def create_submission(
         db=db,
     )
 
-    return ProjectSubmissionSchema.from_orm(submission)
+    return ProjectSubmissionSchema.model_validate(submission)
 
 
 @router.get("/{branch_id}/submissions", response_model=ProjectSubmissionListResponse)
@@ -82,7 +88,7 @@ async def list_submissions(
     submissions = result.scalars().all()
 
     return ProjectSubmissionListResponse(
-        items=[ProjectSubmissionSchema.from_orm(s) for s in submissions],
+        items=[ProjectSubmissionSchema.model_validate(s) for s in submissions],
         total=total or 0,
         page=page,
         page_size=page_size,
@@ -102,7 +108,7 @@ async def delete_submission(
 
     submission = await db.get(ProjectSubmission, submission_id)
     if not submission or submission.branch_id != branch_id:
-        raise HTTPException(status_code=404, detail="Submission not found")
+        raise HTTPException(status_code=404, detail="Dossier introuvable")
 
     await db.delete(submission)
     await db.commit()

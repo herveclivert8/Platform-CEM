@@ -71,7 +71,10 @@
     },
     "donation_sidebar_title": "Soutenir cette antenne",
     "other_branches": "Découvrir d'autres antennes",
-    "no_posts": "Aucune actualité publiée pour cette antenne pour le moment."
+    "no_posts": "Aucune actualité publiée pour cette antenne pour le moment.",
+    "inactive_badge": "Antenne inactive",
+    "inactive_notice": "Cette antenne n'est plus active. Ses actualités restent consultables, mais elle ne reçoit plus de dons ni de dossiers de projet.",
+    "inactive_submissions": "Cette antenne ne reçoit plus de dossiers pour le moment."
   },
   "donation": {
     "title": "Faire un don",
@@ -82,7 +85,7 @@
     "step_success": "Merci",
     "method_title": "Moyen de paiement",
     "method_card": "Carte bancaire",
-    "method_card_hint": "Paiement en ligne, en euros",
+    "method_card_hint": "Paiement en ligne sécurisé",
     "method_mobile": "Mobile Money",
     "method_mobile_hint": "Depuis votre téléphone, en ariary",
     "step1_title": "Montant de votre don",
@@ -144,7 +147,11 @@
     "unavailable": "Les dons en ligne ne sont pas encore disponibles. Contactez l'antenne de votre choix pour soutenir le CEM.",
     "load_error": "Impossible de charger les moyens de paiement. Vérifiez votre connexion.",
     "retry": "Réessayer",
-    "close": "Fermer"
+    "close": "Fermer",
+    "currency_title": "Devise",
+    "currency_MGA": "Ariary",
+    "currency_EUR": "Euro",
+    "currency_USD": "Dollar US"
   },
   "footer": {
     "association": "Club Excellence Madagascar — Association loi 1901",

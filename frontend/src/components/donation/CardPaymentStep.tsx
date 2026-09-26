@@ -15,15 +15,16 @@ import {
   validateCard,
   type CardFieldError,
 } from "../../lib/payments/card";
-import { formatAmount, type DonationReceipt } from "../../types/donation";
+import { formatAmount, type Currency, type DonationReceipt } from "../../types/donation";
 
 interface CardPaymentStepProps {
   amount: number;
+  currency: Currency;
   branchId?: number;
   onSuccess: (receipt: DonationReceipt, email: string) => void;
 }
 
-export function CardPaymentStep({ amount, branchId, onSuccess }: CardPaymentStepProps) {
+export function CardPaymentStep({ amount, currency, branchId, onSuccess }: CardPaymentStepProps) {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -35,7 +36,7 @@ export function CardPaymentStep({ amount, branchId, onSuccess }: CardPaymentStep
   const cardDonation = useCardDonation();
 
   const brand = detectCardBrand(number);
-  const amountLabel = formatAmount(amount, "EUR");
+  const amountLabel = formatAmount(amount, currency);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,6 +55,7 @@ export function CardPaymentStep({ amount, branchId, onSuccess }: CardPaymentStep
     try {
       const receipt = await cardDonation.mutateAsync({
         branchId,
+        currency,
         amount,
         donorEmail: email,
         donorName: name.trim(),

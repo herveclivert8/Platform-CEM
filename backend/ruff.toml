@@ -1,0 +1,13 @@
+# Lint du backend : `ruff check .` (lancé par la CI)
+target-version = "py312"
+extend-exclude = [".venv", "uploads"]
+
+[lint]
+# Règles par défaut (pyflakes + erreurs pycodestyle)
+ignore = [
+    "E712",  # `colonne == False` est la syntaxe normale d'une condition SQLAlchemy
+]
+
+[lint.per-file-ignores]
+# Relations SQLAlchemy annotées par nom de classe (Mapped["Branch"]), résolues à l'exécution
+"app/models/*.py" = ["F821"]

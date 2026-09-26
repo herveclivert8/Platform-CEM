@@ -11,7 +11,7 @@ import { ManualDonationDrawer } from "../../components/admin/donations/ManualDon
 import { DeleteDonationDialog } from "../../components/admin/donations/DeleteDonationDialog";
 import { Toast, type ToastMessage } from "../../components/ui/Toast";
 import { useAdminDonations, useDeleteDonation, useReopenDonation } from "../../hooks/useAdminDonations";
-import { useBranches } from "../../hooks/useBranches";
+import { useAdminBranchList } from "../../hooks/useBranches";
 import { useAdminScopeStore } from "../../store/adminScopeStore";
 import { useAuthStore } from "../../store/authStore";
 import {
@@ -49,7 +49,7 @@ export function DonationsPage() {
   const user = useAuthStore((s) => s.user);
   const { selectedBranchId } = useAdminScopeStore();
   const { data: donations, isLoading } = useAdminDonations();
-  const { data: branchesData } = useBranches();
+  const { data: branchesData } = useAdminBranchList();
   const reopen = useReopenDonation();
   const deleteDonation = useDeleteDonation();
   const [filter, setFilter] = useState<Filter>("PENDING");

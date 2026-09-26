@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
@@ -26,6 +27,7 @@ from app.schemas.auth import (
     LoginRequest,
     LoginResponse,
     LogoutResponse,
+    MessageResponse,
     RefreshTokenRequest,
     ResetPasswordRequest,
 )
@@ -60,8 +62,8 @@ async def get_bearer_token(request: Request) -> str:
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Missing or invalid Authorization header",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Non authentifié",
         )
     return auth_header[7:]  # Remove "Bearer " prefix
 
@@ -73,7 +75,10 @@ async def login(
 ) -> LoginResponse:
     """Connexion utilisateur - Retourne JWT access token + refresh token"""
     result = await db.execute(
-        select(User).options(selectinload(User.branch)).where(User.email == credentials.email)
+        select(User)
+        .options(selectinload(User.branch))
+        # Case/whitespace-insensitive: browsers and phones often capitalize the first letter.
+        .where(func.lower(User.email) == credentials.email.strip().lower())
     )
     user = result.scalar_one_or_none()
 
@@ -148,7 +153,7 @@ async def logout(
     return LogoutResponse(message="Déconnecté avec succès")
 
 
-@router.post("/password/change", status_code=200)
+@router.post("/password/change", response_model=MessageResponse, status_code=200)
 async def change_password(
     data: ChangePasswordRequest,
     user: User = Depends(get_authenticated_user),
@@ -198,7 +203,7 @@ async def forgot_password(
     return generic_message
 
 
-@router.post("/password/reset", status_code=200)
+@router.post("/password/reset", response_model=MessageResponse, status_code=200)
 async def reset_password(
     data: ResetPasswordRequest,
     db: AsyncSession = Depends(get_db),

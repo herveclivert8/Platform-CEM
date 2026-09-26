@@ -23,6 +23,20 @@ export function useBranches(params: BranchListParams = {}) {
   });
 }
 
+/** Admin list: every status (active, inactive, pending); a branch admin only gets their own branch. */
+export function useAdminBranchList() {
+  return useQuery({
+    queryKey: ["branches", "admin"],
+    queryFn: async () => {
+      const { data } = await api.get<PaginatedDto<BranchDto>>("/branches/admin", {
+        params: { page: 1, page_size: 100 },
+      });
+      return mapPaginated(data, mapBranch);
+    },
+    staleTime: 60_000,
+  });
+}
+
 export function useBranch(branchId: number | undefined) {
   return useQuery<Branch>({
     queryKey: ["branch", branchId],

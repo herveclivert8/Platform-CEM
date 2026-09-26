@@ -71,7 +71,10 @@
     },
     "donation_sidebar_title": "Support this branch",
     "other_branches": "Discover other branches",
-    "no_posts": "No news published for this branch yet."
+    "no_posts": "No news published for this branch yet.",
+    "inactive_badge": "Inactive branch",
+    "inactive_notice": "This branch is no longer active. Its news remain available, but it no longer accepts donations or project applications.",
+    "inactive_submissions": "This branch is not accepting applications at the moment."
   },
   "donation": {
     "title": "Make a donation",
@@ -82,7 +85,7 @@
     "step_success": "Thank you",
     "method_title": "Payment method",
     "method_card": "Card",
-    "method_card_hint": "Online payment, in euros",
+    "method_card_hint": "Secure online payment",
     "method_mobile": "Mobile Money",
     "method_mobile_hint": "From your phone, in ariary",
     "step1_title": "Donation amount",
@@ -144,7 +147,11 @@
     "unavailable": "Online donations are not available yet. Please contact the branch of your choice to support CEM.",
     "load_error": "Could not load the payment methods. Please check your connection.",
     "retry": "Try again",
-    "close": "Close"
+    "close": "Close",
+    "currency_title": "Currency",
+    "currency_MGA": "Ariary",
+    "currency_EUR": "Euro",
+    "currency_USD": "US Dollar"
   },
   "footer": {
     "association": "Club Excellence Madagascar — French non-profit (loi 1901)",

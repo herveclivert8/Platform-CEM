@@ -6,7 +6,7 @@ Structuré pour ELK stack, Sentry, etc.
 import logging
 import sys
 from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 import json
 
 
@@ -33,7 +33,7 @@ class StructuredLogger:
             file_handler = logging.FileHandler('logs/app.log')
             file_handler.setFormatter(formatter)
             self.logger.addHandler(file_handler)
-        except:
+        except OSError:
             pass  # Logs directory might not exist
 
     def log_auth_event(
@@ -138,7 +138,6 @@ class LoggingMiddleware:
             return
 
         import time
-        from fastapi import Request
 
         start_time = time.time()
         path = scope.get("path")

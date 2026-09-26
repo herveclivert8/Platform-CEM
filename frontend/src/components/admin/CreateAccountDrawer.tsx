@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Drawer } from "./Drawer";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
-import { useBranches } from "../../hooks/useBranches";
+import { useAdminBranchList } from "../../hooks/useBranches";
 import { useCreateAccount } from "../../hooks/useAdminAccounts";
 
 export function CreateAccountDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -10,7 +10,7 @@ export function CreateAccountDrawer({ open, onClose }: { open: boolean; onClose:
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [branchId, setBranchId] = useState<number | "">("");
-  const { data: branchesData } = useBranches();
+  const { data: branchesData } = useAdminBranchList();
   const createAccount = useCreateAccount();
 
   const handleSubmit = async (e: React.FormEvent) => {

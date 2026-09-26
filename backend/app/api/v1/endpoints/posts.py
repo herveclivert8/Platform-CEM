@@ -10,13 +10,13 @@ from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_db, get_current_user
 from app.models import Branch, Post, PostImage, User
+from app.models.branch import BranchStatus
 from app.models.post import PostStatus as PostStatusModel
 from app.schemas.post import (
     Post as PostSchema,
     PostCreate,
     PostUpdate,
     PostListResponse,
-    PostStatus,
 )
 from app.core.permissions import verify_branch_access
 
@@ -28,7 +28,7 @@ async def _get_post_or_404(db: AsyncSession, post_id: int) -> Post:
     result = await db.execute(query)
     post = result.scalar_one_or_none()
     if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
+        raise HTTPException(status_code=404, detail="Post introuvable")
     return post
 
 
@@ -41,8 +41,10 @@ async def list_branch_posts(
     pillar: str | None = Query(None),
 ):
     """Lister les posts publiés d'une antenne. Accessible: Public."""
-    if not await db.get(Branch, branch_id):
-        raise HTTPException(status_code=404, detail="Branch not found")
+    branch = await db.get(Branch, branch_id)
+    # Une antenne en attente n'est pas encore ouverte : invisible pour le public
+    if not branch or branch.status == BranchStatus.PENDING:
+        raise HTTPException(status_code=404, detail="Antenne introuvable")
 
     filters = [Post.branch_id == branch_id, Post.status == PostStatusModel.PUBLISHED]
     if pillar:
@@ -111,7 +113,10 @@ async def get_post(
     """Récupérer un post publié. Accessible: Public."""
     post = await _get_post_or_404(db, post_id)
     if post.status != PostStatusModel.PUBLISHED:
-        raise HTTPException(status_code=404, detail="Post not found")
+        raise HTTPException(status_code=404, detail="Post introuvable")
+    branch = await db.get(Branch, post.branch_id)
+    if branch and branch.status == BranchStatus.PENDING:
+        raise HTTPException(status_code=404, detail="Post introuvable")
     return PostSchema.from_orm_post(post)
 
 
@@ -128,7 +133,7 @@ async def create_post(
     """
     await verify_branch_access(user, branch_id)
     if not await db.get(Branch, branch_id):
-        raise HTTPException(status_code=404, detail="Branch not found")
+        raise HTTPException(status_code=404, detail="Antenne introuvable")
 
     post = Post(
         branch_id=branch_id,
@@ -158,7 +163,7 @@ async def update_post(
     post = await _get_post_or_404(db, post_id)
     await verify_branch_access(user, post.branch_id)
 
-    update_data = data.dict(exclude_unset=True, exclude={"images"})
+    update_data = data.model_dump(exclude_unset=True, exclude={"images"})
     for key, value in update_data.items():
         setattr(post, key, value.value if hasattr(value, "value") else value)
 

@@ -9,12 +9,12 @@ import {
 import type { PaginatedDto } from "../types/post";
 import { useAdminScopeStore } from "../store/adminScopeStore";
 import { useAuthStore } from "../store/authStore";
-import { useBranches } from "./useBranches";
+import { useAdminBranchList } from "./useBranches";
 
 export function useAdminSubmissions() {
   const user = useAuthStore((s) => s.user);
   const { selectedBranchId } = useAdminScopeStore();
-  const { data: branchesData } = useBranches();
+  const { data: branchesData } = useAdminBranchList();
 
   const targetBranchIds =
     user?.role === "SUPER_ADMIN"

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Mail, Phone, User, Send, CheckCircle2 } from "lucide-react";
 import { Card, IconBadge } from "../ui/Card";
 import { Button } from "../ui/Button";
@@ -6,6 +7,7 @@ import { useCreateSubmission } from "../../hooks/useSubmissions";
 import type { Branch } from "../../types/branch";
 
 export function TeamContactTab({ branch }: { branch: Branch }) {
+  const { t } = useTranslation();
   const [applicantName, setApplicantName] = useState("");
   const [email, setEmail] = useState("");
   const [projectSummary, setProjectSummary] = useState("");
@@ -60,7 +62,11 @@ export function TeamContactTab({ branch }: { branch: Branch }) {
           Soumettez votre dossier à l'antenne de {branch.cityName}.
         </p>
 
-        {createSubmission.isSuccess ? (
+        {branch.status !== "active" ? (
+          <p className="mt-6 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            {t("hub.inactive_submissions")}
+          </p>
+        ) : createSubmission.isSuccess ? (
           <div className="mt-6 flex items-center gap-2.5 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
             <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
             Votre dossier a bien été transmis à l'antenne locale.

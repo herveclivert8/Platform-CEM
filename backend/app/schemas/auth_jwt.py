@@ -3,7 +3,7 @@ Schémas Pydantic pour authentification JWT
 Production-ready
 """
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 from typing import Optional
 
 
@@ -12,25 +12,27 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "email": "admin@cem.mg",
                 "password": "SecurePassword123!",
             }
         }
+    )
 
 
 class RefreshTokenRequest(BaseModel):
     """Requête refresh token"""
     refresh_token: str
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
             }
         }
+    )
 
 
 class CurrentUserResponse(BaseModel):
@@ -50,8 +52,8 @@ class LoginResponse(BaseModel):
     token_type: str = "bearer"
     user: CurrentUserResponse
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
                 "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -66,16 +68,18 @@ class LoginResponse(BaseModel):
                 },
             }
         }
+    )
 
 
 class LogoutResponse(BaseModel):
     """Réponse logout"""
     message: str
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {"message": "Déconnecté avec succès"}
         }
+    )
 
 
 class TokenResponse(BaseModel):
@@ -83,10 +87,11 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
                 "token_type": "bearer",
             }
         }
+    )

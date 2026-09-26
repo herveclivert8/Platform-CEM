@@ -32,6 +32,19 @@ async def get_current_user(
     return user
 
 
+async def get_optional_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    """Utilisateur connecté s'il y en a un, sinon None (pour les endpoints publics)."""
+    if credentials is None:
+        return None
+    try:
+        return await get_current_user(credentials, db)
+    except HTTPException:
+        return None
+
+
 def require_role(allowed_roles: list[str | UserRole]):
     async def role_checker(current_user: User = Depends(get_current_user)) -> User:
         role_values = [r.value if isinstance(r, UserRole) else r for r in allowed_roles]

@@ -44,7 +44,8 @@ MOBILE_OPERATOR_LABELS = {
     MobileOperator.AIRTEL_MONEY: "Airtel Money",
 }
 
-# Devise imposée par le mode de paiement : carte en euros, Mobile Money en ariary.
+# Devise par défaut de chaque mode de paiement. Mobile Money : toujours en ariary ;
+# carte : le donateur choisit (voir CARD_CURRENCY_LIMITS dans schemas/donation.py).
 CURRENCY_BY_METHOD = {
     PaymentMethod.CARD: "EUR",
     PaymentMethod.MOBILE_MONEY: "MGA",

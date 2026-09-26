@@ -4,14 +4,20 @@ import { ArrowLeft, Heart, X } from "lucide-react";
 import clsx from "clsx";
 import { Button } from "../ui/Button";
 import { AmountStep } from "./AmountStep";
-import { PRESET_AMOUNTS, type DonationMethod } from "./donationConstants";
+import { METHODS_BY_CURRENCY, PRESET_AMOUNTS, type DonationMethod } from "./donationConstants";
 import { CardPaymentStep } from "./CardPaymentStep";
 import { MobileMoneyStep } from "./MobileMoneyStep";
 import { DonationSuccess } from "./DonationSuccess";
 import { Spinner } from "./donationUi";
 import { usePaymentOptions } from "../../hooks/useDonations";
 import { useDonationUiStore } from "../../store/donationUiStore";
-import { CURRENCY_BY_METHOD, formatAmount, type DonationReceipt, type PaymentOptions } from "../../types/donation";
+import {
+  DONATION_CURRENCIES,
+  formatAmount,
+  type Currency,
+  type DonationReceipt,
+  type PaymentOptions,
+} from "../../types/donation";
 
 type Step = "amount" | "payment" | "success";
 const STEPS: Step[] = ["amount", "payment", "success"];
@@ -29,17 +35,20 @@ export function DonationModal() {
   const { isOpen: open, branchId, branchName, close: onClose } = useDonationUiStore();
   const { data: options, isFetching, isError, refetch } = usePaymentOptions();
   const [step, setStep] = useState<Step>("amount");
+  const [currency, setCurrency] = useState<Currency>(DONATION_CURRENCIES[0]);
   const [method, setMethod] = useState<DonationMethod | null>(null);
   const [presetAmount, setPresetAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState("");
   const [receipt, setReceipt] = useState<DonationReceipt | null>(null);
   const [receiptEmail, setReceiptEmail] = useState<string | undefined>(undefined);
 
-  const methods = availableMethods(options);
+  const enabledMethods = availableMethods(options);
+  // Only offer a currency if at least one of its payment methods is enabled
+  const currencies = DONATION_CURRENCIES.filter((c) => METHODS_BY_CURRENCY[c].some((m) => enabledMethods.includes(m)));
+  const selectedCurrency = currencies.includes(currency) ? currency : (currencies[0] ?? DONATION_CURRENCIES[0]);
+  const methods = METHODS_BY_CURRENCY[selectedCurrency].filter((m) => enabledMethods.includes(m));
   const selectedMethod = method && methods.includes(method) ? method : (methods[0] ?? null);
-  const amount = customAmount
-    ? Number(customAmount)
-    : (presetAmount ?? (selectedMethod ? PRESET_AMOUNTS[selectedMethod][1] : 0));
+  const amount = customAmount ? Number(customAmount) : (presetAmount ?? PRESET_AMOUNTS[selectedCurrency][1]);
 
   // The modal stays mounted while closed: reload the payment options each time it opens,
   // in case an admin just changed them.
@@ -51,6 +60,7 @@ export function DonationModal() {
     if (open) return;
     const timeout = setTimeout(() => {
       setStep("amount");
+      setCurrency(DONATION_CURRENCIES[0]);
       setMethod(null);
       setPresetAmount(null);
       setCustomAmount("");
@@ -73,14 +83,18 @@ export function DonationModal() {
 
   if (!open) return null;
 
-  const loading = isFetching && methods.length === 0;
+  const loading = isFetching && enabledMethods.length === 0;
   const stepIndex = STEPS.indexOf(step);
 
-  const changeMethod = (m: DonationMethod) => {
-    setMethod(m);
+  const changeCurrency = (c: Currency) => {
+    setCurrency(c);
+    setMethod(null);
     setPresetAmount(null);
     setCustomAmount("");
   };
+
+  // Same currency, so the amount the donor chose is kept
+  const changeMethod = (m: DonationMethod) => setMethod(m);
 
   const handleSuccess = (donationReceipt: DonationReceipt, email?: string) => {
     setReceipt(donationReceipt);
@@ -170,7 +184,7 @@ export function DonationModal() {
             </div>
             <div className="text-right">
               <p className="text-lg font-extrabold tabular-nums tracking-tight text-slate-900 dark:text-white">
-                {formatAmount(amount, CURRENCY_BY_METHOD[selectedMethod])}
+                {formatAmount(amount, selectedCurrency)}
               </p>
               <button
                 type="button"
@@ -207,6 +221,9 @@ export function DonationModal() {
           {!loading && options && selectedMethod && step === "amount" && (
             <AmountStep
               options={options}
+              currencies={currencies}
+              currency={selectedCurrency}
+              onCurrencyChange={changeCurrency}
               methods={methods}
               method={selectedMethod}
               onMethodChange={changeMethod}
@@ -224,6 +241,7 @@ export function DonationModal() {
           {options && step === "payment" && selectedMethod === "CARD" && (
             <CardPaymentStep
               amount={amount}
+              currency={selectedCurrency}
               branchId={branchId}
               onSuccess={(r, email) => handleSuccess(r, email)}
             />

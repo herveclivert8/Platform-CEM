@@ -33,6 +33,9 @@ class CardPaymentProvider(Protocol):
     name: str
     simulated: bool
 
+    # currency : "MGA", "EUR" ou "USD". Attention pour un vrai prestataire : l'ariary n'a pas de
+    # subdivision (Stripe le traite comme une devise "zero-decimal" : 5 000 Ar -> amount=5000,
+    # alors que 25 € -> amount=2500 centimes).
     async def charge(self, amount: float, currency: str, token: str, description: str) -> PaymentResult: ...
 
 

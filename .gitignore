@@ -11,3 +11,14 @@ frontend/dist/
 # Misc
 venv/
 .DS_Store
+
+# Tests / lint
+backend/.pytest_cache/
+backend/.ruff_cache/
+
+# Déploiement
+.env.prod
+
+# Données locales : images envoyées, ancienne base SQLite
+backend/uploads/
+backend/dev.db

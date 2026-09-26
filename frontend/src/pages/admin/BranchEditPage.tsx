@@ -8,6 +8,13 @@ import { AddressAutocomplete, type GeoSelection } from "../../components/admin/A
 import { BranchProfileFields } from "../../components/admin/BranchProfileFields";
 import { useBranch } from "../../hooks/useBranches";
 import { useUpdateBranch, type TeamMemberInput } from "../../hooks/useAdminBranches";
+import { BRANCH_STATUS_LABELS, type BranchStatus } from "../../types/branch";
+
+const STATUS_HELP: Record<BranchStatus, string> = {
+  active: "Visible dans l'annuaire ; reçoit dons et dossiers.",
+  inactive: "Retirée de l'annuaire. Sa page reste consultable avec la mention « antenne inactive », sans dons ni dépôt de dossiers.",
+  pending: "Pas encore ouverte : invisible pour le public. Ses admins peuvent déjà préparer son contenu.",
+};
 
 export function BranchEditPage() {
   const { branchId } = useParams<{ branchId: string }>();
@@ -24,10 +31,12 @@ export function BranchEditPage() {
   const [description, setDescription] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [teamMembers, setTeamMembers] = useState<TeamMemberInput[]>([]);
+  const [status, setStatus] = useState<BranchStatus>("active");
 
   useEffect(() => {
     if (branch) {
       setName(branch.cityName);
+      setStatus(branch.status);
       setCountry(branch.country);
       setAddress(branch.address ?? "");
       setCoords(branch.lat && branch.lng ? { lat: branch.lat, lng: branch.lng } : null);
@@ -60,6 +69,7 @@ export function BranchEditPage() {
       contact_phone: contactPhone || undefined,
       description: description || undefined,
       logo_url: logoUrl || undefined,
+      status,
       team_members: teamMembers.filter((m) => m.name.trim() && m.role.trim()),
     });
   };
@@ -83,6 +93,25 @@ export function BranchEditPage() {
       ) : (
         <Card hoverable={false} className="mt-6 max-w-2xl p-6">
           <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label htmlFor="branch-status" className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
+                Statut
+              </label>
+              <select
+                id="branch-status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value as BranchStatus)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              >
+                {(Object.keys(BRANCH_STATUS_LABELS) as BranchStatus[]).map((s) => (
+                  <option key={s} value={s}>
+                    {BRANCH_STATUS_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">{STATUS_HELP[status]}</p>
+            </div>
+
             <div>
               <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
                 Rechercher une adresse (autocomplétion)

@@ -84,7 +84,7 @@ async def mark_as_read(notification_id: int, db: AsyncSession) -> bool:
 async def mark_all_as_read(user_id: int, db: AsyncSession) -> int:
     """Mark all user notifications as read."""
     try:
-        from sqlalchemy import select, update
+        from sqlalchemy import update
 
         stmt = (
             update(Notification)

@@ -3,34 +3,47 @@ import { Sparkles, ArrowRight } from "lucide-react";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { useDonationUiStore } from "../../store/donationUiStore";
+import { useHomeHero } from "../../hooks/useHomeHero";
+
+export const DEFAULT_HERO_IMAGE =
+  "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1920&q=80&auto=format&fit=crop";
 
 export function Hero() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const openDonation = useDonationUiStore((s) => s.open);
+  // Custom cover set by the super admin; any empty field falls back to the default text / photo
+  const { data: hero, isLoading } = useHomeHero();
+  const isEn = i18n.language?.startsWith("en");
+  const badge = (isEn ? hero?.badgeEn : hero?.badgeFr) || t("hero.badge");
+  const title = (isEn ? hero?.titleEn : hero?.titleFr) || t("hero.title");
+  const subtitle = (isEn ? hero?.subtitleEn : hero?.subtitleFr) || t("hero.subtitle");
 
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden bg-slate-900">
       <div className="absolute inset-0">
-        <img
-          src="https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1920&q=80&auto=format&fit=crop"
-          alt=""
-          className="h-full w-full object-cover"
-        />
+        {/* Wait for the settings so the default cover doesn't flash before the custom one */}
+        {!isLoading && (
+          <img src={hero?.imageUrl || DEFAULT_HERO_IMAGE} alt="" className="h-full w-full object-cover" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/85 via-slate-900/50 to-transparent" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[640px] max-w-7xl flex-col justify-end px-4 pb-20 pt-40 sm:px-6 lg:px-8">
+      <div
+        className={`relative mx-auto flex min-h-[640px] max-w-7xl flex-col justify-end px-4 pb-20 pt-40 transition-opacity sm:px-6 lg:px-8 ${
+          isLoading ? "opacity-0" : "opacity-100"
+        }`}
+      >
         <Badge tone="emerald" className="w-fit animate-fade-in-up">
           <Sparkles className="h-3.5 w-3.5" aria-hidden />
-          {t("hero.badge")}
+          {badge}
         </Badge>
 
         <h1 className="mt-6 max-w-3xl text-4xl font-extrabold tracking-tight text-white animate-fade-in-up lg:text-6xl">
-          {t("hero.title")}
+          {title}
         </h1>
 
         <p className="mt-5 max-w-xl text-base text-slate-200 animate-fade-in-up lg:text-lg">
-          {t("hero.subtitle")}
+          {subtitle}
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3 animate-fade-in-up">

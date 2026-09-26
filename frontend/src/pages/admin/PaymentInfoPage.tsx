@@ -117,7 +117,7 @@ export function PaymentInfoPage() {
 
         <Card hoverable={false} className="h-fit p-6">
           <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
-            <CreditCard className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden /> Carte bancaire (€)
+            <CreditCard className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden /> Carte bancaire (Ar, €, $)
           </h2>
           {!options ? (
             <p className="mt-3 text-sm text-slate-400">Chargement…</p>

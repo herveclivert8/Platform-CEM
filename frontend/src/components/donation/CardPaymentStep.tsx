@@ -82,7 +82,7 @@ export function CardPaymentStep({ amount, branchId, onSuccess }: CardPaymentStep
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="vous@exemple.com"
+          placeholder={t("auth.email_placeholder")}
           className={fieldClass}
         />
       </Field>

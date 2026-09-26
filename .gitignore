@@ -3,6 +3,9 @@ backend/.venv/
 backend/__pycache__/
 backend/**/__pycache__/
 backend/.env
+backend/uploads/
+backend/logs/
+backend/*.db
 
 # Frontend
 frontend/node_modules/
@@ -11,3 +14,6 @@ frontend/dist/
 # Misc
 venv/
 .DS_Store
+
+# Déploiement
+.env.production

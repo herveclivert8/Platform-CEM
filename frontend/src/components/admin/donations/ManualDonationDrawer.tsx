@@ -9,6 +9,7 @@ import { useBranches } from "../../../hooks/useBranches";
 import { useRecordManualDonation } from "../../../hooks/useAdminDonations";
 import { useAuthStore } from "../../../store/authStore";
 import { OPERATOR_LABELS, normalizeMgPhone, type Donation, type MobileOperator } from "../../../types/donation";
+import { Trans, useTranslation } from "react-i18next";
 
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white";
@@ -24,14 +25,16 @@ interface ManualDonationDrawerProps {
 }
 
 export function ManualDonationDrawer({ open, onClose, defaultBranchId, onRecorded }: ManualDonationDrawerProps) {
+  const { t } = useTranslation();
   return (
-    <Drawer open={open} onClose={onClose} title="Enregistrer un don reçu">
+    <Drawer open={open} onClose={onClose} title={t("admin.donations.record_received")}>
       {open && <ManualDonationForm defaultBranchId={defaultBranchId} onDone={onRecorded} />}
     </Drawer>
   );
 }
 
 function ManualDonationForm({ defaultBranchId, onDone }: { defaultBranchId?: number; onDone: (donation: Donation) => void }) {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const { data: branchesData } = useBranches();
@@ -51,7 +54,7 @@ function ManualDonationForm({ defaultBranchId, onDone }: { defaultBranchId?: num
     setError(null);
     const normalizedPhone = normalizeMgPhone(phone);
     if (!normalizedPhone) {
-      setError("Numéro émetteur invalide (format : 034 12 345 67).");
+      setError(t("admin.donations.invalid_phone"));
       return;
     }
     try {
@@ -69,10 +72,10 @@ function ManualDonationForm({ defaultBranchId, onDone }: { defaultBranchId?: num
       const status = isAxiosError(err) ? err.response?.status : undefined;
       setError(
         status === 409
-          ? "Cette référence est déjà enregistrée pour un don."
+          ? t("admin.donations.ref_exists")
           : status === 422
-            ? "Vérifiez la référence, le montant et l'email."
-            : "L'enregistrement a échoué. Réessayez.",
+            ? t("admin.donations.check_fields")
+            : t("admin.donations.record_failed"),
       );
     }
   };
@@ -80,15 +83,14 @@ function ManualDonationForm({ defaultBranchId, onDone }: { defaultBranchId?: num
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
-        Pour un paiement Mobile Money arrivé sur le compte sans que le donateur l'ait déclaré. Le don est enregistré comme
-        <strong> confirmé</strong> ; si un email est renseigné, le donateur reçoit un remerciement.
+        <Trans i18nKey="admin.donations.manual_intro" components={{ strong: <strong /> }} />
       </p>
 
       {isSuperAdmin && (
         <div>
-          <label className={labelClass}>Antenne</label>
+          <label className={labelClass}>{t("admin.donations.branch")}</label>
           <select value={branchId} onChange={(e) => setBranchId(e.target.value)} className={inputClass}>
-            <option value="">Don global (sans antenne)</option>
+            <option value="">{t("admin.donations.global_no_branch")}</option>
             {branchesData?.items.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.cityName}
@@ -99,7 +101,7 @@ function ManualDonationForm({ defaultBranchId, onDone }: { defaultBranchId?: num
       )}
 
       <div>
-        <label className={labelClass}>Opérateur</label>
+        <label className={labelClass}>{t("admin.donations.operator")}</label>
         <div className="grid grid-cols-3 gap-2">
           {(Object.keys(OPERATOR_LABELS) as MobileOperator[]).map((op) => (
             <button
@@ -122,27 +124,27 @@ function ManualDonationForm({ defaultBranchId, onDone }: { defaultBranchId?: num
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={labelClass}>Numéro émetteur</label>
+          <label className={labelClass}>{t("admin.donations.sender_number")}</label>
           <input required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="034 12 345 67" className={clsx(inputClass, "font-mono")} />
         </div>
         <div>
-          <label className={labelClass}>Montant reçu (Ar)</label>
+          <label className={labelClass}>{t("admin.donations.received_amount_short")}</label>
           <input required type="number" min={100} value={amount} onChange={(e) => setAmount(e.target.value)} className={clsx(inputClass, "tabular-nums")} />
         </div>
       </div>
 
       <div>
-        <label className={labelClass}>Référence de la transaction</label>
+        <label className={labelClass}>{t("admin.donations.transaction_reference")}</label>
         <input required value={reference} onChange={(e) => setReference(e.target.value.toUpperCase())} className={clsx(inputClass, "font-mono")} />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={labelClass}>Email du donateur (facultatif)</label>
+          <label className={labelClass}>{t("admin.donations.donor_email_optional")}</label>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
         </div>
         <div>
-          <label className={labelClass}>Nom (facultatif)</label>
+          <label className={labelClass}>{t("admin.donations.name_optional")}</label>
           <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
         </div>
       </div>
@@ -154,7 +156,7 @@ function ManualDonationForm({ defaultBranchId, onDone }: { defaultBranchId?: num
       )}
 
       <Button type="submit" variant="secondary" className="w-full justify-center" disabled={record.isPending}>
-        {record.isPending ? "…" : "Enregistrer le don"}
+        {record.isPending ? "…" : t("admin.donations.record_button")}
       </Button>
     </form>
   );

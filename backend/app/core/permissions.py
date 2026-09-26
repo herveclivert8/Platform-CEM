@@ -32,7 +32,7 @@ async def verify_branch_access(user: User, required_branch_id: int) -> None:
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail="Access denied: You can only access your own branch",
+        detail="Accès refusé : vous ne pouvez gérer que votre antenne",
     )
 
 
@@ -46,7 +46,7 @@ async def verify_super_admin_only(user: User) -> None:
     if user.role != UserRole.SUPER_ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied: Super admin only",
+            detail="Accès réservé au Super Admin",
         )
 
 
@@ -72,7 +72,7 @@ def require_admin(func):
         if user.role not in (UserRole.BRANCH_ADMIN, UserRole.SUPER_ADMIN):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Admin access required",
+                detail="Accès réservé aux administrateurs",
             )
         return await func(*args, user=user, **kwargs)
     return wrapper

@@ -9,6 +9,8 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_db, get_current_user
+from app.api.scope import like_pattern, resolve_branch_scope
+from app.services.audit import record_audit
 from app.models import Branch, Post, PostImage, User
 from app.models.post import PostStatus as PostStatusModel
 from app.schemas.post import (
@@ -17,6 +19,7 @@ from app.schemas.post import (
     PostUpdate,
     PostListResponse,
     PostStatus,
+    Pillar,
 )
 from app.core.permissions import verify_branch_access
 
@@ -28,7 +31,7 @@ async def _get_post_or_404(db: AsyncSession, post_id: int) -> Post:
     result = await db.execute(query)
     post = result.scalar_one_or_none()
     if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
+        raise HTTPException(status_code=404, detail="Post introuvable")
     return post
 
 
@@ -42,7 +45,7 @@ async def list_branch_posts(
 ):
     """Lister les posts publiés d'une antenne. Accessible: Public."""
     if not await db.get(Branch, branch_id):
-        raise HTTPException(status_code=404, detail="Branch not found")
+        raise HTTPException(status_code=404, detail="Antenne introuvable")
 
     filters = [Post.branch_id == branch_id, Post.status == PostStatusModel.PUBLISHED]
     if pillar:
@@ -70,23 +73,39 @@ async def list_branch_posts(
     )
 
 
-@router.get("/branches/{branch_id}/posts/admin", response_model=PostListResponse)
-async def list_branch_posts_admin(
-    branch_id: int,
+@router.get("/posts/admin", response_model=PostListResponse)
+async def list_posts_admin(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    branch_id: int | None = Query(None, description="Super Admin : limiter à une antenne"),
+    status_filter: PostStatus | None = Query(None, alias="status"),
+    pillar: Pillar | None = Query(None),
+    q: str | None = Query(None, max_length=100, description="Recherche dans le titre"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
-    """Lister tous les posts (brouillons inclus) d'une antenne. Accessible: Admin de la branche + Super Admin."""
-    await verify_branch_access(user, branch_id)
+    """
+    Lister les posts (brouillons inclus), avec filtres et recherche.
+    Accessible: Admin d'antenne (la sienne) + Super Admin (toutes, ou une seule).
+    """
+    scope = resolve_branch_scope(user, branch_id)
 
-    total = await db.scalar(select(func.count(Post.id)).where(Post.branch_id == branch_id))
+    filters = []
+    if scope is not None:
+        filters.append(Post.branch_id == scope)
+    if status_filter is not None:
+        filters.append(Post.status == status_filter.value)
+    if pillar is not None:
+        filters.append(Post.pillar == pillar.value)
+    if q and q.strip():
+        filters.append(Post.title.ilike(like_pattern(q), escape="\\"))
+
+    total = await db.scalar(select(func.count(Post.id)).where(*filters))
 
     query = (
         select(Post)
         .options(selectinload(Post.images))
-        .where(Post.branch_id == branch_id)
+        .where(*filters)
         .order_by(Post.created_at.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
@@ -111,7 +130,7 @@ async def get_post(
     """Récupérer un post publié. Accessible: Public."""
     post = await _get_post_or_404(db, post_id)
     if post.status != PostStatusModel.PUBLISHED:
-        raise HTTPException(status_code=404, detail="Post not found")
+        raise HTTPException(status_code=404, detail="Post introuvable")
     return PostSchema.from_orm_post(post)
 
 
@@ -128,7 +147,7 @@ async def create_post(
     """
     await verify_branch_access(user, branch_id)
     if not await db.get(Branch, branch_id):
-        raise HTTPException(status_code=404, detail="Branch not found")
+        raise HTTPException(status_code=404, detail="Antenne introuvable")
 
     post = Post(
         branch_id=branch_id,
@@ -140,6 +159,11 @@ async def create_post(
         images=[PostImage(url=url, position=i) for i, url in enumerate(data.images)],
     )
     db.add(post)
+    await db.flush()
+    record_audit(
+        db, user=user, action="create", resource_type="post", resource_id=post.id,
+        branch_id=branch_id, details={"title": post.title},
+    )
     await db.commit()
     await db.refresh(post)
     await db.refresh(post, attribute_names=["images"])
@@ -158,7 +182,7 @@ async def update_post(
     post = await _get_post_or_404(db, post_id)
     await verify_branch_access(user, post.branch_id)
 
-    update_data = data.dict(exclude_unset=True, exclude={"images"})
+    update_data = data.model_dump(exclude_unset=True, exclude={"images"})
     for key, value in update_data.items():
         setattr(post, key, value.value if hasattr(value, "value") else value)
 
@@ -167,6 +191,10 @@ async def update_post(
         for i, url in enumerate(data.images):
             post.images.append(PostImage(url=url, position=i))
 
+    record_audit(
+        db, user=user, action="update", resource_type="post", resource_id=post.id,
+        branch_id=post.branch_id, details={"title": post.title, "fields": sorted(data.model_fields_set)},
+    )
     await db.commit()
     await db.refresh(post)
     await db.refresh(post, attribute_names=["images"])
@@ -184,6 +212,10 @@ async def delete_post(
     post = await _get_post_or_404(db, post_id)
     await verify_branch_access(user, post.branch_id)
 
+    record_audit(
+        db, user=user, action="delete", resource_type="post", resource_id=post.id,
+        branch_id=post.branch_id, details={"title": post.title},
+    )
     await db.delete(post)
     await db.commit()
 

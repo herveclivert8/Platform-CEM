@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, get_current_user
 from app.core.permissions import verify_super_admin_only
+from app.services.audit import record_audit
 from app.models.settings import AssociationSettings
 from app.models.user import User
 from app.schemas.settings import PaymentInfoRead, PaymentInfoUpdate, SocialLinksRead, SocialLinksUpdate
@@ -42,9 +43,13 @@ async def update_social_links(
     await verify_super_admin_only(user)
 
     settings = await _get_or_create_settings(db)
-    for key, value in data.dict(exclude_unset=True).items():
+    for key, value in data.model_dump(exclude_unset=True).items():
         setattr(settings, key, value)
 
+    record_audit(
+        db, user=user, action="update", resource_type="settings",
+        details={"section": "social_links", "fields": sorted(data.model_fields_set)},
+    )
     await db.commit()
     await db.refresh(settings)
     return settings
@@ -66,10 +71,14 @@ async def update_payment_info(
     await verify_super_admin_only(user)
 
     settings = await _get_or_create_settings(db)
-    for key, value in data.dict(exclude_unset=True).items():
+    for key, value in data.model_dump(exclude_unset=True).items():
         # Un champ vidé dans le formulaire est stocké à NULL (= non affiché)
         setattr(settings, key, value.strip() if isinstance(value, str) and value.strip() else None)
 
+    record_audit(
+        db, user=user, action="update", resource_type="settings",
+        details={"section": "payment_info", "fields": sorted(data.model_fields_set)},
+    )
     await db.commit()
     await db.refresh(settings)
     return settings

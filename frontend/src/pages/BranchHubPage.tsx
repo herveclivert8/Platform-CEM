@@ -7,8 +7,10 @@ import { DonationSidebar } from "../components/hub/DonationSidebar";
 import { BottomActionBar } from "../components/hub/BottomActionBar";
 import { OtherBranchesCarousel } from "../components/hub/OtherBranchesCarousel";
 import { Skeleton } from "../components/ui/Skeleton";
+import { useTranslation } from "react-i18next";
 
 export function BranchHubPage() {
+  const { t } = useTranslation();
   const { branchId } = useParams<{ branchId: string }>();
   const id = branchId ? Number(branchId) : undefined;
   const { data: branch, isLoading, isError } = useBranch(id);
@@ -25,7 +27,7 @@ export function BranchHubPage() {
     return (
       <div className="mx-auto max-w-7xl px-4 py-24 text-center sm:px-6 lg:px-8">
         <p className="text-lg font-semibold text-slate-700 dark:text-slate-200">
-          Antenne introuvable.
+          {t("hub.not_found")}
         </p>
       </div>
     );

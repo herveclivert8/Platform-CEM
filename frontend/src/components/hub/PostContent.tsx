@@ -3,6 +3,7 @@ import { Calendar } from "lucide-react";
 import { Badge } from "../ui/Badge";
 import { usePillarLabels } from "../../hooks/usePillarLabels";
 import type { Post } from "../../types/post";
+import { dateLocale } from "../../lib/locale";
 
 const PILLAR_TONE: Record<Post["pillar"], "emerald" | "orange"> = {
   EDUCATION: "emerald",
@@ -38,7 +39,7 @@ export function PostContent({ post, headingLevel = "h2" }: PostContentProps) {
 
       <p className="mt-3 flex items-center gap-1.5 text-sm text-slate-400">
         <Calendar className="h-4 w-4" aria-hidden />
-        {new Date(post.createdAt).toLocaleDateString("fr-FR", {
+        {new Date(post.createdAt).toLocaleDateString(dateLocale(), {
           day: "numeric",
           month: "long",
           year: "numeric",

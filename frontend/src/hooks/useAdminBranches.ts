@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { mapBranch, type Branch, type BranchDto } from "../types/branch";
+import { mapBranch, type Branch, type BranchDto, type BranchStatus } from "../types/branch";
 
 export interface TeamMemberInput {
   name: string;
@@ -14,12 +14,14 @@ export interface BranchInput {
   continent?: string;
   latitude?: number;
   longitude?: number;
-  physical_address?: string;
-  contact_name?: string;
-  contact_email?: string;
-  contact_phone?: string;
-  description?: string;
-  logo_url?: string;
+  // null clears the field
+  physical_address?: string | null;
+  contact_name?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  description?: string | null;
+  logo_url?: string | null;
+  status?: BranchStatus;
   team_members?: TeamMemberInput[];
 }
 

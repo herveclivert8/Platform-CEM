@@ -9,17 +9,19 @@ Deux modes de paiement (voir app/models/donation.py) :
 Un email de remerciement part à chaque confirmation (une seule fois par don).
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
 from app.api.deps import get_current_user, get_db
+from app.api.scope import like_pattern, resolve_branch_scope
 from app.core.email import email_service
 from app.core.permissions import verify_branch_access, verify_super_admin_only
+from app.core.rate_limit import rate_limit
 from app.db.session import AsyncSessionLocal
 from app.models import Branch, Donation, User
 from app.models.donation import (
@@ -46,6 +48,7 @@ from app.schemas.donation import (
     PaymentOptions,
 )
 from app.services.notification_service import get_branch_notification_recipients, send_batch_notification
+from app.services.audit import record_audit
 from app.services.payments import get_card_provider
 
 router = APIRouter(prefix="/donations", tags=["donations"])
@@ -56,6 +59,10 @@ OPERATOR_NUMBER_FIELDS = {
     MobileOperatorModel.ORANGE_MONEY: "orange_money_number",
     MobileOperatorModel.AIRTEL_MONEY: "airtel_money_number",
 }
+
+# Anti-spam : déclarations Mobile Money "à vérifier" acceptées par numéro ou par email sur 24 h
+MAX_PENDING_DECLARATIONS = 3
+PENDING_DECLARATIONS_WINDOW = timedelta(hours=24)
 
 
 # ============================================
@@ -76,6 +83,19 @@ def payment_label(donation: Donation) -> str:
     return "Virement bancaire"
 
 
+def _audit_donation(db: AsyncSession, user: User, action: str, donation: Donation, **extra) -> None:
+    record_audit(
+        db, user=user, action=action, resource_type="donation", resource_id=donation.id,
+        branch_id=donation.branch_id,
+        details={
+            "amount": float(donation.amount),
+            "currency": donation.currency,
+            "reference": donation.transaction_reference,
+            **extra,
+        },
+    )
+
+
 def _mobile_money_accounts(settings: AssociationSettings | None) -> list[MobileMoneyAccount]:
     if settings is None:
         return []
@@ -91,7 +111,7 @@ async def _get_branch_or_404(db: AsyncSession, branch_id: int | None) -> Branch 
         return None
     branch = await db.get(Branch, branch_id)
     if not branch:
-        raise HTTPException(status_code=404, detail="Branch not found")
+        raise HTTPException(status_code=404, detail="Antenne introuvable")
     return branch
 
 
@@ -181,7 +201,13 @@ async def get_payment_options(db: AsyncSession = Depends(get_db)):
     )
 
 
-@router.post("/card", response_model=DonationPublic, status_code=201)
+@router.post(
+    "/card",
+    response_model=DonationPublic,
+    status_code=201,
+    # Limite aussi le test de cartes volées
+    dependencies=[Depends(rate_limit("donation_card", limit=10, window=60 * 60))],
+)
 async def donate_by_card(
     data: CardDonationCreate,
     background_tasks: BackgroundTasks,
@@ -222,16 +248,39 @@ async def donate_by_card(
 
     await _notify_admins(db, donation, branch, "Nouveau don par carte", "")
     background_tasks.add_task(_send_thank_you_email, donation.id)
-    return DonationPublic.from_orm(donation)
+    return DonationPublic.model_validate(donation)
 
 
-@router.post("/mobile-money", response_model=DonationPublic, status_code=201)
+@router.post(
+    "/mobile-money",
+    response_model=DonationPublic,
+    status_code=201,
+    dependencies=[Depends(rate_limit("donation_mobile_money", limit=10, window=60 * 60))],
+)
 async def declare_mobile_money_donation(
     data: MobileMoneyDeclaration,
     db: AsyncSession = Depends(get_db),
 ):
     """Déclarer un paiement Mobile Money déjà effectué (statut "à vérifier"). Accessible: Public."""
+    if data.website:
+        # Champ piège rempli : robot
+        raise HTTPException(status_code=400, detail="Déclaration refusée.")
+
     branch = await _get_branch_or_404(db, data.branch_id)
+
+    pending_count = await db.scalar(
+        select(func.count(Donation.id)).where(
+            Donation.status == DonationStatusModel.PENDING,
+            Donation.created_at >= datetime.now(timezone.utc) - PENDING_DECLARATIONS_WINDOW,
+            or_(Donation.donor_phone == data.sender_phone, Donation.donor_email == data.donor_email),
+        )
+    )
+    if pending_count >= MAX_PENDING_DECLARATIONS:
+        raise HTTPException(
+            status_code=429,
+            detail="Plusieurs de vos paiements sont déjà en cours de vérification. "
+            "Merci d'attendre leur validation avant d'en déclarer un nouveau.",
+        )
 
     settings = await db.get(AssociationSettings, SETTINGS_ID)
     operator = MobileOperatorModel(data.operator.value)
@@ -261,7 +310,7 @@ async def declare_mobile_money_donation(
         db, donation, branch, "Don Mobile Money à vérifier",
         f"Réf. {donation.transaction_reference} ({MOBILE_OPERATOR_LABELS[operator]}).",
     )
-    return DonationPublic.from_orm(donation)
+    return DonationPublic.model_validate(donation)
 
 
 # ============================================
@@ -272,16 +321,34 @@ async def declare_mobile_money_donation(
 async def list_donations(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    branch_id: int | None = Query(None, description="Super Admin : limiter à une antenne"),
+    status_filter: DonationStatusModel | None = Query(None, alias="status"),
+    q: str | None = Query(None, max_length=100, description="Recherche : référence, téléphone, email, nom"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
     """
-    Lister les dons.
-    Accessible: Admin de la branche (ses dons) + Super Admin (tous les dons).
+    Lister les dons, avec filtres et recherche.
+    Accessible: Admin de la branche (ses dons) + Super Admin (tous les dons, ou une antenne).
     """
+    scope = resolve_branch_scope(user, branch_id)
+
     filters = []
-    if user.role == UserRole.BRANCH_ADMIN:
-        filters.append(Donation.branch_id == user.branch_id)
+    if scope is not None:
+        filters.append(Donation.branch_id == scope)
+    if status_filter is not None:
+        filters.append(Donation.status == status_filter)
+    if q and q.strip():
+        # Les numéros et références sont stockés sans espaces
+        pattern = like_pattern(q.replace(" ", ""))
+        filters.append(
+            or_(
+                Donation.transaction_reference.ilike(pattern, escape="\\"),
+                Donation.donor_phone.ilike(pattern, escape="\\"),
+                Donation.donor_email.ilike(pattern, escape="\\"),
+                Donation.donor_name.ilike(like_pattern(q), escape="\\"),
+            )
+        )
 
     total = await db.scalar(select(func.count(Donation.id)).where(*filters))
 
@@ -296,7 +363,7 @@ async def list_donations(
     donations = result.scalars().all()
 
     return DonationListResponse(
-        items=[DonationSchema.from_orm(d) for d in donations],
+        items=[DonationSchema.model_validate(d) for d in donations],
         total=total or 0,
         page=page,
         page_size=page_size,
@@ -336,17 +403,23 @@ async def record_manual_donation(
         status_updated_at=datetime.now(timezone.utc),
     )
     db.add(donation)
+    try:
+        await db.flush()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="Cette référence de transaction a déjà été déclarée.")
+    _audit_donation(db, user, "create", donation)
     await _commit_or_conflict(db)
     await db.refresh(donation)
 
     background_tasks.add_task(_send_thank_you_email, donation.id)
-    return DonationSchema.from_orm(donation)
+    return DonationSchema.model_validate(donation)
 
 
 async def _get_manageable_donation(db: AsyncSession, user: User, donation_id: int) -> Donation:
     donation = await db.get(Donation, donation_id)
     if not donation:
-        raise HTTPException(status_code=404, detail="Donation not found")
+        raise HTTPException(status_code=404, detail="Don introuvable")
     await _verify_can_manage(user, donation.branch_id)
     if donation.payment_method == PaymentMethodModel.CARD:
         raise HTTPException(status_code=400, detail="Un don par carte est confirmé par le prestataire de paiement.")
@@ -375,11 +448,12 @@ async def confirm_donation(
     donation.status = DonationStatusModel.CONFIRMED
     donation.rejection_reason = None
     donation.status_updated_at = datetime.now(timezone.utc)
+    _audit_donation(db, user, "confirm", donation, declared_amount=float(donation.declared_amount or 0) or None)
     await _commit_or_conflict(db)
     await db.refresh(donation)
 
     background_tasks.add_task(_send_thank_you_email, donation.id)
-    return DonationSchema.from_orm(donation)
+    return DonationSchema.model_validate(donation)
 
 
 @router.post("/{donation_id}/reject", response_model=DonationSchema)
@@ -397,9 +471,10 @@ async def reject_donation(
     donation.status = DonationStatusModel.REJECTED
     donation.rejection_reason = data.reason.strip()
     donation.status_updated_at = datetime.now(timezone.utc)
+    _audit_donation(db, user, "reject", donation, reason=donation.rejection_reason)
     await db.commit()
     await db.refresh(donation)
-    return DonationSchema.from_orm(donation)
+    return DonationSchema.model_validate(donation)
 
 
 @router.post("/{donation_id}/reopen", response_model=DonationSchema)
@@ -412,13 +487,18 @@ async def reopen_donation(
     donation = await _get_manageable_donation(db, user, donation_id)
     if donation.payment_method == PaymentMethodModel.BANK_TRANSFER:
         raise HTTPException(status_code=400, detail="Le virement bancaire n'est plus proposé.")
+    if donation.status == DonationStatusModel.CONFIRMED and user.role != UserRole.SUPER_ADMIN:
+        # Un don confirmé rouvert redevient supprimable : réservé au Super Admin
+        raise HTTPException(status_code=403, detail="Seul le Super Admin peut rouvrir un don confirmé.")
 
+    previous_status = donation.status.value
     donation.status = DonationStatusModel.PENDING
     donation.rejection_reason = None
     donation.status_updated_at = datetime.now(timezone.utc)
+    _audit_donation(db, user, "reopen", donation, previous_status=previous_status)
     await db.commit()
     await db.refresh(donation)
-    return DonationSchema.from_orm(donation)
+    return DonationSchema.model_validate(donation)
 
 
 @router.delete("/{donation_id}", status_code=204)
@@ -433,11 +513,12 @@ async def delete_donation(
     """
     donation = await db.get(Donation, donation_id)
     if not donation:
-        raise HTTPException(status_code=404, detail="Donation not found")
+        raise HTTPException(status_code=404, detail="Don introuvable")
     await _verify_can_manage(user, donation.branch_id)
     if donation.status == DonationStatusModel.CONFIRMED:
         raise HTTPException(status_code=400, detail="Un don confirmé ne peut pas être supprimé.")
 
+    _audit_donation(db, user, "delete", donation, status=donation.status.value, donor_email=donation.donor_email)
     await db.delete(donation)
     await db.commit()
     return None

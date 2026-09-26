@@ -4,6 +4,7 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { NETWORK_CONFIG } from "../../components/layout/SocialLinks";
 import { useSocialLinks, useUpdateSocialLinks } from "../../hooks/useSocialLinks";
+import { useTranslation } from "react-i18next";
 
 const FIELDS = [
   { key: "facebookUrl", network: "facebook", placeholder: "https://facebook.com/votre-page" },
@@ -13,6 +14,7 @@ const FIELDS = [
 ] as const;
 
 export function SocialLinksPage() {
+  const { t } = useTranslation();
   const { data, isLoading } = useSocialLinks();
   const updateSocialLinks = useUpdateSocialLinks();
 
@@ -43,16 +45,15 @@ export function SocialLinksPage() {
     <div>
       <div className="flex items-center gap-2.5">
         <Share2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" aria-hidden />
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Réseaux sociaux</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{t("admin.social.title")}</h1>
       </div>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Ces liens apparaissent dans le pied de page du site public, sous le logo de l'association.
-        Laissez un champ vide pour masquer l'icône correspondante.
+        {t("admin.social.subtitle")}
       </p>
 
       <Card hoverable={false} className="mt-6 max-w-lg p-6">
         {isLoading ? (
-          <p className="text-sm text-slate-400 dark:text-slate-500">Chargement…</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500">{t("common.loading")}</p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {FIELDS.map((field) => {
@@ -75,16 +76,16 @@ export function SocialLinksPage() {
             })}
 
             {updateSocialLinks.isError && (
-              <p className="text-sm text-red-600 dark:text-red-400">Une erreur est survenue. Veuillez réessayer.</p>
+              <p className="text-sm text-red-600 dark:text-red-400">{t("common.error_retry")}</p>
             )}
             {updateSocialLinks.isSuccess && (
               <p className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="h-4 w-4" /> Liens mis à jour.
+                <CheckCircle2 className="h-4 w-4" /> {t("admin.social.updated")}
               </p>
             )}
 
             <Button type="submit" variant="secondary" disabled={updateSocialLinks.isPending}>
-              {updateSocialLinks.isPending ? "…" : "Enregistrer"}
+              {updateSocialLinks.isPending ? "…" : t("common.save")}
             </Button>
           </form>
         )}

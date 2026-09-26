@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
@@ -29,8 +29,7 @@ class NotificationRead(BaseModel):
     icon: str | None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class NotificationList(BaseModel):
@@ -71,7 +70,7 @@ async def get_notifications(
     notifications = result.scalars().all()
 
     return NotificationList(
-        data=[NotificationRead.from_orm(n) for n in notifications],
+        data=[NotificationRead.model_validate(n) for n in notifications],
         total=total or 0,
         unread_count=unread_count or 0,
     )
@@ -87,7 +86,7 @@ async def mark_notification_read(
     # Verify ownership
     notification = await db.get(Notification, notification_id)
     if not notification or notification.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Notification not found")
+        raise HTTPException(status_code=404, detail="Notification introuvable")
 
     await mark_as_read(notification_id, db)
 
@@ -111,7 +110,7 @@ async def delete_notification_endpoint(
     # Verify ownership
     notification = await db.get(Notification, notification_id)
     if not notification or notification.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Notification not found")
+        raise HTTPException(status_code=404, detail="Notification introuvable")
 
     await delete_notification(notification_id, db)
 

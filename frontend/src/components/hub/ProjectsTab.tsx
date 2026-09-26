@@ -67,7 +67,7 @@ export function ProjectsTab({ branchId }: { branchId: number }) {
               to={`/antennes/${branchId}/actualites`}
               className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
             >
-              Voir toutes les actualités <ArrowRight className="h-3.5 w-3.5" />
+              {t("hub.reports.all_news")} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           )}
         </>

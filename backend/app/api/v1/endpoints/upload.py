@@ -5,10 +5,13 @@ from pathlib import Path
 
 from PIL import Image
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import require_role
+from app.api.deps import get_db, require_role
 from app.core.config import settings
 from app.core.storage import get_storage_backend
+from app.models.uploaded_file import UploadedFile
+from app.services.audit import record_audit
 from app.models.user import User, UserRole
 from app.schemas.upload import FileUploadResponse
 
@@ -47,6 +50,7 @@ def _validate_image_content(file_content: bytes, file_ext: str) -> bool:
 async def upload_image(
     file: UploadFile = File(...),
     current_user: User = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.BRANCH_ADMIN])),
+    db: AsyncSession = Depends(get_db),
 ) -> FileUploadResponse:
     """Upload an image file (hero image, profile picture, etc.)."""
 
@@ -94,6 +98,9 @@ async def upload_image(
             detail="Erreur lors du téléchargement du fichier",
         )
 
+    db.add(UploadedFile(filename=unique_filename, uploaded_by_id=current_user.id, branch_id=current_user.branch_id))
+    await db.commit()
+
     # Return file information
     try:
         img = Image.open(BytesIO(file_content))
@@ -115,15 +122,34 @@ async def upload_image(
 async def delete_file(
     filename: str,
     current_user: User = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.BRANCH_ADMIN])),
+    db: AsyncSession = Depends(get_db),
 ):
-    """Delete an uploaded file."""
+    """
+    Supprimer un fichier envoyé.
+    Accessible: Super Admin, ou admin de l'antenne qui l'a envoyé (fichiers antérieurs au suivi :
+    Super Admin uniquement).
+    """
 
     # Prevent path traversal
     if ".." in filename or "/" in filename:
         raise HTTPException(status_code=400, detail="Nom de fichier invalide")
+
+    record = await db.get(UploadedFile, filename)
+    if current_user.role != UserRole.SUPER_ADMIN and (
+        record is None or record.branch_id is None or record.branch_id != current_user.branch_id
+    ):
+        raise HTTPException(status_code=403, detail="Ce fichier n'appartient pas à votre antenne")
 
     # Delete file using storage backend
     success = await storage.delete(filename)
 
     if not success:
         raise HTTPException(status_code=404, detail="Fichier non trouvé ou erreur de suppression")
+
+    if record is not None:
+        await db.delete(record)
+    record_audit(
+        db, user=current_user, action="delete", resource_type="file",
+        branch_id=record.branch_id if record else None, details={"filename": filename},
+    )
+    await db.commit()

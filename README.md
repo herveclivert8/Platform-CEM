@@ -34,6 +34,7 @@ Démarre PostgreSQL sur `localhost:5432` (utilisateur `cem`, mot de passe `cem`,
 ```bash
 cd backend
 python3.12 -m venv .venv
+
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env           # puis éditez SECRET_KEY

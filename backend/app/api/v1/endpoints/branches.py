@@ -8,8 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select, func
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_user, get_optional_user
 from app.models import Branch, Publication, TeamMember, User
+from app.models.user import UserRole
 from app.schemas.branch import (
     Branch as BranchSchema,
     BranchCreate,
@@ -19,8 +20,22 @@ from app.schemas.branch import (
     BranchManagerRead,
 )
 from app.core.permissions import verify_super_admin_only, verify_branch_access
+from app.services.audit import record_audit
 
 router = APIRouter(prefix="/branches", tags=["branches"])
+
+# Champs du profil qu'un admin d'antenne peut modifier ; le reste (nom, pays, position, statut...)
+# est réservé au Super Admin.
+BRANCH_ADMIN_EDITABLE_FIELDS = {
+    "description",
+    "logo_url",
+    "banner_url",
+    "contact_name",
+    "contact_email",
+    "contact_phone",
+    "physical_address",
+    "team_members",
+}
 
 
 # ============================================
@@ -30,26 +45,28 @@ router = APIRouter(prefix="/branches", tags=["branches"])
 @router.get("", response_model=BranchListResponse)
 async def list_branches(
     db: AsyncSession = Depends(get_db),
+    user: User | None = Depends(get_optional_user),
     page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
+    page_size: int = Query(10, ge=1, le=500),
+    include_inactive: bool = Query(False, description="Super Admin : inclure les antennes inactives / en attente"),
 ):
     """
-    Récupérer la liste de toutes les branches actives
+    Récupérer la liste des branches actives (toutes pour le Super Admin avec include_inactive)
     Accessible: Public
     """
-    # Query
-    query = select(Branch).where(Branch.status == "active")
-    
-    # Pagination
-    total = await db.scalar(select(func.count(Branch.id)).where(Branch.status == "active"))
+    filters = []
+    if not (include_inactive and user is not None and user.role == UserRole.SUPER_ADMIN):
+        filters.append(Branch.status == "active")
+
+    total = await db.scalar(select(func.count(Branch.id)).where(*filters))
     offset = (page - 1) * page_size
-    query = query.offset(offset).limit(page_size)
+    query = select(Branch).where(*filters).order_by(Branch.name, Branch.id).offset(offset).limit(page_size)
     
     result = await db.execute(query)
     branches = result.scalars().all()
     
     return BranchListResponse(
-        items=[BranchSchema.from_orm(b) for b in branches],
+        items=[BranchSchema.model_validate(b) for b in branches],
         total=total,
         page=page,
         page_size=page_size,
@@ -76,16 +93,16 @@ async def get_branch(
     branch = result.scalar_one_or_none()
 
     if not branch:
-        raise HTTPException(status_code=404, detail="Branch not found")
+        raise HTTPException(status_code=404, detail="Antenne introuvable")
 
     # Compter les publications
     pub_count = await db.scalar(
         select(func.count(Publication.id)).where(Publication.branch_id == branch_id)
     )
 
-    response = BranchWithStats.from_orm(branch)
+    response = BranchWithStats.model_validate(branch)
     response.publication_count = pub_count or 0
-    response.manager = BranchManagerRead.from_orm(branch.manager) if branch.manager else None
+    response.manager = BranchManagerRead.model_validate(branch.manager) if branch.manager else None
     return response
 
 
@@ -104,7 +121,7 @@ async def get_branch_publications(
     query = select(Branch).where(Branch.id == branch_id)
     result = await db.execute(query)
     if not result.scalar_one_or_none():
-        raise HTTPException(status_code=404, detail="Branch not found")
+        raise HTTPException(status_code=404, detail="Antenne introuvable")
 
     # Récupérer les publications de la branche
     pub_query = select(Publication).where(Publication.branch_id == branch_id)
@@ -146,7 +163,7 @@ async def create_branch(
     await verify_super_admin_only(user)
 
     # Créer la branche
-    branch_data = data.dict(exclude={"team_members"})
+    branch_data = data.model_dump(exclude={"team_members"})
     branch = Branch(
         **branch_data,
         team_members=[
@@ -155,10 +172,15 @@ async def create_branch(
         ],
     )
     db.add(branch)
+    await db.flush()
+    record_audit(
+        db, user=user, action="create", resource_type="branch", resource_id=branch.id,
+        branch_id=branch.id, details={"name": branch.name},
+    )
     await db.commit()
     await db.refresh(branch)
 
-    return BranchSchema.from_orm(branch)
+    return BranchSchema.model_validate(branch)
 
 
 @router.put("/{branch_id}", response_model=BranchSchema)
@@ -175,6 +197,14 @@ async def update_branch(
     """
     await verify_branch_access(user, branch_id)
 
+    if user.role != UserRole.SUPER_ADMIN:
+        forbidden = sorted(data.model_fields_set - BRANCH_ADMIN_EDITABLE_FIELDS)
+        if forbidden:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Seul le Super Admin peut modifier : {', '.join(forbidden)}",
+            )
+
     # Récupérer la branche
     query = (
         select(Branch)
@@ -185,10 +215,10 @@ async def update_branch(
     branch = result.scalar_one_or_none()
 
     if not branch:
-        raise HTTPException(status_code=404, detail="Branch not found")
+        raise HTTPException(status_code=404, detail="Antenne introuvable")
 
     # Modifier
-    update_data = data.dict(exclude_unset=True, exclude={"team_members"})
+    update_data = data.model_dump(exclude_unset=True, exclude={"team_members"})
     for key, value in update_data.items():
         setattr(branch, key, value)
 
@@ -199,10 +229,14 @@ async def update_branch(
                 TeamMember(name=m.name, role=m.role, photo_url=m.photo_url, position=i)
             )
 
+    record_audit(
+        db, user=user, action="update", resource_type="branch", resource_id=branch.id,
+        branch_id=branch.id, details={"name": branch.name, "fields": sorted(data.model_fields_set)},
+    )
     await db.commit()
     await db.refresh(branch)
 
-    return BranchSchema.from_orm(branch)
+    return BranchSchema.model_validate(branch)
 
 
 @router.delete("/{branch_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -223,8 +257,21 @@ async def delete_branch(
     branch = result.scalar_one_or_none()
     
     if not branch:
-        raise HTTPException(status_code=404, detail="Branch not found")
-    
+        raise HTTPException(status_code=404, detail="Antenne introuvable")
+
+    # Ses admins resteraient sans antenne (connectés mais sans accès à rien)
+    admin_count = await db.scalar(select(func.count(User.id)).where(User.branch_id == branch_id))
+    if admin_count:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cette antenne a encore {admin_count} admin(s) rattaché(s). "
+            "Supprimez ou réaffectez ces comptes avant de supprimer l'antenne.",
+        )
+
+    record_audit(
+        db, user=user, action="delete", resource_type="branch", resource_id=branch.id,
+        details={"name": branch.name},
+    )
     await db.delete(branch)
     await db.commit()
     

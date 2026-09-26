@@ -1,22 +1,34 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.v1.router import api_router
-from app.core.config import settings
+from app.core.config import HSTS_HEADER, SECURITY_HEADERS, settings
 from app.core.cache import init_redis, close_redis
 from app.core.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
+from app.services.audit import AuditContextMiddleware
 
 setup_logging()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if settings.USE_REDIS:
+        await init_redis(settings.REDIS_URL)
+    yield
+    await close_redis()
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="CEM Platform API",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 # Security: Rate limiting middleware
@@ -34,8 +46,18 @@ app.add_middleware(
     expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
 )
 
-# Session middleware
-app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
+# Journal d'audit : IP et navigateur de la requête en cours
+app.add_middleware(AuditContextMiddleware)
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    for name, value in SECURITY_HEADERS.items():
+        response.headers.setdefault(name, value)
+    if settings.ENVIRONMENT == "production":
+        response.headers.setdefault(*HSTS_HEADER)
+    return response
+
 
 # Monitoring: Sentry integration
 if settings.SENTRY_DSN:
@@ -80,17 +102,6 @@ if settings.STORAGE_TYPE == "local":
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
-
-# Lifecycle events
-@app.on_event("startup")
-async def startup():
-    await init_redis()
-    print("Application startup complete")
-
-@app.on_event("shutdown")
-async def shutdown():
-    await close_redis()
-    print("Application shutdown complete")
 
 # Health check
 @app.get("/health")

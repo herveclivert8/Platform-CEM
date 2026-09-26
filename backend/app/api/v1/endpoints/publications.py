@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.api.deps import get_db, get_current_user
+from app.services.audit import record_audit
 from app.models import Publication, User
 from app.schemas.publication import (
     Publication as PublicationSchema,
@@ -43,13 +44,18 @@ async def create_publication(
     publication = Publication(
         branch_id=branch_id,
         contributors=[user],
-        **data.dict(),
+        **data.model_dump(),
     )
     db.add(publication)
+    await db.flush()
+    record_audit(
+        db, user=user, action="create", resource_type="publication", resource_id=publication.id,
+        branch_id=branch_id, details={"title": publication.title},
+    )
     await db.commit()
     await db.refresh(publication)
 
-    return PublicationSchema.from_orm(publication)
+    return PublicationSchema.model_validate(publication)
 
 
 @router.put("/publications/{pub_id}", response_model=PublicationSchema)
@@ -69,19 +75,23 @@ async def update_publication(
     publication = result.scalar_one_or_none()
 
     if not publication:
-        raise HTTPException(status_code=404, detail="Publication not found")
+        raise HTTPException(status_code=404, detail="Bilan introuvable")
 
     # ✅ VÉRIFICATION CRITIQUE D'ISOLATION
     await verify_branch_access(user, publication.branch_id)
 
-    update_data = data.dict(exclude_unset=True)
+    update_data = data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(publication, key, value)
 
+    record_audit(
+        db, user=user, action="update", resource_type="publication", resource_id=publication.id,
+        branch_id=publication.branch_id, details={"title": publication.title, "fields": sorted(update_data)},
+    )
     await db.commit()
     await db.refresh(publication)
 
-    return PublicationSchema.from_orm(publication)
+    return PublicationSchema.model_validate(publication)
 
 
 @router.delete("/publications/{pub_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -100,11 +110,15 @@ async def delete_publication(
     publication = result.scalar_one_or_none()
 
     if not publication:
-        raise HTTPException(status_code=404, detail="Publication not found")
+        raise HTTPException(status_code=404, detail="Bilan introuvable")
 
     # ✅ VÉRIFICATION CRITIQUE D'ISOLATION
     await verify_branch_access(user, publication.branch_id)
 
+    record_audit(
+        db, user=user, action="delete", resource_type="publication", resource_id=publication.id,
+        branch_id=publication.branch_id, details={"title": publication.title},
+    )
     await db.delete(publication)
     await db.commit()
 
@@ -125,6 +139,6 @@ async def get_publication(
     publication = result.scalar_one_or_none()
 
     if not publication:
-        raise HTTPException(status_code=404, detail="Publication not found")
+        raise HTTPException(status_code=404, detail="Bilan introuvable")
 
-    return PublicationSchema.from_orm(publication)
+    return PublicationSchema.model_validate(publication)

@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, func
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, false, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -40,6 +40,14 @@ class User(Base):
         Enum(OAuthProvider, name="oauth_provider", values_callable=lambda e: [m.value for m in e]), nullable=True
     )
     oauth_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # Copiée dans chaque JWT ("ver") ; l'incrémenter invalide tous les jetons déjà émis
+    # (déconnexion, changement ou réinitialisation du mot de passe).
+    token_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    # Mot de passe temporaire (compte créé par le Super Admin) : à remplacer avant tout accès à l'admin
+    must_change_password: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=false()
+    )
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

@@ -12,6 +12,7 @@ from app.api.v1.endpoints import (
     admin,
     audit,
     notifications,
+    dashboard,
 )
 
 api_router = APIRouter()
@@ -48,3 +49,6 @@ api_router.include_router(audit.router)
 
 # Notifications
 api_router.include_router(notifications.router)
+
+# Tableau de bord admin
+api_router.include_router(dashboard.router)

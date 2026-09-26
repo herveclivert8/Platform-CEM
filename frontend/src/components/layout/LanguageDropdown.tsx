@@ -9,7 +9,7 @@ const LANGUAGES = [
 ];
 
 export function LanguageDropdown() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -29,7 +29,7 @@ export function LanguageDropdown() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-        aria-label="Changer de langue"
+        aria-label={t("common.change_language")}
       >
         <Globe className="h-4 w-4" aria-hidden />
         <span className="uppercase">{current}</span>

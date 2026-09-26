@@ -6,6 +6,7 @@ import { NotFoundPage } from "./pages/NotFoundPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { RequireAuth } from "./components/auth/RequireAuth";
 import { RequireSuperAdmin } from "./components/auth/RequireSuperAdmin";
 import { AdminLayout } from "./components/admin/AdminLayout";
@@ -87,6 +88,7 @@ export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
   { path: "/reset-password", element: <ResetPasswordPage /> },
+  { path: "/change-password", element: <ChangePasswordPage /> },
   {
     path: "/admin",
     element: <RequireAuth />,

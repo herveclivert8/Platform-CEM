@@ -4,7 +4,7 @@ Schémas Pydantic pour les réglages globaux de l'association
 
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 
 
 class SocialLinksRead(BaseModel):
@@ -13,8 +13,7 @@ class SocialLinksRead(BaseModel):
     linkedin_url: Optional[str] = None
     youtube_url: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SocialLinksUpdate(BaseModel):
@@ -31,8 +30,7 @@ class PaymentInfoRead(BaseModel):
     orange_money_number: Optional[str] = None
     airtel_money_number: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaymentInfoUpdate(BaseModel):

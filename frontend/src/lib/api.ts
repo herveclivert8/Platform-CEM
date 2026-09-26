@@ -37,6 +37,18 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Temporary password not replaced yet (e.g. stale state from another tab): force the change
+    if (error.response?.status === 403 && error.response?.data?.detail === "PASSWORD_CHANGE_REQUIRED") {
+      const { user } = useAuthStore.getState();
+      if (user && !user.mustChangePassword) {
+        useAuthStore.setState({ user: { ...user, mustChangePassword: true } });
+      }
+      if (window.location.pathname !== "/change-password") {
+        window.location.assign("/change-password");
+      }
+      return Promise.reject(error);
+    }
+
     if (error.response?.status !== 401 || originalRequest._retry || !useAuthStore.getState().isAuthenticated) {
       return Promise.reject(error);
     }

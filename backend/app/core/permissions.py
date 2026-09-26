@@ -34,7 +34,7 @@ async def verify_branch_access(user: User, required_branch_id: int) -> None:
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail="Accès refusé : vous ne pouvez agir que sur votre antenne",
+        detail="Accès refusé : vous ne pouvez gérer que votre antenne",
     )
 
 
@@ -57,7 +57,7 @@ async def verify_super_admin_only(user: User) -> None:
     if user.role != UserRole.SUPER_ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Accès réservé au super admin",
+            detail="Accès réservé au Super Admin",
         )
 
 

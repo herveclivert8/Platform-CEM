@@ -51,6 +51,7 @@ export function useDeclareMobileMoneyDonation() {
         amount: input.amount,
         donor_email: input.donorEmail,
         donor_name: input.donorName || null,
+        website: input.website || null,
       });
       return mapDonationReceipt(data);
     },

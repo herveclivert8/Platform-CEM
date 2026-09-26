@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+from pydantic import ConfigDict, BaseModel, EmailStr, Field, field_validator, model_validator
 
 
 class PaymentMethod(str, Enum):
@@ -70,6 +70,8 @@ class MobileMoneyDeclaration(_MobileMoneyPayment):
     """Déclaration par le donateur d'un paiement Mobile Money déjà effectué."""
     branch_id: Optional[int] = None
     donor_email: EmailStr
+    # Champ piège anti-robots : invisible pour un humain, donc toujours vide pour un vrai donateur
+    website: Optional[str] = Field(None, max_length=255)
 
 
 class ManualDonationCreate(_MobileMoneyPayment):

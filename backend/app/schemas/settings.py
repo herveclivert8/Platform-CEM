@@ -4,7 +4,7 @@ Schémas Pydantic pour les réglages globaux de l'association
 
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, BaseModel, Field
 
 
 class SocialLinksRead(BaseModel):

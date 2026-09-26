@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { useAuthStore } from "../store/authStore";
 
@@ -27,8 +27,9 @@ export interface AuditLogEntry {
   action: string;
   resource_type: string;
   resource_id: number | null;
-  user_email: string;
+  user_email: string | null;
   branch_id: number | null;
+  details: Record<string, unknown> | null;
   ip_address: string | null;
   success: number;
   created_at: string;
@@ -42,17 +43,18 @@ interface AuditLogListDto {
   total_pages: number;
 }
 
-export function useAuditLog(days = 30) {
+export function useAuditLog(days = 30, page = 1) {
   const isSuperAdmin = useAuthStore((s) => s.user?.role === "SUPER_ADMIN");
 
   return useQuery<AuditLogListDto>({
-    queryKey: ["audit-log", days],
+    queryKey: ["audit-log", days, page],
     queryFn: async () => {
       const { data } = await api.get<AuditLogListDto>("/super-admin/audit", {
-        params: { page: 1, page_size: 50, days },
+        params: { page, page_size: 50, days },
       });
       return data;
     },
+    placeholderData: keepPreviousData,
     enabled: isSuperAdmin,
   });
 }

@@ -4,6 +4,7 @@ import { isAxiosError } from "axios";
 import { AlertCircle, ShieldAlert } from "lucide-react";
 import clsx from "clsx";
 import { Button } from "../ui/Button";
+import { HoneypotField } from "../ui/HoneypotField";
 import { CopyButton, Field, OperatorMark, Spinner } from "./donationUi";
 import { fieldClass, fieldErrorClass, operatorAccent } from "./donationConstants";
 import { useDeclareMobileMoneyDonation } from "../../hooks/useDonations";
@@ -32,6 +33,7 @@ export function MobileMoneyStep({ amount, branchId, options, onSuccess }: Mobile
   const [sentAmount, setSentAmount] = useState(String(amount));
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [website, setWebsite] = useState("");
   const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const declare = useDeclareMobileMoneyDonation();
@@ -62,11 +64,13 @@ export function MobileMoneyStep({ amount, branchId, options, onSuccess }: Mobile
         amount: amountValue,
         donorEmail: email,
         donorName: name.trim(),
+        website,
       });
       onSuccess(receipt);
     } catch (err) {
       const status = isAxiosError(err) ? err.response?.status : undefined;
       if (status === 409) setErrors({ reference: t("donation.error_reference_used") });
+      else if (status === 429) setSubmitError(t("donation.error_too_many_pending"));
       else setSubmitError(t("donation.error"));
     }
   };
@@ -74,7 +78,8 @@ export function MobileMoneyStep({ amount, branchId, options, onSuccess }: Mobile
   const clearError = (field: FieldName) => errors[field] && setErrors((e) => ({ ...e, [field]: undefined }));
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="relative space-y-6">
+      <HoneypotField value={website} onChange={setWebsite} />
       {/* 1. Send the money */}
       <section>
         <StepHeading index={1} title={t("donation.mm_send_title", { amount: formatAmount(amount, "MGA") })} />
@@ -210,7 +215,7 @@ export function MobileMoneyStep({ amount, branchId, options, onSuccess }: Mobile
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="vous@exemple.com"
+              placeholder={t("auth.email_placeholder")}
               className={fieldClass}
             />
           </Field>

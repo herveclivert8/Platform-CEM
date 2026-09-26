@@ -5,7 +5,7 @@ Structuré pour ELK stack, Sentry, etc.
 
 import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 import json
 
@@ -55,7 +55,7 @@ class StructuredLogger:
             details: Détails supplémentaires
         """
         log_data = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "event_type": event_type,
             "user_id": user_id,
             "email": email,
@@ -76,7 +76,7 @@ class StructuredLogger:
     ):
         """Logger un appel API"""
         log_data = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "method": method,
             "path": path,
             "status_code": status_code,
@@ -96,7 +96,7 @@ class StructuredLogger:
     ):
         """Logger une erreur"""
         log_data = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "error_type": error_type,
             "message": message,
             "user_id": user_id,

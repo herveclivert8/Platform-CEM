@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { CheckCircle2, CreditCard, Landmark, MailCheck, Plus, RotateCcw, Search, ShieldCheck, Smartphone, Trash2 } from "lucide-react";
 import clsx from "clsx";
 import { Card } from "../../components/ui/Card";
@@ -11,49 +11,65 @@ import { ManualDonationDrawer } from "../../components/admin/donations/ManualDon
 import { DeleteDonationDialog } from "../../components/admin/donations/DeleteDonationDialog";
 import { Toast, type ToastMessage } from "../../components/ui/Toast";
 import { useAdminDonations, useDeleteDonation, useReopenDonation } from "../../hooks/useAdminDonations";
-import { useAdminBranchList } from "../../hooks/useBranches";
-import { useAdminScopeStore } from "../../store/adminScopeStore";
+import { useBranches } from "../../hooks/useBranches";
+import { useScopedBranchId } from "../../hooks/useAdminScope";
+import { useDashboardSummary } from "../../hooks/useDashboardSummary";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
+import { Pagination } from "../../components/ui/Pagination";
 import { useAuthStore } from "../../store/authStore";
 import {
   OPERATOR_LABELS,
   formatAmount,
-  formatConfirmedTotals,
   formatDateTime,
   formatMgPhone,
   type Donation,
   type DonationStatus,
 } from "../../types/donation";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
 type Filter = DonationStatus | "ALL";
 
-const FILTERS: { value: Filter; label: string }[] = [
-  { value: "PENDING", label: "À vérifier" },
-  { value: "CONFIRMED", label: "Confirmés" },
-  { value: "REJECTED", label: "Rejetés" },
-  { value: "ALL", label: "Tous" },
+const FILTERS: { value: Filter; labelKey: string }[] = [
+  { value: "PENDING", labelKey: "admin.donations.filter_pending" },
+  { value: "CONFIRMED", labelKey: "admin.donations.filter_confirmed" },
+  { value: "REJECTED", labelKey: "admin.donations.filter_rejected" },
+  { value: "ALL", labelKey: "admin.donations.filter_all" },
 ];
 
 const STATUS_BADGE: Record<DonationStatus, { label: string; tone: "orange" | "emerald" | "slate" }> = {
-  PENDING: { label: "À vérifier", tone: "orange" },
-  CONFIRMED: { label: "Confirmé", tone: "emerald" },
-  REJECTED: { label: "Rejeté", tone: "slate" },
+  PENDING: { label: "admin.donations.status_pending", tone: "orange" },
+  CONFIRMED: { label: "admin.donations.status_confirmed", tone: "emerald" },
+  REJECTED: { label: "admin.donations.status_rejected", tone: "slate" },
 };
 
-function methodLabel(d: Donation): string {
-  if (d.paymentMethod === "CARD") return "Carte bancaire";
-  if (d.paymentMethod === "MOBILE_MONEY") return d.mobileOperator ? OPERATOR_LABELS[d.mobileOperator] : "Mobile Money";
-  return "Virement (ancien)";
+function methodLabel(d: Donation, t: TFunction): string {
+  if (d.paymentMethod === "CARD") return t("admin.donations.method_card");
+  if (d.paymentMethod === "MOBILE_MONEY") return d.mobileOperator ? OPERATOR_LABELS[d.mobileOperator] : t("admin.donations.method_mobile");
+  return t("admin.donations.method_transfer");
 }
 
 export function DonationsPage() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
-  const { selectedBranchId } = useAdminScopeStore();
-  const { data: donations, isLoading } = useAdminDonations();
-  const { data: branchesData } = useAdminBranchList();
+  const scopedBranchId = useScopedBranchId();
+  const [page, setPage] = useState(1);
+  const [filter, setFilterState] = useState<Filter>("PENDING");
+  const [search, setSearchState] = useState("");
+  const q = useDebouncedValue(search);
+  const { data, isLoading } = useAdminDonations({ page, status: filter === "ALL" ? undefined : filter, q });
+  const { data: summary, isLoading: summaryLoading } = useDashboardSummary();
+  const setFilter = (value: Filter) => {
+    setFilterState(value);
+    setPage(1);
+  };
+  const setSearch = (value: string) => {
+    setSearchState(value);
+    setPage(1);
+  };
+  const { data: branchesData } = useBranches();
   const reopen = useReopenDonation();
   const deleteDonation = useDeleteDonation();
-  const [filter, setFilter] = useState<Filter>("PENDING");
-  const [search, setSearch] = useState("");
   const [verifying, setVerifying] = useState<Donation | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
   const [deleting, setDeleting] = useState<Donation | null>(null);
@@ -65,10 +81,10 @@ export function DonationsPage() {
   const closeDeleteDialog = useCallback(() => setDeleting(null), []);
 
   const thankYouNote = (d: Donation) =>
-    d.donorEmail ? `Un email de remerciement va être envoyé à ${d.donorEmail}.` : "Aucun email envoyé : pas d'adresse renseignée.";
+    d.donorEmail ? t("admin.donations.thanks_will_send", { email: d.donorEmail }) : t("admin.donations.no_email");
 
   const branchName = (branchId: number | null) =>
-    branchId ? (branchesData?.items.find((b) => b.id === branchId)?.cityName ?? `#${branchId}`) : "Don global";
+    branchId ? (branchesData?.items.find((b) => b.id === branchId)?.cityName ?? `#${branchId}`) : t("admin.donations.global");
 
   // Global donations (no branch) can only be handled by the Super Admin (enforced server-side too).
   const hasAccess = (d: Donation) => user?.role === "SUPER_ADMIN" || d.branchId !== null;
@@ -76,53 +92,48 @@ export function DonationsPage() {
   // Only never-validated donations can be deleted: a confirmed one is money actually received.
   const canDelete = (d: Donation) => hasAccess(d) && d.status !== "CONFIRMED";
 
-  const counts = useMemo(() => {
-    const byStatus: Record<Filter, number> = { PENDING: 0, CONFIRMED: 0, REJECTED: 0, ALL: donations?.length ?? 0 };
-    for (const d of donations ?? []) byStatus[d.status] += 1;
-    return byStatus;
-  }, [donations]);
-
-  const visible = useMemo(() => {
-    const q = search.trim().toLowerCase().replace(/\s/g, "");
-    return (donations ?? []).filter((d) => {
-      if (filter !== "ALL" && d.status !== filter) return false;
-      if (!q) return true;
-      return [d.transactionReference, d.donorPhone, d.donorEmail, d.donorName]
-        .filter(Boolean)
-        .some((field) => field!.toLowerCase().replace(/\s/g, "").includes(q));
-    });
-  }, [donations, filter, search]);
+  const counts: Record<Filter, number> = {
+    PENDING: summary?.donations_pending ?? 0,
+    CONFIRMED: summary?.donations_confirmed ?? 0,
+    REJECTED: summary?.donations_rejected ?? 0,
+    ALL: (summary?.donations_pending ?? 0) + (summary?.donations_confirmed ?? 0) + (summary?.donations_rejected ?? 0),
+  };
+  const confirmedTotal =
+    summary && summary.donations_confirmed_totals.length > 0
+      ? summary.donations_confirmed_totals.map((t) => formatAmount(t.amount, t.currency)).join(" · ")
+      : formatAmount(0, "EUR");
+  const visible = data?.items ?? [];
 
   const handleReopen = (d: Donation) => {
-    if (!window.confirm("Remettre ce don « à vérifier » ?")) return;
+    if (!window.confirm(t("admin.donations.reopen_confirm"))) return;
     reopen.mutate(d.id, {
-      onSuccess: () => notify("Don remis à vérifier", `${formatAmount(d.amount, d.currency)} — à revalider ou rejeter.`, "neutral"),
+      onSuccess: () => notify(t("admin.donations.reopened_toast"), t("admin.donations.reopened_text", { amount: formatAmount(d.amount, d.currency) }), "neutral"),
     });
   };
 
   const handleVerified = (updated: Donation) => {
     setVerifying(null);
     if (updated.status === "CONFIRMED") {
-      notify(`Don de ${formatAmount(updated.amount, updated.currency)} confirmé`, thankYouNote(updated));
+      notify(t("admin.donations.confirmed_toast", { amount: formatAmount(updated.amount, updated.currency) }), thankYouNote(updated));
     } else {
-      notify("Don rejeté", updated.rejectionReason ?? undefined, "neutral");
+      notify(t("admin.donations.rejected_toast"), updated.rejectionReason ?? undefined, "neutral");
     }
   };
 
   const handleRecorded = (donation: Donation) => {
     setManualOpen(false);
-    notify(`Don de ${formatAmount(donation.amount, donation.currency)} enregistré et confirmé`, thankYouNote(donation));
+    notify(t("admin.donations.recorded_toast", { amount: formatAmount(donation.amount, donation.currency) }), thankYouNote(donation));
   };
 
   const handleDelete = (d: Donation) => {
     deleteDonation.mutate(d.id, {
       onSuccess: () => {
         setDeleting(null);
-        notify("Don supprimé", `${formatAmount(d.amount, d.currency)}${d.transactionReference ? ` — réf. ${d.transactionReference}` : ""}`, "neutral");
+        notify(t("admin.donations.deleted_toast"), `${formatAmount(d.amount, d.currency)}${d.transactionReference ? ` — ${t("admin.donations.ref", { ref: d.transactionReference })}` : ""}`, "neutral");
       },
       onError: () => {
         setDeleting(null);
-        notify("Suppression impossible", "Le don a peut-être été confirmé entre-temps. Actualisez la page.", "neutral");
+        notify(t("admin.donations.delete_failed"), t("admin.donations.delete_failed_text"), "neutral");
       },
     });
   };
@@ -131,26 +142,25 @@ export function DonationsPage() {
     <div>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Dons</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{t("admin.donations.title")}</h1>
           <p className="mt-1 max-w-xl text-sm text-slate-500 dark:text-slate-400">
-            Les dons par carte sont confirmés automatiquement. Les dons Mobile Money déclarés sont à vérifier dans
-            l'historique du compte avant validation.
+            {t("admin.donations.subtitle")}
           </p>
         </div>
         <Button variant="secondary" icon={<Plus className="h-4 w-4" />} onClick={() => setManualOpen(true)}>
-          Enregistrer un don reçu
+          {t("admin.donations.record_received")}
         </Button>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Card hoverable={false} className="p-4">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total confirmé</p>
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("admin.donations.total_confirmed")}</p>
           <p className="mt-1 text-xl font-extrabold tabular-nums tracking-tight text-emerald-600 dark:text-emerald-400">
-            {isLoading ? "…" : formatConfirmedTotals(donations)}
+            {summaryLoading ? "…" : confirmedTotal}
           </p>
         </Card>
         <Card hoverable={false} className="p-4">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Dons confirmés</p>
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("admin.donations.confirmed_count")}</p>
           <p className="mt-1 text-xl font-extrabold tabular-nums tracking-tight text-slate-900 dark:text-white">{counts.CONFIRMED}</p>
         </Card>
         <button
@@ -163,7 +173,7 @@ export function DonationsPage() {
               : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900",
           )}
         >
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">À vérifier</p>
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("admin.donations.status_pending")}</p>
           <p
             className={clsx(
               "mt-1 text-xl font-extrabold tabular-nums tracking-tight",
@@ -189,7 +199,7 @@ export function DonationsPage() {
                   : "border-slate-200 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:text-slate-400",
               )}
             >
-              {f.label} <span className="ml-0.5 opacity-70">{counts[f.value]}</span>
+              {t(f.labelKey)} <span className="ml-0.5 opacity-70">{counts[f.value]}</span>
             </button>
           ))}
         </div>
@@ -198,7 +208,7 @@ export function DonationsPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Référence, numéro, email…"
+            placeholder={t("admin.donations.search")}
             className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
           />
         </div>
@@ -214,7 +224,7 @@ export function DonationsPage() {
         <div className="mt-10 flex flex-col items-center text-center">
           <CheckCircle2 className="h-8 w-8 text-slate-300 dark:text-slate-600" />
           <p className="mt-2 text-sm text-slate-400 dark:text-slate-500">
-            {filter === "PENDING" && !search ? "Aucun don à vérifier. Tout est à jour !" : "Aucun don dans cette catégorie."}
+            {filter === "PENDING" && !search ? t("admin.donations.all_verified") : t("admin.donations.none_in_category")}
           </p>
         </div>
       ) : (
@@ -243,14 +253,14 @@ export function DonationsPage() {
                 <div className="min-w-0 flex-1 basis-60">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
-                      {d.donorName || d.donorEmail || "Donateur non renseigné"}
+                      {d.donorName || d.donorEmail || t("admin.donations.unknown_donor")}
                     </p>
                     <Badge tone={badge.tone} className="px-2.5 py-0.5">
-                      {badge.label}
+                      {t(badge.label)}
                     </Badge>
                   </div>
                   <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-500 dark:text-slate-400">
-                    <span>{methodLabel(d)}</span>
+                    <span>{methodLabel(d, t)}</span>
                     {d.transactionReference && d.paymentMethod === "MOBILE_MONEY" && (
                       <span className="font-mono font-semibold text-slate-700 dark:text-slate-200">{d.transactionReference}</span>
                     )}
@@ -261,17 +271,17 @@ export function DonationsPage() {
                     <span>{formatDateTime(d.createdAt)}</span>
                   </p>
                   {d.status === "REJECTED" && d.rejectionReason && (
-                    <p className="mt-1 text-xs text-red-600 dark:text-red-400">Motif : {d.rejectionReason}</p>
+                    <p className="mt-1 text-xs text-red-600 dark:text-red-400">{t("admin.donations.reason", { reason: d.rejectionReason })}</p>
                   )}
                   {d.status === "CONFIRMED" && (
                     <p className="mt-1 flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
                       {d.paymentMethod === "CARD" ? (
                         <>
-                          <ShieldCheck className="h-3 w-3" /> Payé en ligne
+                          <ShieldCheck className="h-3 w-3" /> {t("admin.donations.paid_online")}
                         </>
                       ) : d.thankYouEmailSentAt ? (
                         <>
-                          <MailCheck className="h-3 w-3" /> Remerciement envoyé
+                          <MailCheck className="h-3 w-3" /> {t("admin.donations.thanks_sent")}
                         </>
                       ) : null}
                     </p>
@@ -290,7 +300,7 @@ export function DonationsPage() {
                     {formatAmount(d.amount, d.currency)}
                   </p>
                   {corrected && (
-                    <p className="text-[11px] text-slate-400">déclaré {formatAmount(d.declaredAmount!, d.currency)}</p>
+                    <p className="text-[11px] text-slate-400">{t("admin.donations.declared_amount", { amount: formatAmount(d.declaredAmount!, d.currency) })}</p>
                   )}
                 </div>
 
@@ -299,17 +309,17 @@ export function DonationsPage() {
                     {canManage(d) &&
                       (d.status === "PENDING" ? (
                         <Button variant="secondary" size="sm" onClick={() => setVerifying(d)}>
-                          Vérifier
+                          {t("admin.donations.verify")}
                         </Button>
-                      ) : (
+                      ) : d.status === "CONFIRMED" && user?.role !== "SUPER_ADMIN" ? null : (
                         <button
                           type="button"
                           onClick={() => handleReopen(d)}
                           disabled={reopen.isPending}
-                          title="Remettre à vérifier"
+                          title={t("admin.donations.reopen_title")}
                           className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                         >
-                          <RotateCcw className="h-3.5 w-3.5" /> Rouvrir
+                          <RotateCcw className="h-3.5 w-3.5" /> {t("admin.donations.reopen")}
                         </button>
                       ))}
                     {canDelete(d) && (
@@ -317,8 +327,8 @@ export function DonationsPage() {
                         type="button"
                         onClick={() => setDeleting(d)}
                         disabled={deleteDonation.isPending}
-                        aria-label="Supprimer"
-                        title="Supprimer ce don"
+                        aria-label={t("common.delete")}
+                        title={t("admin.donations.delete_title")}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-slate-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -329,6 +339,9 @@ export function DonationsPage() {
               </Card>
             );
           })}
+          {data && (
+            <Pagination page={data.page} totalPages={data.totalPages} total={data.total} onPageChange={setPage} itemLabel={t("admin.donations.count_label")} />
+          )}
         </div>
       )}
 
@@ -337,7 +350,7 @@ export function DonationsPage() {
         open={manualOpen}
         onClose={() => setManualOpen(false)}
         onRecorded={handleRecorded}
-        defaultBranchId={selectedBranchId === "all" ? undefined : selectedBranchId}
+        defaultBranchId={scopedBranchId}
       />
       <DeleteDonationDialog
         donation={deleting}

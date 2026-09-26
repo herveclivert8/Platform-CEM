@@ -7,8 +7,10 @@ import { BranchProfileFields } from "../../components/admin/BranchProfileFields"
 import { useAuthStore } from "../../store/authStore";
 import { useBranch } from "../../hooks/useBranches";
 import { useUpdateBranch, type TeamMemberInput } from "../../hooks/useAdminBranches";
+import { useTranslation } from "react-i18next";
 
 export function MyBranchPage() {
+  const { t } = useTranslation();
   const branchId = useAuthStore((s) => s.user?.branchId ?? undefined);
   const { data: branch, isLoading } = useBranch(branchId);
   const updateBranch = useUpdateBranch(branchId);
@@ -36,11 +38,11 @@ export function MyBranchPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await updateBranch.mutateAsync({
-      physical_address: address || undefined,
-      contact_email: contactEmail || undefined,
-      contact_phone: contactPhone || undefined,
-      description: description || undefined,
-      logo_url: logoUrl || undefined,
+      physical_address: address || null,
+      contact_email: contactEmail || null,
+      contact_phone: contactPhone || null,
+      description: description || null,
+      logo_url: logoUrl || null,
       team_members: teamMembers.filter((m) => m.name.trim() && m.role.trim()),
     });
   };
@@ -48,17 +50,17 @@ export function MyBranchPage() {
   if (!branchId) {
     return (
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Mon antenne</h1>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Aucune antenne n'est rattachée à ce compte.</p>
+        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{t("admin.my_branch.title")}</h1>
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("admin.my_branch.none")}</p>
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Mon antenne</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{t("admin.my_branch.title")}</h1>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Ces informations apparaissent dans l'aperçu de votre antenne dans l'annuaire public.
+        {t("admin.my_branch.subtitle")}
       </p>
 
       {isLoading ? (
@@ -71,7 +73,7 @@ export function MyBranchPage() {
 
           <form onSubmit={handleSubmit} className="mt-4 space-y-5">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">Adresse</label>
+              <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">{t("admin.my_branch.address")}</label>
               <input
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
@@ -94,17 +96,17 @@ export function MyBranchPage() {
 
             {updateBranch.isError && (
               <p className="text-sm text-red-600 dark:text-red-400">
-                Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.
+                {t("admin.branch_edit.save_error")}
               </p>
             )}
             {updateBranch.isSuccess && (
               <p className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="h-4 w-4" /> Antenne mise à jour.
+                <CheckCircle2 className="h-4 w-4" /> {t("admin.branch_edit.updated")}
               </p>
             )}
 
             <Button type="submit" variant="secondary" disabled={updateBranch.isPending}>
-              {updateBranch.isPending ? "…" : "Enregistrer"}
+              {updateBranch.isPending ? "…" : t("common.save")}
             </Button>
           </form>
         </Card>

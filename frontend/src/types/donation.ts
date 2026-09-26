@@ -1,3 +1,5 @@
+import { dateLocale } from "../lib/locale";
+
 export type PaymentMethod = "CARD" | "MOBILE_MONEY" | "BANK_TRANSFER";
 export type DonationStatus = "PENDING" | "CONFIRMED" | "REJECTED";
 export type MobileOperator = "MVOLA" | "ORANGE_MONEY" | "AIRTEL_MONEY";
@@ -15,9 +17,9 @@ export const OPERATOR_LABELS: Record<MobileOperator, string> = {
 };
 
 export function formatAmount(amount: number, currency: string): string {
-  if (currency === "MGA") return `${amount.toLocaleString("fr-FR", { maximumFractionDigits: 0 })} Ar`;
+  if (currency === "MGA") return `${amount.toLocaleString(dateLocale(), { maximumFractionDigits: 0 })} Ar`;
   const symbol = CURRENCY_SYMBOLS[currency as Currency] ?? currency;
-  return `${amount.toLocaleString("fr-FR", { minimumFractionDigits: amount % 1 ? 2 : 0, maximumFractionDigits: 2 })} ${symbol}`;
+  return `${amount.toLocaleString(dateLocale(), { minimumFractionDigits: amount % 1 ? 2 : 0, maximumFractionDigits: 2 })} ${symbol}`;
 }
 
 /** Malagasy mobile number, as the backend expects it: "+261 34 12 345 67" -> "0341234567" (null if invalid). */
@@ -37,7 +39,7 @@ export function formatMgPhone(value: string | null): string {
 
 /** Date + time: needed to match a payment in the operator's history. */
 export function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", {
+  return new Date(iso).toLocaleString(dateLocale(), {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -171,6 +173,8 @@ export interface MobileMoneyDeclarationInput {
   amount: number;
   donorEmail: string;
   donorName?: string;
+  /** Anti-spam trap field, always empty for a real donor */
+  website?: string;
 }
 
 export interface ManualDonationInput {
@@ -183,12 +187,3 @@ export interface ManualDonationInput {
   donorName?: string;
 }
 
-/** Total of confirmed donations, one amount per currency (e.g. "120 € · 50 000 Ar"). */
-export function formatConfirmedTotals(donations: Donation[] | undefined): string {
-  const totals = new Map<Currency, number>();
-  for (const d of donations ?? []) {
-    if (d.status === "CONFIRMED") totals.set(d.currency, (totals.get(d.currency) ?? 0) + d.amount);
-  }
-  if (totals.size === 0) return formatAmount(0, "EUR");
-  return [...totals.entries()].map(([currency, total]) => formatAmount(total, currency)).join(" · ");
-}

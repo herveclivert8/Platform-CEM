@@ -50,12 +50,20 @@ export function useChangePassword() {
       newPassword: string;
       confirmPassword: string;
     }) => {
-      const { data } = await api.post("/auth/password/change", {
+      const { data } = await api.post<LoginResponseDto>("/auth/password/change", {
         current_password: params.currentPassword,
         new_password: params.newPassword,
         confirm_password: params.confirmPassword,
       });
       return data;
+    },
+    // The backend revokes every existing session and returns fresh tokens for this one
+    onSuccess: (data) => {
+      useAuthStore.getState().login({
+        user: mapCurrentUser(data.user),
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+      });
     },
   });
 }

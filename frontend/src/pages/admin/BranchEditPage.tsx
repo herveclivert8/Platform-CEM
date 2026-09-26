@@ -8,15 +8,11 @@ import { AddressAutocomplete, type GeoSelection } from "../../components/admin/A
 import { BranchProfileFields } from "../../components/admin/BranchProfileFields";
 import { useBranch } from "../../hooks/useBranches";
 import { useUpdateBranch, type TeamMemberInput } from "../../hooks/useAdminBranches";
-import { BRANCH_STATUS_LABELS, type BranchStatus } from "../../types/branch";
-
-const STATUS_HELP: Record<BranchStatus, string> = {
-  active: "Visible dans l'annuaire ; reçoit dons et dossiers.",
-  inactive: "Retirée de l'annuaire. Sa page reste consultable avec la mention « antenne inactive », sans dons ni dépôt de dossiers.",
-  pending: "Pas encore ouverte : invisible pour le public. Ses admins peuvent déjà préparer son contenu.",
-};
+import type { BranchStatus } from "../../types/branch";
+import { useTranslation } from "react-i18next";
 
 export function BranchEditPage() {
+  const { t } = useTranslation();
   const { branchId } = useParams<{ branchId: string }>();
   const id = branchId ? Number(branchId) : undefined;
   const { data: branch, isLoading } = useBranch(id);
@@ -36,7 +32,6 @@ export function BranchEditPage() {
   useEffect(() => {
     if (branch) {
       setName(branch.cityName);
-      setStatus(branch.status);
       setCountry(branch.country);
       setAddress(branch.address ?? "");
       setCoords(branch.lat && branch.lng ? { lat: branch.lat, lng: branch.lng } : null);
@@ -44,6 +39,7 @@ export function BranchEditPage() {
       setContactPhone(branch.contactPhone ?? "");
       setDescription(branch.description ?? "");
       setLogoUrl(branch.logoUrl ?? "");
+      setStatus(branch.status);
       setTeamMembers(
         branch.teamMembers?.map((m) => ({ name: m.name, role: m.role, photo_url: m.photoUrl ?? undefined })) ?? [],
       );
@@ -62,14 +58,14 @@ export function BranchEditPage() {
     await updateBranch.mutateAsync({
       name,
       country,
-      physical_address: address || undefined,
+      status,
+      physical_address: address || null,
       latitude: coords?.lat,
       longitude: coords?.lng,
-      contact_email: contactEmail || undefined,
-      contact_phone: contactPhone || undefined,
-      description: description || undefined,
-      logo_url: logoUrl || undefined,
-      status,
+      contact_email: contactEmail || null,
+      contact_phone: contactPhone || null,
+      description: description || null,
+      logo_url: logoUrl || null,
       team_members: teamMembers.filter((m) => m.name.trim() && m.role.trim()),
     });
   };
@@ -81,7 +77,7 @@ export function BranchEditPage() {
         className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        Retour aux antennes
+        {t("admin.branch_edit.back")}
       </Link>
 
       <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
@@ -94,39 +90,20 @@ export function BranchEditPage() {
         <Card hoverable={false} className="mt-6 max-w-2xl p-6">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="branch-status" className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                Statut
-              </label>
-              <select
-                id="branch-status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value as BranchStatus)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-              >
-                {(Object.keys(BRANCH_STATUS_LABELS) as BranchStatus[]).map((s) => (
-                  <option key={s} value={s}>
-                    {BRANCH_STATUS_LABELS[s]}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">{STATUS_HELP[status]}</p>
-            </div>
-
-            <div>
               <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                Rechercher une adresse (autocomplétion)
+                {t("admin.branch_edit.address_search")}
               </label>
               <AddressAutocomplete onSelect={handleGeoSelect} />
               {coords && (
                 <p className="mt-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-                  Coordonnées : {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+                  {t("admin.branch_edit.coordinates", { lat: coords.lat.toFixed(4), lng: coords.lng.toFixed(4) })}
                 </p>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">Ville</label>
+                <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">{t("admin.branch_edit.city")}</label>
                 <input
                   required
                   value={name}
@@ -135,7 +112,7 @@ export function BranchEditPage() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">Pays</label>
+                <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">{t("admin.branch_edit.country")}</label>
                 <input
                   required
                   value={country}
@@ -143,6 +120,19 @@ export function BranchEditPage() {
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">{t("admin.branch_edit.status")}</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as BranchStatus)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              >
+                <option value="active">{t("admin.branch_edit.status_active")}</option>
+                <option value="pending">{t("admin.branch_edit.status_pending")}</option>
+                <option value="inactive">{t("admin.branch_edit.status_inactive")}</option>
+              </select>
             </div>
 
             <BranchProfileFields
@@ -160,17 +150,17 @@ export function BranchEditPage() {
 
             {updateBranch.isError && (
               <p className="text-sm text-red-600 dark:text-red-400">
-                Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.
+                {t("admin.branch_edit.save_error")}
               </p>
             )}
             {updateBranch.isSuccess && (
               <p className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="h-4 w-4" /> Antenne mise à jour.
+                <CheckCircle2 className="h-4 w-4" /> {t("admin.branch_edit.updated")}
               </p>
             )}
 
             <Button type="submit" variant="secondary" disabled={updateBranch.isPending}>
-              {updateBranch.isPending ? "…" : "Enregistrer"}
+              {updateBranch.isPending ? "…" : t("common.save")}
             </Button>
           </form>
         </Card>

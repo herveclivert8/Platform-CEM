@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface DrawerProps {
   open: boolean;
@@ -10,6 +11,7 @@ interface DrawerProps {
 }
 
 export function Drawer({ open, onClose, title, children }: DrawerProps) {
+  const { t } = useTranslation();
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -37,7 +39,7 @@ export function Drawer({ open, onClose, title, children }: DrawerProps) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t("common.close")}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
           >
             <X className="h-4 w-4" />

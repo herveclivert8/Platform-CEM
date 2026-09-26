@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Bold, Italic, List, Link2 } from "lucide-react";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 
 interface RichTextEditorProps {
   value: string;
@@ -9,12 +10,13 @@ interface RichTextEditorProps {
 }
 
 const TOOLBAR_ACTIONS = [
-  { command: "bold", icon: Bold, label: "Gras" },
-  { command: "italic", icon: Italic, label: "Italique" },
-  { command: "insertUnorderedList", icon: List, label: "Liste à puces" },
+  { command: "bold", icon: Bold, labelKey: "admin.editor.bold" },
+  { command: "italic", icon: Italic, labelKey: "admin.editor.italic" },
+  { command: "insertUnorderedList", icon: List, labelKey: "admin.editor.bullets" },
 ];
 
 export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
+  const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
 
   // Only sync external -> DOM when the value actually diverges (e.g. loading an
@@ -33,7 +35,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   };
 
   const insertLink = () => {
-    const url = window.prompt("URL du lien :");
+    const url = window.prompt(t("admin.editor.link_prompt"));
     if (!url) return;
     exec("createLink");
     document.execCommand("createLink", false, url);
@@ -47,7 +49,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           <button
             key={action.command}
             type="button"
-            title={action.label}
+            title={t(action.labelKey)}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => exec(action.command)}
             className={clsx(
@@ -59,7 +61,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         ))}
         <button
           type="button"
-          title="Insérer un lien"
+          title={t("admin.editor.link")}
           onMouseDown={(e) => e.preventDefault()}
           onClick={insertLink}
           className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"

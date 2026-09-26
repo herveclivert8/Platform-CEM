@@ -34,6 +34,7 @@ Démarre PostgreSQL sur `localhost:5432` (utilisateur `cem`, mot de passe `cem`,
 ```bash
 cd backend
 python3.12 -m venv .venv
+
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env           # puis éditez SECRET_KEY
@@ -144,19 +145,14 @@ Disponible sur http://localhost:5173. Le serveur de dev redirige automatiquement
 
 ## Tests et qualité
 
-Les tests du backend (authentification, permissions par antenne, dons, statut des antennes) tournent sur une base dédiée **`cem_test`**, entièrement effacée à chaque lancement. Ils refusent de démarrer sur une base dont le nom ne finit pas par `_test`.
+Les tests du backend tournent sur une base dédiée **`cem_test`**, **supprimée puis recréée** à chaque lancement (migrations + données de démo). Ils refusent de démarrer sur une base dont le nom ne finit pas par `_test`.
 
-Créez-la une seule fois :
-
-```bash
-docker compose exec db createdb -U cem cem_test                                  # base Docker
-# ou, avec un PostgreSQL installé : CREATE DATABASE cem_test OWNER cem;
-```
+L'utilisateur PostgreSQL doit pouvoir créer des bases : c'est le cas de `cem` dans la base Docker. Avec un PostgreSQL installé, accordez-le une fois : `ALTER ROLE cem CREATEDB;`
 
 Puis, dans `backend/` (environnement virtuel activé) :
 
 ```bash
-pip install -r requirements-dev.txt   # une seule fois : ajoute l'outil de lint (ruff)
+pip install -r requirements-dev.txt   # une seule fois : outils de test, de lint et d'audit
 ruff check .                          # lint
 pytest                                # tests
 ```
@@ -169,16 +165,16 @@ Côté frontend : `npm run lint` puis `npm run build`.
 
 ## Déploiement (Docker)
 
-Chaque partie a son image : [`backend/Dockerfile`](backend/Dockerfile) (API, applique les migrations au démarrage) et [`frontend/Dockerfile`](frontend/Dockerfile) (site compilé, servi par nginx, qui relaie `/api` et `/uploads` vers l'API). [`docker-compose.prod.yml`](docker-compose.prod.yml) assemble base de données, API et site :
+Chaque partie a son image : [`backend/Dockerfile`](backend/Dockerfile) (API, applique les migrations au démarrage) et [`frontend/Dockerfile`](frontend/Dockerfile) (site compilé, servi par nginx, qui relaie `/api` et `/uploads` vers l'API). [`docker-compose.prod.yml`](docker-compose.prod.yml) assemble base de données, Redis, API et site :
 
 ```bash
-cp .env.prod.example .env.prod        # puis renseignez POSTGRES_PASSWORD et SECRET_KEY
-docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+cp .env.production.example .env.production   # puis renseignez POSTGRES_PASSWORD, SECRET_KEY et FRONTEND_URL
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
 ```
 
-Le site est alors servi sur le port 80 (`HTTP_PORT` pour en changer). Pour une mise en ligne publique, placez un serveur HTTPS devant (Caddy, Traefik, ou le proxy de l'hébergeur). La base et les images envoyées sont conservées dans des volumes Docker.
+Le site est alors servi sur le port 8080 (`HTTP_PORT` pour en changer). Pour une mise en ligne publique, placez un serveur HTTPS devant (Caddy, Traefik, ou le proxy de l'hébergeur). La base et les images envoyées sont conservées dans des volumes Docker.
 
-> Avant une vraie mise en production, voir les points de sécurité restants dans [ANALYSE.md](ANALYSE.md) (limite de requêtes, révocation des sessions…). Le paiement par carte y est désactivé (`CARD_PAYMENT_PROVIDER=disabled`) tant qu'aucun vrai prestataire n'est branché, et les données de démo ne sont pas chargées.
+> Le paiement par carte y est désactivé (`CARD_PAYMENT_PROVIDER=disabled`) tant qu'aucun vrai prestataire n'est branché, et les données de démo ne sont pas chargées.
 
 ## Dons
 

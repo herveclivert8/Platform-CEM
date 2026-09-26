@@ -1,9 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { mapPost, type PaginatedDto, type Post, type PostDto } from "../types/post";
-import { useAdminScopeStore } from "../store/adminScopeStore";
-import { useAuthStore } from "../store/authStore";
-import { useAdminBranchList } from "./useBranches";
+import { mapPaginated, mapPost, type Paginated, type PaginatedDto, type Post, type PostDto } from "../types/post";
+import { useScopedBranchId } from "./useAdminScope";
 
 export interface PostInput {
   title: string;
@@ -13,37 +11,33 @@ export interface PostInput {
   images: string[];
 }
 
-/** Admin listing (drafts included), respecting the current scope (one branch, or all for Super Admin). */
-export function useAdminPosts() {
-  const user = useAuthStore((s) => s.user);
-  const { selectedBranchId } = useAdminScopeStore();
-  const { data: branchesData } = useAdminBranchList();
+export interface AdminPostFilters {
+  page: number;
+  status?: string;
+  pillar?: string;
+  q?: string;
+}
 
-  const targetBranchIds =
-    user?.role === "SUPER_ADMIN"
-      ? selectedBranchId === "all"
-        ? (branchesData?.items ?? []).map((b) => b.id)
-        : [selectedBranchId]
-      : user?.branchId
-        ? [user.branchId]
-        : [];
+/** Admin listing (drafts included), filtered and paginated server-side, in the current scope. */
+export function useAdminPosts(filters: AdminPostFilters = { page: 1 }) {
+  const branchId = useScopedBranchId();
 
-  return useQuery<Post[]>({
-    queryKey: ["admin-posts", targetBranchIds],
+  return useQuery<Paginated<Post>>({
+    queryKey: ["admin-posts", branchId ?? "all", filters],
     queryFn: async () => {
-      const results = await Promise.all(
-        targetBranchIds.map((branchId) =>
-          api.get<PaginatedDto<PostDto>>(`/branches/${branchId}/posts/admin`, {
-            params: { page: 1, page_size: 50 },
-          }),
-        ),
-      );
-      return results
-        .flatMap((r) => r.data.items)
-        .map(mapPost)
-        .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+      const { data } = await api.get<PaginatedDto<PostDto>>("/posts/admin", {
+        params: {
+          branch_id: branchId,
+          page: filters.page,
+          page_size: 20,
+          status: filters.status || undefined,
+          pillar: filters.pillar || undefined,
+          q: filters.q?.trim() || undefined,
+        },
+      });
+      return mapPaginated(data, mapPost);
     },
-    enabled: targetBranchIds.length > 0,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -54,7 +48,10 @@ export function useCreatePost(branchId: number | undefined) {
       const { data } = await api.post<PostDto>(`/branches/${branchId}/posts`, input);
       return mapPost(data);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-posts"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+    },
   });
 }
 
@@ -65,7 +62,10 @@ export function useUpdatePost(postId: number | undefined) {
       const { data } = await api.put<PostDto>(`/posts/${postId}`, input);
       return mapPost(data);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-posts"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+    },
   });
 }
 
@@ -75,6 +75,9 @@ export function useDeletePost() {
     mutationFn: async (postId: number) => {
       await api.delete(`/posts/${postId}`);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-posts"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+    },
   });
 }

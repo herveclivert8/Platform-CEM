@@ -6,6 +6,7 @@ import { Badge } from "../ui/Badge";
 import { PostModal } from "./PostModal";
 import type { Post } from "../../types/post";
 import { usePillarLabels } from "../../hooks/usePillarLabels";
+import { dateLocale } from "../../lib/locale";
 
 const PILLAR_TONE: Record<Post["pillar"], "emerald" | "orange"> = {
   EDUCATION: "emerald",
@@ -48,7 +49,7 @@ export function PostCard({ post }: { post: Post }) {
             </p>
             <p className="mt-4 flex items-center gap-1.5 text-xs text-slate-400">
               <Calendar className="h-3.5 w-3.5" aria-hidden />
-              {new Date(post.createdAt).toLocaleDateString("fr-FR", {
+              {new Date(post.createdAt).toLocaleDateString(dateLocale(), {
                 day: "numeric",
                 month: "long",
                 year: "numeric",

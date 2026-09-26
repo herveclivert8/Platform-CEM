@@ -7,23 +7,21 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_router
-from app.core.config import settings
+from app.core.config import HSTS_HEADER, SECURITY_HEADERS, settings
 from app.core.cache import init_redis, close_redis
 from app.core.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
+from app.services.audit import AuditContextMiddleware
 
 setup_logging()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Redis est optionnel : sans lui, la limite de requêtes est gérée en mémoire
     if settings.USE_REDIS:
         await init_redis(settings.REDIS_URL)
-    print("Application startup complete")
     yield
     await close_redis()
-    print("Application shutdown complete")
 
 
 app = FastAPI(
@@ -47,6 +45,19 @@ app.add_middleware(
     max_age=3600,
     expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
 )
+
+# Journal d'audit : IP et navigateur de la requête en cours
+app.add_middleware(AuditContextMiddleware)
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    for name, value in SECURITY_HEADERS.items():
+        response.headers.setdefault(name, value)
+    if settings.ENVIRONMENT == "production":
+        response.headers.setdefault(*HSTS_HEADER)
+    return response
+
 
 # Monitoring: Sentry integration
 if settings.SENTRY_DSN:

@@ -23,9 +23,9 @@ const EMPTY: HomeHeroInput = {
 };
 
 const TEXT_FIELDS = [
-  { key: "badge", label: "Bandeau (au-dessus du titre)", i18nKey: "hero.badge", maxLength: 255, rows: 1 },
-  { key: "title", label: "Titre", i18nKey: "hero.title", maxLength: 200, rows: 2 },
-  { key: "subtitle", label: "Sous-titre", i18nKey: "hero.subtitle", maxLength: 500, rows: 3 },
+  { key: "badge", labelKey: "admin.home_hero.badge", i18nKey: "hero.badge", maxLength: 255, rows: 1 },
+  { key: "title", labelKey: "admin.home_hero.heading", i18nKey: "hero.title", maxLength: 200, rows: 2 },
+  { key: "subtitle", labelKey: "admin.home_hero.tagline", i18nKey: "hero.subtitle", maxLength: 500, rows: 3 },
 ] as const;
 
 const LANG_LABELS: Record<Lang, string> = { fr: "Français", en: "English" };
@@ -38,7 +38,7 @@ function fieldKey(key: (typeof TEXT_FIELDS)[number]["key"], lang: Lang): keyof H
 }
 
 export function HomeHeroPage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data, isLoading } = useHomeHero();
   const updateHomeHero = useUpdateHomeHero();
   const [values, setValues] = useState<HomeHeroInput>(EMPTY);
@@ -75,7 +75,7 @@ export function HomeHeroPage() {
   };
 
   const resetAll = () => {
-    if (window.confirm("Revenir à la photo et aux textes d'origine ? Il faudra ensuite enregistrer.")) {
+    if (window.confirm(t("admin.home_hero.reset_confirm"))) {
       updateHomeHero.reset();
       setValues(EMPTY);
     }
@@ -88,35 +88,29 @@ export function HomeHeroPage() {
     <div>
       <div className="flex items-center gap-2.5">
         <ImageIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" aria-hidden />
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Page d'accueil</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{t("admin.home_hero.title")}</h1>
       </div>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Photo et message de couverture, en haut de la page d'accueil. Un champ laissé vide affiche le texte ou la
-        photo d'origine.
-      </p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("admin.home_hero.subtitle")}</p>
 
       {isLoading ? (
-        <p className="mt-6 text-sm text-slate-400 dark:text-slate-500">Chargement…</p>
+        <p className="mt-6 text-sm text-slate-400 dark:text-slate-500">{t("admin.home_hero.loading")}</p>
       ) : (
         <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <Card hoverable={false} className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <p className="mb-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">Photo de couverture</p>
+                <p className="mb-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">{t("admin.home_hero.photo")}</p>
                 <ImageDropzone
                   images={values.imageUrl ? [values.imageUrl] : []}
                   // A single photo: a new upload replaces the current one
                   onChange={(images) => set("imageUrl", images[images.length - 1] ?? "")}
                 />
-                <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
-                  Format paysage, au moins 1920 px de large (5 Mo maximum). Le bas de la photo est assombri pour que le
-                  texte reste lisible.
-                </p>
+                <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">{t("admin.home_hero.photo_hint")}</p>
               </div>
 
               {TEXT_FIELDS.map((field) => (
                 <fieldset key={field.key} className="space-y-2">
-                  <legend className="mb-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">{field.label}</legend>
+                  <legend className="mb-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">{t(field.labelKey)}</legend>
                   {(["fr", "en"] as Lang[]).map((lang) => {
                     const key = fieldKey(field.key, lang);
                     const Input = field.rows > 1 ? "textarea" : "input";
@@ -124,7 +118,7 @@ export function HomeHeroPage() {
                       <div key={lang} className="flex items-start gap-2">
                         <span className="mt-2.5 w-7 shrink-0 text-[11px] font-semibold uppercase text-slate-400">{lang}</span>
                         <Input
-                          aria-label={`${field.label} (${LANG_LABELS[lang]})`}
+                          aria-label={`${t(field.labelKey)} (${LANG_LABELS[lang]})`}
                           rows={field.rows > 1 ? field.rows : undefined}
                           maxLength={field.maxLength}
                           placeholder={defaults[lang](field.i18nKey)}
@@ -139,20 +133,20 @@ export function HomeHeroPage() {
               ))}
 
               {updateHomeHero.isError && (
-                <p className="text-sm text-red-600 dark:text-red-400">Une erreur est survenue. Veuillez réessayer.</p>
+                <p className="text-sm text-red-600 dark:text-red-400">{t("admin.home_hero.error")}</p>
               )}
               {updateHomeHero.isSuccess && (
                 <p className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400">
-                  <CheckCircle2 className="h-4 w-4" /> Couverture mise à jour.
+                  <CheckCircle2 className="h-4 w-4" /> {t("admin.home_hero.saved")}
                 </p>
               )}
 
               <div className="flex flex-wrap items-center gap-2">
                 <Button type="submit" variant="secondary" disabled={updateHomeHero.isPending}>
-                  {updateHomeHero.isPending ? "…" : "Enregistrer"}
+                  {updateHomeHero.isPending ? "…" : t("admin.home_hero.save")}
                 </Button>
                 <Button type="button" variant="ghost" icon={<RotateCcw className="h-4 w-4" />} onClick={resetAll}>
-                  Couverture d'origine
+                  {t("admin.home_hero.reset")}
                 </Button>
               </div>
             </form>
@@ -160,7 +154,7 @@ export function HomeHeroPage() {
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Aperçu</p>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("admin.home_hero.preview")}</p>
               <div className="flex gap-1 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800">
                 {(["fr", "en"] as Lang[]).map((lang) => (
                   <button

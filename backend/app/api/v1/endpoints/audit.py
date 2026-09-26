@@ -6,13 +6,13 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import desc, func
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.api.deps import get_db, get_current_user
 from app.core.permissions import verify_super_admin_only
 from app.models.user import User
 from app.models.audit import AuditLog
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict, BaseModel
 from typing import List, Optional
 
 
@@ -22,7 +22,7 @@ class AuditLogResponse(BaseModel):
     action: str
     resource_type: str
     resource_id: Optional[int]
-    user_email: str
+    user_email: Optional[str]
     branch_id: Optional[int]
     details: Optional[dict]
     ip_address: Optional[str]
@@ -39,6 +39,14 @@ class AuditLogListResponse(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+
+class AuditStatsResponse(BaseModel):
+    total_events: int
+    failed_logins: int
+    publications_created: int
+    admins_created: int
+    last_event: Optional[datetime]
 
 
 router = APIRouter(prefix="/super-admin/audit", tags=["audit"])
@@ -72,7 +80,7 @@ async def list_audit_logs(
     await verify_super_admin_only(user)
 
     # Date filter
-    start_date = datetime.utcnow() - timedelta(days=days)
+    start_date = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
 
     # Build query
     query = select(AuditLog).where(AuditLog.created_at >= start_date)
@@ -107,20 +115,12 @@ async def list_audit_logs(
     )
 
 
-class AuditStats(BaseModel):
-    total_events: int
-    failed_logins: int
-    publications_created: int
-    admins_created: int
-    last_event: Optional[datetime] = None
-
-
-@router.get("/stats", response_model=AuditStats, status_code=200)
+@router.get("/stats", response_model=AuditStatsResponse, status_code=200)
 async def get_audit_stats(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     days: int = Query(7, ge=1, le=90),
-) -> dict:
+) -> AuditStatsResponse:
     """
     Obtenir les statistiques des logs d'audit
 
@@ -133,7 +133,7 @@ async def get_audit_stats(
     """
     await verify_super_admin_only(user)
 
-    start_date = datetime.utcnow() - timedelta(days=days)
+    start_date = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
 
     # Total events
     total = await db.execute(
@@ -174,40 +174,10 @@ async def get_audit_stats(
     )
     last_event = last_event_result.scalar_one_or_none()
 
-    return {
-        "total_events": total_events,
-        "failed_logins": failed_logins.scalar() or 0,
-        "publications_created": publications.scalar() or 0,
-        "admins_created": admins.scalar() or 0,
-        "last_event": last_event.created_at if last_event else None,
-    }
-
-
-async def log_audit(
-    db: AsyncSession,
-    user_id: Optional[int],
-    user_email: str,
-    action: str,
-    resource_type: str,
-    resource_id: Optional[int],
-    branch_id: Optional[int],
-    details: Optional[dict] = None,
-    ip_address: Optional[str] = None,
-    success: int = 1,
-    error_message: Optional[str] = None,
-):
-    """Créer un audit log"""
-    audit = AuditLog(
-        user_id=user_id,
-        user_email=user_email,
-        action=action,
-        resource_type=resource_type,
-        resource_id=resource_id,
-        branch_id=branch_id,
-        details=details,
-        ip_address=ip_address,
-        success=success,
-        error_message=error_message,
+    return AuditStatsResponse(
+        total_events=total_events,
+        failed_logins=failed_logins.scalar() or 0,
+        publications_created=publications.scalar() or 0,
+        admins_created=admins.scalar() or 0,
+        last_event=last_event.created_at if last_event else None,
     )
-    db.add(audit)
-    await db.commit()

@@ -1,8 +1,9 @@
 """
-Fixtures communes des tests.
+Tests d'intégration : l'API tourne en mémoire (httpx + ASGI) contre une vraie base PostgreSQL.
 
-Les tests tournent sur une base PostgreSQL dédiée (TEST_DATABASE_URL, par défaut la base `cem_test`
-du docker-compose / du PostgreSQL local), recréée à chaque session puis vidée après chaque test.
+La base de test est RECRÉÉE à chaque lancement (migrations Alembic + seed), à partir de
+TEST_DATABASE_URL (par défaut : base "cem_test" sur le PostgreSQL de docker-compose).
+Ne jamais la faire pointer vers une base contenant des données à conserver.
 """
 
 import asyncio
@@ -15,118 +16,97 @@ TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL", "postgresql+asyncpg://cem:cem@localhost:5432/cem_test"
 )
 if not TEST_DATABASE_URL.rsplit("/", 1)[-1].endswith("_test"):
-    # Garde-fou : la base est entièrement effacée, elle ne doit jamais être une base de travail
+    # Garde-fou : cette base est supprimée puis recréée à chaque lancement
     raise RuntimeError(f"TEST_DATABASE_URL doit viser une base dont le nom finit par _test ({TEST_DATABASE_URL})")
 
-# À définir avant d'importer l'application : la configuration est lue à l'import
-os.environ.update(
-    DATABASE_URL=TEST_DATABASE_URL,
-    SECRET_KEY="test-secret-key-not-for-production",
-    ENVIRONMENT="test",
-    RATE_LIMIT_ENABLED="false",
-    USE_REDIS="false",
-    CARD_PAYMENT_PROVIDER="simulation",
-    SMTP_USER="",
-    SMTP_PASSWORD="",
-)
+# Avant tout import de l'application : la configuration est lue à l'import
+os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+os.environ["ENVIRONMENT"] = "test"
+os.environ["SECRET_KEY"] = "test-secret-key-for-pytest-only-0123456789"
+os.environ["USE_REDIS"] = "false"
+os.environ["CARD_PAYMENT_PROVIDER"] = "simulation"
+os.environ["SMTP_USER"] = ""
 
+import asyncpg  # noqa: E402
 import httpx  # noqa: E402
 import pytest  # noqa: E402
-from sqlalchemy import text  # noqa: E402
-
-from app.core.security import create_access_token, hash_password  # noqa: E402
-from app.db.session import AsyncSessionLocal, engine  # noqa: E402
-from app.main import app  # noqa: E402
-from app.models import Branch, User  # noqa: E402
-from app.models.settings import AssociationSettings  # noqa: E402
-from app.models.user import UserRole  # noqa: E402
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
-PASSWORD = "Password123!"
+
+SUPER_ADMIN = ("super.admin@cem-madagascar.org", "SuperAdmin123!")
+TANA_ADMIN = ("antananarivo@cem-madagascar.org", "BranchAdmin123!")
+PARIS_ADMIN = ("paris@cem-madagascar.org", "BranchAdmin123!")
+
+
+async def _recreate_database() -> None:
+    base_url, db_name = TEST_DATABASE_URL.rsplit("/", 1)
+    dsn = base_url.replace("postgresql+asyncpg://", "postgresql://") + "/postgres"
+    conn = await asyncpg.connect(dsn)
+    try:
+        await conn.execute(f'DROP DATABASE IF EXISTS "{db_name}" WITH (FORCE)')
+        await conn.execute(f'CREATE DATABASE "{db_name}"')
+    finally:
+        await conn.close()
+
+
+def _run(*args: str) -> None:
+    result = subprocess.run(
+        [sys.executable, *args], cwd=BACKEND_DIR, env=os.environ.copy(), capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"Échec de {' '.join(args)} :\n{result.stdout}\n{result.stderr}")
+
+
+def pytest_sessionstart(session):
+    asyncio.run(_recreate_database())
+    _run("-m", "alembic", "upgrade", "head")
+    _run("-m", "app.seed")
 
 
 @pytest.fixture(scope="session")
-def event_loop():
-    # Une seule boucle pour toute la session : le pool de connexions de l'application y est rattaché
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.fixture(scope="session", autouse=True)
-async def database():
-    """Schéma vierge, créé par les migrations Alembic (ce qui les teste au passage)."""
-    async with engine.begin() as conn:
-        await conn.execute(text("DROP SCHEMA public CASCADE"))
-        await conn.execute(text("CREATE SCHEMA public"))
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "upgrade", "head"],
-        cwd=BACKEND_DIR,
-        env=os.environ.copy(),
-        check=True,
-        capture_output=True,
-    )
-    yield
-    await engine.dispose()
-
-
-@pytest.fixture(autouse=True)
-async def clean_tables():
-    yield
-    async with engine.begin() as conn:
-        tables = (
-            await conn.execute(
-                text("SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename != 'alembic_version'")
-            )
-        ).scalars().all()
-        await conn.execute(text(f"TRUNCATE {', '.join(tables)} RESTART IDENTITY CASCADE"))
-
-
-@pytest.fixture
 async def client():
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as c:
+    from app.main import app
+
+    transport = httpx.ASGITransport(app=app, client=("203.0.113.10", 50000))
+    async with httpx.AsyncClient(transport=transport, base_url="http://test/api/v1") as c:
         yield c
 
 
-def auth(user: User) -> dict[str, str]:
-    token = create_access_token(data={"sub": str(user.id), "email": user.email})
+@pytest.fixture(autouse=True)
+def reset_rate_limits():
+    from app.core.rate_limit import reset_memory_counters
+
+    reset_memory_counters()
+    yield
+    reset_memory_counters()
+
+
+async def login(client: httpx.AsyncClient, email: str, password: str) -> dict:
+    response = await client.post("/auth/login", json={"email": email, "password": password})
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+def bearer(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
-class World:
-    """Deux antennes (A et B), un admin pour chacune et un super admin."""
-
-    branch_a: Branch
-    branch_b: Branch
-    super_admin: User
-    admin_a: User
-    admin_b: User
+@pytest.fixture
+async def super_admin(client) -> dict:
+    return bearer((await login(client, *SUPER_ADMIN))["access_token"])
 
 
 @pytest.fixture
-async def world() -> World:
-    w = World()
-    async with AsyncSessionLocal() as db:
-        w.branch_a = Branch(name="Antenne A", country="Madagascar")
-        w.branch_b = Branch(name="Antenne B", country="France")
-        db.add_all([w.branch_a, w.branch_b])
-        await db.flush()
+async def tana_admin(client) -> dict:
+    return bearer((await login(client, *TANA_ADMIN))["access_token"])
 
-        hashed = hash_password(PASSWORD)
-        w.super_admin = User(
-            email="super@test.org", first_name="Super", last_name="Admin",
-            role=UserRole.SUPER_ADMIN, hashed_password=hashed,
-        )
-        w.admin_a = User(
-            email="admin.a@test.org", first_name="Admin", last_name="A",
-            role=UserRole.BRANCH_ADMIN, branch_id=w.branch_a.id, hashed_password=hashed,
-        )
-        w.admin_b = User(
-            email="admin.b@test.org", first_name="Admin", last_name="B",
-            role=UserRole.BRANCH_ADMIN, branch_id=w.branch_b.id, hashed_password=hashed,
-        )
-        db.add_all([w.super_admin, w.admin_a, w.admin_b])
-        # Un seul opérateur Mobile Money configuré : MVola (la ligne unique existe déjà après les migrations)
-        await db.merge(AssociationSettings(id=1, mobile_money_holder="CEM", mvola_number="0340000000"))
-        await db.commit()
-    return w
+
+@pytest.fixture
+async def paris_admin(client) -> dict:
+    return bearer((await login(client, *PARIS_ADMIN))["access_token"])
+
+
+@pytest.fixture
+async def branch_ids(client, super_admin) -> dict[str, int]:
+    response = await client.get("/branches", params={"page_size": 100})
+    return {b["name"]: b["id"] for b in response.json()["items"]}

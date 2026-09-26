@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { CheckCircle2, Info, X } from "lucide-react";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 
 export interface ToastMessage {
   /** Changes on every new message, so the same text shown twice restarts the timer. */
@@ -14,6 +15,7 @@ const DURATION_MS = 5000;
 
 /** Short feedback message, bottom-right, auto-dismissed. */
 export function Toast({ toast, onClose }: { toast: ToastMessage | null; onClose: () => void }) {
+  const { t } = useTranslation();
   useEffect(() => {
     if (!toast) return;
     const timeout = setTimeout(onClose, DURATION_MS);
@@ -45,7 +47,7 @@ export function Toast({ toast, onClose }: { toast: ToastMessage | null; onClose:
       <button
         type="button"
         onClick={onClose}
-        aria-label="Fermer"
+        aria-label={t("common.close")}
         className="-mr-1 -mt-1 inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
       >
         <X className="h-4 w-4" />

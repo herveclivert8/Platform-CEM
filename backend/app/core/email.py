@@ -100,13 +100,16 @@ class EmailService:
                 <h1>Bienvenue sur CEM Platform, {{ user_name }}!</h1>
                 <p>Votre compte administrateur a été créé avec succès.</p>
                 <p>Email: {{ user_email }}</p>
-                <p>Vous pouvez maintenant vous connecter à: <a href="https://app.cem.mg/login">CEM Platform</a></p>
+                <p>Connectez-vous avec le mot de passe temporaire que vous a transmis le Super Admin :
+                <a href="{{ login_url }}">CEM Platform</a>. Vous devrez le remplacer par votre propre mot de passe.</p>
                 <p>Cordialement,<br>L'équipe CEM</p>
             </body>
         </html>
         """
         
-        html = Template(template).render(user_email=user_email, user_name=user_name)
+        html = Template(template, autoescape=True).render(
+            user_email=user_email, user_name=user_name, login_url=f"{settings.FRONTEND_URL}/login"
+        )
         return self.send_email(
             to_email=user_email,
             subject=f"Bienvenue sur CEM Platform, {user_name}",
@@ -132,7 +135,7 @@ class EmailService:
         </html>
         """
         
-        html = Template(template).render(
+        html = Template(template, autoescape=True).render(
             publication_title=publication_title,
             branch_name=branch_name,
         )
@@ -154,14 +157,14 @@ class EmailService:
                 <h2>Réinitialiser votre mot de passe</h2>
                 <p>Cliquez sur le lien ci-dessous pour réinitialiser votre mot de passe:</p>
                 <p><a href="{{ reset_link }}">Réinitialiser mon mot de passe</a></p>
-                <p>Ce lien expire dans 24 heures.</p>
+                <p>Ce lien expire dans 1 heure.</p>
                 <p>Si vous n'avez pas demandé de réinitialisation, ignorez cet email.</p>
                 <p>Cordialement,<br>L'équipe CEM</p>
             </body>
         </html>
         """
         
-        html = Template(template).render(reset_link=reset_link)
+        html = Template(template, autoescape=True).render(reset_link=reset_link)
         return self.send_email(
             to_email=user_email,
             subject="Réinitialiser votre mot de passe CEM Platform",
@@ -192,7 +195,7 @@ class EmailService:
         </html>
         """
         
-        html = Template(template).render(
+        html = Template(template, autoescape=True).render(
             alert_type=alert_type,
             message=message,
             details=details,
@@ -201,6 +204,21 @@ class EmailService:
             to_email=admin_email,
             subject=f"[ALERTE] {alert_type}",
             html_content=html,
+        )
+
+    def send_submission_acknowledgment(
+        self,
+        applicant_email: str,
+        applicant_name: str,
+        branch_name: str,
+    ) -> bool:
+        """Accusé de réception envoyé au porteur de projet après le dépôt de son dossier."""
+        context = dict(applicant_name=applicant_name, branch_name=branch_name, site_url=settings.FRONTEND_URL)
+        return self.send_email(
+            to_email=applicant_email,
+            subject="Nous avons bien reçu votre dossier — Club Excellence Madagascar",
+            html_content=Template(SUBMISSION_ACK_HTML, autoescape=True).render(**context),
+            text_content=Template(SUBMISSION_ACK_TEXT).render(**context),
         )
 
     def send_donation_thank_you(
@@ -223,7 +241,7 @@ class EmailService:
             donation_date=donation_date.strftime("%d/%m/%Y"),
             site_url=settings.FRONTEND_URL,
         )
-        html = Template(DONATION_THANK_YOU_HTML).render(**context)
+        html = Template(DONATION_THANK_YOU_HTML, autoescape=True).render(**context)
         text = Template(DONATION_THANK_YOU_TEXT).render(**context)
         return self.send_email(
             to_email=donor_email,
@@ -235,6 +253,37 @@ class EmailService:
 
 # Instance globale
 email_service = EmailService()
+
+
+SUBMISSION_ACK_TEXT = """Bonjour {{ applicant_name }},
+
+Nous avons bien reçu votre dossier de projet, transmis à l'antenne {{ branch_name }} du Club Excellence Madagascar.
+L'équipe de l'antenne va l'étudier et reviendra vers vous à cette adresse email.
+
+Merci pour votre confiance,
+L'équipe du Club Excellence Madagascar
+{{ site_url }}
+"""
+
+SUBMISSION_ACK_HTML = """<!doctype html>
+<html lang="fr">
+<body style="margin:0;padding:24px 12px;background:#f1f5f9;font-family:Helvetica,Arial,sans-serif;color:#0f172a;">
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;">
+    <div style="background:#059669;padding:24px 32px;color:#ffffff;">
+      <p style="margin:0;font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.85;">Club Excellence Madagascar</p>
+      <h1 style="margin:8px 0 0;font-size:22px;">Dossier bien reçu</h1>
+    </div>
+    <div style="padding:24px 32px;font-size:15px;line-height:1.6;">
+      <p>Bonjour {{ applicant_name }},</p>
+      <p>Nous avons bien reçu votre dossier de projet, transmis à l'antenne <strong>{{ branch_name }}</strong>.
+      L'équipe de l'antenne va l'étudier et reviendra vers vous à cette adresse email.</p>
+      <p>Merci pour votre confiance,<br>L'équipe du Club Excellence Madagascar</p>
+      <p><a href="{{ site_url }}" style="color:#059669;">{{ site_url }}</a></p>
+    </div>
+  </div>
+</body>
+</html>
+"""
 
 
 DONATION_THANK_YOU_TEXT = """Bonjour{% if donor_name %} {{ donor_name }}{% endif %},

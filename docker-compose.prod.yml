@@ -1,23 +1,34 @@
-# Déploiement complet : PostgreSQL + API + site (nginx), sur un seul serveur.
-#   cp .env.prod.example .env.prod      # puis renseignez les valeurs
-#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
-# Le site écoute sur le port HTTP_PORT (80 par défaut). Mettez un terminateur HTTPS devant
-# (Caddy, Traefik, nginx de l'hébergeur...) pour une mise en ligne publique.
+# Déploiement complet : PostgreSQL + Redis + API + site (nginx).
+#
+#   cp .env.production.example .env.production   # puis remplissez-le
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+#
+# Seul le conteneur "frontend" est exposé (port HTTP_PORT). Placez un reverse proxy HTTPS devant.
 
 services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: cem
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans .env.prod}
-      POSTGRES_DB: cem
+      POSTGRES_USER: ${POSTGRES_USER:-cem}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD est obligatoire}
+      POSTGRES_DB: ${POSTGRES_DB:-cem}
     volumes:
-      - cem_prod_postgres:/var/lib/postgresql/data
+      - cem_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cem"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cem}"]
       interval: 5s
       timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
       retries: 10
 
   backend:
@@ -26,29 +37,39 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://cem:${POSTGRES_PASSWORD}@db:5432/cem
-      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY manquant dans .env.prod}
       ENVIRONMENT: production
-      USE_REDIS: "false"
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cem}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-cem}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY est obligatoire}
+      FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL est obligatoire}
+      # Rate limit partagé entre les workers
+      USE_REDIS: "true"
+      REDIS_URL: redis://redis:6379/0
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
+      # L'API n'est joignable que par nginx sur le réseau interne : X-Forwarded-For (réécrit par nginx) est fiable
+      FORWARDED_ALLOW_IPS: "*"
       CARD_PAYMENT_PROVIDER: ${CARD_PAYMENT_PROVIDER:-disabled}
-      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       FROM_EMAIL: ${FROM_EMAIL:-noreply@cem.mg}
       FROM_NAME: ${FROM_NAME:-Club Excellence Madagascar}
+      SENTRY_DSN: ${SENTRY_DSN:-}
     volumes:
-      - cem_prod_uploads:/app/uploads
+      - cem_uploads:/app/uploads
 
   frontend:
     build: ./frontend
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
-      - "${HTTP_PORT:-80}:80"
+      - "${HTTP_PORT:-8080}:80"
 
 volumes:
-  cem_prod_postgres:
-  cem_prod_uploads:
+  cem_postgres_data:
+  cem_uploads:

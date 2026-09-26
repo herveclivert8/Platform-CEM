@@ -5,8 +5,10 @@ import { Skeleton } from "../components/ui/Skeleton";
 import { BranchDirectoryCard } from "../components/directory/BranchDirectoryCard";
 import { BranchPreviewPanel } from "../components/directory/BranchPreviewPanel";
 import { BranchSwitcherList } from "../components/directory/BranchSwitcherList";
+import { useTranslation } from "react-i18next";
 
 export function BranchesDirectoryPage() {
+  const { t } = useTranslation();
   const { branchId } = useParams<{ branchId: string }>();
   const selectedId = branchId ? Number(branchId) : undefined;
 
@@ -18,7 +20,7 @@ export function BranchesDirectoryPage() {
           className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Retour à toutes les antennes
+          {t("directory.back_all")}
         </Link>
 
         <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
@@ -33,15 +35,16 @@ export function BranchesDirectoryPage() {
 }
 
 function BranchDirectoryGrid() {
+  const { t } = useTranslation();
   const { data, isLoading } = useBranches();
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-        Nos antennes
+        {t("directory.title")}
       </h1>
       <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-        Découvrez les antennes du CEM et leurs équipes sur le terrain.
+        {t("directory.subtitle")}
       </p>
 
       {isLoading ? (
@@ -51,7 +54,7 @@ function BranchDirectoryGrid() {
           ))}
         </div>
       ) : !data || data.items.length === 0 ? (
-        <p className="mt-10 text-sm text-slate-400">Aucune antenne pour le moment.</p>
+        <p className="mt-10 text-sm text-slate-400">{t("directory.none")}</p>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {data.items.map((branch) => (

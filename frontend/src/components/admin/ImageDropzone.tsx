@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { ImagePlus, X, Loader2 } from "lucide-react";
 import { api } from "../../lib/api";
+import { useTranslation } from "react-i18next";
 
 interface ImageDropzoneProps {
   images: string[];
@@ -8,6 +9,7 @@ interface ImageDropzoneProps {
 }
 
 export function ImageDropzone({ images, onChange }: ImageDropzoneProps) {
+  const { t } = useTranslation();
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState(false);
@@ -66,7 +68,7 @@ export function ImageDropzone({ images, onChange }: ImageDropzoneProps) {
           <ImagePlus className="h-6 w-6 text-slate-400 dark:text-slate-500" aria-hidden />
         )}
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          {uploading ? "Envoi en cours…" : "Glissez des images ici, ou cliquez pour parcourir"}
+          {uploading ? t("admin.images.uploading") : t("admin.images.drop")}
         </p>
         <input
           ref={inputRef}
@@ -80,7 +82,7 @@ export function ImageDropzone({ images, onChange }: ImageDropzoneProps) {
 
       {error && (
         <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-          Échec de l'envoi d'une image. Vérifiez le format (JPEG/PNG/GIF/WebP, 5 Mo max) et réessayez.
+          {t("admin.images.upload_failed")}
         </p>
       )}
 
@@ -93,7 +95,7 @@ export function ImageDropzone({ images, onChange }: ImageDropzoneProps) {
                 type="button"
                 onClick={() => onChange(images.filter((_, idx) => idx !== i))}
                 className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-950/80 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                aria-label="Supprimer l'image"
+                aria-label={t("admin.images.remove")}
               >
                 <X className="h-3.5 w-3.5" />
               </button>

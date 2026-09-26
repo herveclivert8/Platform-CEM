@@ -1,7 +1,5 @@
 #!/bin/sh
+# Applique les migrations avant de démarrer l'API (idempotent : ne fait rien si la base est à jour).
 set -e
-
-# Met la base à jour avant de démarrer (sans effet si elle l'est déjà)
 alembic upgrade head
-
 exec "$@"

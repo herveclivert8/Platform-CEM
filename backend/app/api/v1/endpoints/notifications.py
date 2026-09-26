@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict, BaseModel
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
@@ -115,11 +115,7 @@ async def delete_notification_endpoint(
     await delete_notification(notification_id, db)
 
 
-class UnreadCount(BaseModel):
-    unread_count: int
-
-
-@router.get("/unread-count", response_model=UnreadCount)
+@router.get("/unread-count", response_model=dict)
 async def get_unread_count(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

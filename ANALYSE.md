@@ -80,7 +80,7 @@ Le super admin choisit le statut dans la page de modification de l'antenne (un a
 - **Inactive** : retirée de l'annuaire ; sa page reste consultable avec la mention « antenne inactive », sans dons ni dépôt de dossiers (refusés aussi par le serveur) ;
 - **En attente** : invisible pour le public (page, actualités) ; ses admins peuvent déjà préparer son contenu.
 
-L'espace admin liste désormais les antennes de tous statuts (`GET /branches/admin`), et plus seulement les actives.
+L'espace admin liste désormais les antennes de tous statuts (`GET /branches?include_inactive=true`, réservé au super admin), et plus seulement les actives. Depuis la liste des antennes, les boutons « Désactiver » / « Réactiver » changent le statut en un clic.
 
 ### 11. ~~Supprimer une antenne laisse des admins orphelins~~ — ✅ traité
 La suppression est refusée tant que des comptes admin sont rattachés à l'antenne. Le message de confirmation précise ce qui est effacé (posts, dossiers, équipe ; les dons sont conservés) et conseille de passer plutôt l'antenne en « Inactive ».

@@ -15,27 +15,29 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { ScopeSelector } from "./ScopeSelector";
+import { useTranslation } from "react-i18next";
 
 const NAV_ITEMS = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/admin/posts", label: "Mes Publications", icon: Newspaper },
-  { to: "/admin/submissions", label: "Dossiers Entrepreneurs", icon: Briefcase },
-  { to: "/admin/donations", label: "Dons", icon: HeartHandshake },
-  { to: "/admin/settings", label: "Paramètres", icon: Settings },
+  { to: "/admin", labelKey: "admin.nav.dashboard", icon: LayoutDashboard, end: true },
+  { to: "/admin/posts", labelKey: "admin.nav.posts", icon: Newspaper },
+  { to: "/admin/submissions", labelKey: "admin.nav.submissions", icon: Briefcase },
+  { to: "/admin/donations", labelKey: "admin.nav.donations", icon: HeartHandshake },
+  { to: "/admin/settings", labelKey: "admin.nav.settings", icon: Settings },
 ];
 
-const BRANCH_ADMIN_ITEMS = [{ to: "/admin/my-branch", label: "Mon antenne", icon: MapPin }];
+const BRANCH_ADMIN_ITEMS = [{ to: "/admin/my-branch", labelKey: "admin.nav.my_branch", icon: MapPin }];
 
 const SUPER_ADMIN_ITEMS = [
-  { to: "/admin/home-hero", label: "Page d'accueil", icon: ImageIcon },
-  { to: "/admin/branches", label: "Antennes", icon: MapPin },
-  { to: "/admin/accounts", label: "Comptes admin", icon: Users },
-  { to: "/admin/audit", label: "Journal d'audit", icon: ScrollText },
-  { to: "/admin/social-links", label: "Réseaux sociaux", icon: Share2 },
-  { to: "/admin/payment-info", label: "Coordonnées de paiement", icon: Wallet },
+  { to: "/admin/home-hero", labelKey: "admin.nav.home_hero", icon: ImageIcon },
+  { to: "/admin/branches", labelKey: "admin.nav.branches", icon: MapPin },
+  { to: "/admin/accounts", labelKey: "admin.nav.accounts", icon: Users },
+  { to: "/admin/audit", labelKey: "admin.nav.audit", icon: ScrollText },
+  { to: "/admin/social-links", labelKey: "admin.nav.social_links", icon: Share2 },
+  { to: "/admin/payment-info", labelKey: "admin.nav.payment_info", icon: Wallet },
 ];
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const isBranchAdmin = user?.role === "BRANCH_ADMIN";
@@ -65,7 +67,7 @@ export function Sidebar() {
         {NAV_ITEMS.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} className={linkClass}>
             <item.icon className="h-4 w-4" aria-hidden />
-            {item.label}
+            {t(item.labelKey)}
           </NavLink>
         ))}
 
@@ -73,19 +75,19 @@ export function Sidebar() {
           BRANCH_ADMIN_ITEMS.map((item) => (
             <NavLink key={item.to} to={item.to} className={linkClass}>
               <item.icon className="h-4 w-4" aria-hidden />
-              {item.label}
+              {t(item.labelKey)}
             </NavLink>
           ))}
 
         {isSuperAdmin && (
           <>
             <p className="mt-5 px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-600">
-              Super Admin
+              {t("admin.nav.super_admin")}
             </p>
             {SUPER_ADMIN_ITEMS.map((item) => (
               <NavLink key={item.to} to={item.to} className={linkClass}>
                 <item.icon className="h-4 w-4" aria-hidden />
-                {item.label}
+                {t(item.labelKey)}
               </NavLink>
             ))}
           </>

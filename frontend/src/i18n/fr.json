@@ -2,8 +2,8 @@
   "nav": {
     "home": "Accueil",
     "branches": "Nos Antennes",
-    "network": "Réseau & Partenaires",
-    "model": "Notre Modèle Paris/Mada",
+    "achievements": "Nos réalisations",
+    "ongoing": "Projets en cours",
     "donate": "Soutenir le CEM",
     "admin": "Espace Admin"
   },
@@ -41,6 +41,32 @@
     "SOCIAL": "Aide Sociale",
     "SPORT": "Éducation par le Sport",
     "ENTERPRISE": "Entrepreneuriat & Partenariats"
+  },
+  "projects": {
+    "completed_title": "Nos réalisations",
+    "completed_subtitle": "Les projets menés à bien par nos antennes, au service des communautés à Madagascar.",
+    "ongoing_title": "Projets en cours",
+    "ongoing_subtitle": "Les actions actuellement menées par nos antennes — vous pouvez les soutenir dès aujourd'hui.",
+    "all_branches": "Toutes les antennes",
+    "all_pillars": "Tous",
+    "empty_completed": "Aucune réalisation publiée pour le moment.",
+    "empty_ongoing": "Aucun projet en cours publié pour le moment.",
+    "beneficiaries": "Bénéficiaires",
+    "location": "Lieu",
+    "period": "Période",
+    "since": "Depuis le {{date}}",
+    "completed_on": "Terminé le {{date}}",
+    "from_to": "Du {{start}} au {{end}}",
+    "badge_ongoing": "En cours",
+    "badge_completed": "Réalisé",
+    "back_completed": "Toutes nos réalisations",
+    "back_ongoing": "Tous les projets en cours",
+    "not_found": "Ce projet est introuvable ou n'est plus publié.",
+    "support": "Soutenir ce projet",
+    "branch_link": "Découvrir l'antenne de {{city}}",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "page": "Page {{page}} / {{total}}"
   },
   "partners": {
     "title": "Ils nous font confiance",

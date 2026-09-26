@@ -5,6 +5,7 @@ from app.api.v1.endpoints import (
     branches,
     publications,
     posts,
+    projects,
     donations,
     submissions,
     upload,
@@ -27,6 +28,9 @@ api_router.include_router(publications.router)
 
 # Posts (actualités par pilier)
 api_router.include_router(posts.router)
+
+# Projets en cours / réalisations (avec validation Super Admin)
+api_router.include_router(projects.router)
 
 # Dons
 api_router.include_router(donations.router)

@@ -31,8 +31,8 @@ export function Navbar() {
   const navLinks: { label: string; href?: string; to?: string }[] = [
     { label: t("nav.home"), to: "/" },
     { label: t("nav.branches"), to: "/antennes" },
-    { label: t("nav.network"), href: "/#partenaires" },
-    { label: t("nav.model"), href: "/#modele" },
+    { label: t("nav.achievements"), to: "/realisations" },
+    { label: t("nav.ongoing"), to: "/projets-en-cours" },
   ];
 
   return (

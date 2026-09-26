@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Briefcase, HeartHandshake, LogOut } from "lucide-react";
+import { Bell, Briefcase, FolderKanban, HeartHandshake, LogOut } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useLogout } from "../../hooks/useAuth";
 import { ThemeToggle } from "../layout/ThemeToggle";
@@ -15,6 +15,7 @@ import type { Notification } from "../../types/notification";
 const NOTIFICATION_ICONS: Record<string, typeof Bell> = {
   donation: HeartHandshake,
   submission: Briefcase,
+  project: FolderKanban,
 };
 
 function formatRelativeTime(iso: string): string {

@@ -1,10 +1,12 @@
 import asyncio
+from datetime import date, datetime, timezone
 
 from app.core.security import hash_password
 from app.db.session import AsyncSessionLocal
 from app.models.branch import Branch
 from app.models.donation import Donation
 from app.models.post import Post, PostImage, Pillar, PostStatus
+from app.models.project import Project, ProjectImage, ProjectPhase, ProjectReviewStatus
 from app.models.project_submission import ProjectSubmission
 from app.models.publication import Publication, PublicationFormat
 from app.models.user import User, UserRole
@@ -199,8 +201,108 @@ async def seed() -> None:
         ]
         db.add_all(donations)
 
+        db.add_all(build_projects(branches, super_admin, branch_admins))
+
         await db.commit()
         print("Seed terminé avec succès.")
+
+
+def build_projects(branches: list[Branch], super_admin: User, branch_admins: list[User]) -> list[Project]:
+    """Réalisations et projets en cours de démonstration, dans les 3 statuts de validation."""
+    now = datetime.now(timezone.utc)
+
+    def approved(**kwargs) -> Project:
+        return Project(review_status=ProjectReviewStatus.APPROVED, reviewed_by_id=super_admin.id, reviewed_at=now, **kwargs)
+
+    return [
+        approved(
+            branch_id=branches[0].id,
+            author_id=branch_admins[0].id,
+            title="Bibliothèque de l'EPP Ambohipo",
+            summary="Équipement complet d'une bibliothèque scolaire : rayonnages, 2 500 ouvrages et formation d'un bibliothécaire.",
+            description="<p>Grâce aux collectes organisées à Paris, l'école primaire publique d'Ambohipo dispose désormais d'une bibliothèque de <strong>2 500 ouvrages</strong>.</p><p>Un enseignant a été formé à la gestion du prêt.</p>",
+            pillar=Pillar.EDUCATION,
+            phase=ProjectPhase.COMPLETED,
+            beneficiaries="Élèves de l'EPP Ambohipo",
+            beneficiaries_count=640,
+            location="Ambohipo, Antananarivo",
+            start_date=date(2025, 9, 1),
+            end_date=date(2026, 3, 15),
+            images=[ProjectImage(url="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1200", position=0)],
+        ),
+        approved(
+            branch_id=branches[1].id,
+            author_id=branch_admins[1].id,
+            title="Tournoi inter-quartiers de football",
+            summary="Un tournoi de 3 mois pour remobiliser les jeunes déscolarisés autour du sport et de l'accompagnement scolaire.",
+            description="<p>16 équipes, un arbitrage assuré par des jeunes formés et un soutien scolaire hebdomadaire pour les participants.</p>",
+            pillar=Pillar.SPORT,
+            phase=ProjectPhase.COMPLETED,
+            beneficiaries="Jeunes de 12 à 18 ans",
+            beneficiaries_count=210,
+            location="Fianarantsoa",
+            start_date=date(2025, 6, 1),
+            end_date=date(2025, 8, 31),
+            images=[ProjectImage(url="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200", position=0)],
+        ),
+        approved(
+            branch_id=branches[2].id,
+            author_id=super_admin.id,
+            title="Collecte de livres « Rentrée 2026 »",
+            summary="Collecte de manuels scolaires au siège parisien pour 12 écoles partenaires à Madagascar.",
+            description="<p>Dépôt possible au 31 avenue de Ségur (Paris 7e). Objectif : <strong>8 000 livres</strong> avant l'envoi du conteneur.</p>",
+            pillar=Pillar.EDUCATION,
+            phase=ProjectPhase.ONGOING,
+            beneficiaries="12 écoles partenaires",
+            beneficiaries_count=12,
+            location="Paris 7e",
+            start_date=date(2026, 6, 1),
+        ),
+        approved(
+            branch_id=branches[3].id,
+            author_id=branch_admins[3].id,
+            title="Accompagnement de la coopérative de vannerie",
+            summary="Formation à l'export et mise en relation avec des boutiques lyonnaises pour une coopérative de 25 artisanes.",
+            description="<p>Ateliers mensuels en visio et premières commandes test prévues pour la fin d'année.</p>",
+            pillar=Pillar.ENTERPRISE,
+            phase=ProjectPhase.ONGOING,
+            beneficiaries="Coopérative de vannerie d'Ambositra",
+            beneficiaries_count=25,
+            location="Ambositra / Lyon",
+            start_date=date(2026, 2, 1),
+        ),
+        Project(
+            branch_id=branches[0].id,
+            author_id=branch_admins[0].id,
+            title="Kits d'hygiène pour familles vulnérables",
+            summary="Distribution de 300 kits d'hygiène aux familles suivies par l'antenne.",
+            description="<p>Kits composés de savon, dentifrice, serviettes et produits d'entretien.</p>",
+            pillar=Pillar.SOCIAL,
+            phase=ProjectPhase.ONGOING,
+            beneficiaries="Familles du quartier d'Isotry",
+            beneficiaries_count=300,
+            location="Isotry, Antananarivo",
+            start_date=date(2026, 9, 1),
+            review_status=ProjectReviewStatus.PENDING,
+        ),
+        Project(
+            branch_id=branches[1].id,
+            author_id=branch_admins[1].id,
+            title="Atelier couture solidaire",
+            summary="Formation de 10 mères de famille à la couture.",
+            description="<p>Dossier incomplet.</p>",
+            pillar=Pillar.ENTERPRISE,
+            phase=ProjectPhase.COMPLETED,
+            beneficiaries="Mères de famille",
+            beneficiaries_count=10,
+            location="Fianarantsoa",
+            end_date=date(2026, 7, 1),
+            review_status=ProjectReviewStatus.REJECTED,
+            rejection_reason="Merci d'ajouter des photos de l'atelier et les dates exactes de la formation.",
+            reviewed_by_id=super_admin.id,
+            reviewed_at=now,
+        ),
+    ]
 
 
 if __name__ == "__main__":

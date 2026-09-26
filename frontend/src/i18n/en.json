@@ -2,8 +2,8 @@
   "nav": {
     "home": "Home",
     "branches": "Our Branches",
-    "network": "Network & Partners",
-    "model": "Our Paris/Mada Model",
+    "achievements": "Our Achievements",
+    "ongoing": "Ongoing Projects",
     "donate": "Support CEM",
     "admin": "Admin Area"
   },
@@ -41,6 +41,32 @@
     "SOCIAL": "Social Support",
     "SPORT": "Sport-Based Education",
     "ENTERPRISE": "Entrepreneurship & Partnerships"
+  },
+  "projects": {
+    "completed_title": "Our Achievements",
+    "completed_subtitle": "Projects successfully delivered by our branches, serving communities in Madagascar.",
+    "ongoing_title": "Ongoing Projects",
+    "ongoing_subtitle": "Actions our branches are carrying out right now — you can support them today.",
+    "all_branches": "All branches",
+    "all_pillars": "All",
+    "empty_completed": "No achievements published yet.",
+    "empty_ongoing": "No ongoing projects published yet.",
+    "beneficiaries": "Beneficiaries",
+    "location": "Location",
+    "period": "Period",
+    "since": "Since {{date}}",
+    "completed_on": "Completed on {{date}}",
+    "from_to": "From {{start}} to {{end}}",
+    "badge_ongoing": "Ongoing",
+    "badge_completed": "Completed",
+    "back_completed": "All our achievements",
+    "back_ongoing": "All ongoing projects",
+    "not_found": "This project cannot be found or is no longer published.",
+    "support": "Support this project",
+    "branch_link": "Discover the {{city}} branch",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {{page}} / {{total}}"
   },
   "partners": {
     "title": "They trust us",

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.notification import Notification
 from app.models.user import User, UserRole
+from app.services import realtime
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,21 @@ async def create_notification(
         db.add(notification)
         await db.commit()
         await db.refresh(notification)
+
+        realtime.publish(
+            user_id,
+            "notification",
+            {
+                "id": notification.id,
+                "title": notification.title,
+                "message": notification.message,
+                "notification_type": notification.notification_type,
+                "is_read": notification.is_read,
+                "action_url": notification.action_url,
+                "icon": notification.icon,
+                "created_at": notification.created_at.isoformat() if notification.created_at else None,
+            },
+        )
 
         logger.info(f"Notification created for user {user_id}")
         return notification

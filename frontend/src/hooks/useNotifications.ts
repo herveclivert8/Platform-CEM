@@ -15,9 +15,8 @@ export function useNotifications() {
         unreadCount: data.unread_count,
       };
     },
-    // First use of polling in this app: an admin panel at this scale doesn't
-    // warrant WebSockets, but the badge should still feel "alive" without a
-    // manual refresh.
+    // Fallback only: new notifications arrive instantly through the SSE stream
+    // (useNotificationStream); this poll covers a dropped connection.
     refetchInterval: 30_000,
   });
 }

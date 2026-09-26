@@ -1,15 +1,22 @@
 """Notification endpoints."""
+import asyncio
+import json
+import time
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi.responses import StreamingResponse
+from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
-from app.api.deps import get_current_user
-from app.db.session import get_db
+from app.api.deps import bearer_scheme, get_current_user
+from app.core.security import decode_token
+from app.db.session import AsyncSessionLocal, get_db
 from app.models.notification import Notification
 from app.models.user import User
+from app.services import realtime
 from app.services.notification_service import (
     mark_as_read,
     mark_all_as_read,
@@ -17,6 +24,9 @@ from app.services.notification_service import (
 )
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
+
+# Commentaire SSE envoyé en l'absence d'évènement, pour que proxys et navigateurs ne coupent pas le flux.
+SSE_KEEPALIVE_SECONDS = 20
 
 
 class NotificationRead(BaseModel):
@@ -74,6 +84,58 @@ async def get_notifications(
         data=[NotificationRead.from_orm(n) for n in notifications],
         total=total or 0,
         unread_count=unread_count or 0,
+    )
+
+
+@router.get("/stream")
+async def stream_notifications(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+):
+    """
+    Flux temps réel (Server-Sent Events) des notifications de l'utilisateur connecté.
+
+    Authentification par l'en-tête Authorization (le client lit le flux via fetch, pas
+    EventSource, pour ne pas exposer le jeton dans l'URL). La session DB n'est ouverte
+    que le temps de vérifier l'utilisateur, pas pendant toute la durée du flux. Le flux
+    se ferme à l'expiration du jeton : le client se reconnecte avec un jeton rafraîchi.
+    """
+    unauthorized = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non authentifié")
+    if credentials is None:
+        raise unauthorized
+    payload = decode_token(credentials.credentials)
+    if payload.get("type") != "access":
+        raise unauthorized
+
+    async with AsyncSessionLocal() as db:
+        user = await db.get(User, int(payload["sub"]))
+    if user is None:
+        raise unauthorized
+
+    user_id = user.id
+    expires_at = float(payload.get("exp", time.time() + 1800))
+
+    async def event_stream():
+        queue = realtime.subscribe(user_id)
+        try:
+            yield "retry: 3000\n\n"
+            while not await request.is_disconnected():
+                remaining = expires_at - time.time()
+                if remaining <= 0:
+                    break
+                try:
+                    message = await asyncio.wait_for(queue.get(), timeout=min(SSE_KEEPALIVE_SECONDS, remaining))
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+                    continue
+                yield f"event: {message['event']}\ndata: {json.dumps(message['data'])}\n\n"
+        finally:
+            realtime.unsubscribe(user_id, queue)
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 

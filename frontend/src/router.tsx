@@ -11,6 +11,7 @@ import { RequireSuperAdmin } from "./components/auth/RequireSuperAdmin";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { DashboardPage } from "./pages/admin/DashboardPage";
 import { PostsPage } from "./pages/admin/PostsPage";
+import { ProjectsPage } from "./pages/admin/ProjectsPage";
 import { SubmissionsPage } from "./pages/admin/SubmissionsPage";
 import { DonationsPage } from "./pages/admin/DonationsPage";
 import { SettingsPage } from "./pages/admin/SettingsPage";
@@ -33,6 +34,14 @@ const BranchPostsPage = lazy(() =>
 const PostDetailPage = lazy(() =>
   import("./pages/PostDetailPage").then((m) => ({ default: m.PostDetailPage })),
 );
+const ProjectsListPage = lazy(() =>
+  import("./pages/ProjectsListPage").then((m) => ({ default: m.ProjectsListPage })),
+);
+const ProjectDetailPage = lazy(() =>
+  import("./pages/ProjectDetailPage").then((m) => ({ default: m.ProjectDetailPage })),
+);
+
+const lazyPage = (element: React.ReactNode) => <Suspense fallback={null}>{element}</Suspense>;
 
 export const router = createBrowserRouter([
   {
@@ -80,6 +89,11 @@ export const router = createBrowserRouter([
           </Suspense>
         ),
       },
+      // Keyed by phase: both lists share one component, so switching between them must reset its filters.
+      { path: "realisations", element: lazyPage(<ProjectsListPage key="COMPLETED" phase="COMPLETED" />) },
+      { path: "realisations/:projectId", element: lazyPage(<ProjectDetailPage phase="COMPLETED" />) },
+      { path: "projets-en-cours", element: lazyPage(<ProjectsListPage key="ONGOING" phase="ONGOING" />) },
+      { path: "projets-en-cours/:projectId", element: lazyPage(<ProjectDetailPage phase="ONGOING" />) },
       { path: "*", element: <NotFoundPage /> },
     ],
   },
@@ -95,6 +109,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <DashboardPage /> },
           { path: "posts", element: <PostsPage /> },
+          { path: "projects", element: <ProjectsPage /> },
           { path: "submissions", element: <SubmissionsPage /> },
           { path: "donations", element: <DonationsPage /> },
           { path: "settings", element: <SettingsPage /> },

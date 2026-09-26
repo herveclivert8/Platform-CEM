@@ -10,13 +10,16 @@ import {
   Users,
   ScrollText,
   Share2,
+  FolderKanban,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { ScopeSelector } from "./ScopeSelector";
+import { useAdminProjects } from "../../hooks/useAdminProjects";
 
 const NAV_ITEMS = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/admin/posts", label: "Mes Publications", icon: Newspaper },
+  { to: "/admin/projects", label: "Réalisations & projets", icon: FolderKanban },
   { to: "/admin/submissions", label: "Dossiers Entrepreneurs", icon: Briefcase },
   { to: "/admin/donations", label: "Dons reçus", icon: HeartHandshake },
   { to: "/admin/settings", label: "Paramètres", icon: Settings },
@@ -35,6 +38,8 @@ export function Sidebar() {
   const user = useAuthStore((s) => s.user);
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const isBranchAdmin = user?.role === "BRANCH_ADMIN";
+  const { data: projects } = useAdminProjects();
+  const pendingCount = isSuperAdmin ? (projects?.counts.PENDING ?? 0) : 0;
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     clsx(
@@ -62,6 +67,14 @@ export function Sidebar() {
           <NavLink key={item.to} to={item.to} end={item.end} className={linkClass}>
             <item.icon className="h-4 w-4" aria-hidden />
             {item.label}
+            {item.to === "/admin/projects" && pendingCount > 0 && (
+              <span
+                className="ml-auto rounded-full bg-orange-600 px-1.5 text-[11px] font-bold text-white"
+                title="En attente de validation"
+              >
+                {pendingCount}
+              </span>
+            )}
           </NavLink>
         ))}
 

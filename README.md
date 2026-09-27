@@ -169,11 +169,11 @@ Autre base : `TEST_DATABASE_URL=postgresql+asyncpg://user:mdp@hote:5432/xxx_test
 
 Côté frontend : `npm run lint` puis `npm run build`.
 
-**Intégration continue** : à chaque push et pull request, GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) lance le lint et les tests du backend, le lint et le build du frontend, puis construit les deux images Docker. Le résultat s'affiche dans l'onglet *Actions* du dépôt et sur chaque pull request.
+**Intégration continue** : la configuration GitHub Actions (`.github/workflows/ci.yml`, conservée hors du dépôt) lance le lint et les tests du backend, le lint et le build du frontend, puis construit les deux images Docker. Elle ne s'exécute sur GitHub que si ce fichier est ajouté au dépôt.
 
 ## Déploiement (Docker)
 
-Chaque partie a son image : [`backend/Dockerfile`](backend/Dockerfile) (API, applique les migrations au démarrage) et [`frontend/Dockerfile`](frontend/Dockerfile) (site compilé, servi par nginx, qui relaie `/api` et `/uploads` vers l'API). [`docker-compose.prod.yml`](docker-compose.prod.yml) assemble base de données, Redis, API et site :
+Chaque partie a son image : [`backend/Dockerfile`](backend/Dockerfile) (API, applique les migrations au démarrage) et [`frontend/Dockerfile`](frontend/Dockerfile) (site compilé, servi par nginx, qui relaie `/api` et `/uploads` vers l'API). `docker-compose.prod.yml` (conservé hors du dépôt, avec `.env.production.example`) assemble base de données, Redis, API et site :
 
 ```bash
 cp .env.production.example .env.production   # puis renseignez POSTGRES_PASSWORD, SECRET_KEY et FRONTEND_URL
@@ -240,9 +240,9 @@ Dans **Admin → Coordonnées de paiement** (super admin) : nom du titulaire et 
 - `frontend/src/` — application React (pages publiques, espace `/admin`, composants, i18n, client API)
 - `frontend/src/components/donation/` — formulaire de don (carte et Mobile Money)
 - `backend/tests/` — tests automatiques (pytest)
-- `docker-compose.yml` — service PostgreSQL pour le développement local
-- `docker-compose.prod.yml`, `backend/Dockerfile`, `frontend/Dockerfile` — déploiement
-- `.github/workflows/ci.yml` — intégration continue (lint, tests, build)
+- `backend/Dockerfile`, `frontend/Dockerfile` — images de déploiement
+
+> Les fichiers `docker-compose*.yml`, `.env.production.example` et la CI (`.github/`) ne sont pas publiés dans ce dépôt.
 
 ## Fonctionnalités
 

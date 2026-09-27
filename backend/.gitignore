@@ -1,0 +1,14 @@
+# Environnement et secrets
+.venv/
+venv/
+.env
+
+# Données locales (bases SQLite, fichiers envoyés, journaux)
+*.db
+uploads/
+logs/
+
+# Caches Python, tests et lint
+__pycache__/
+.pytest_cache/
+.ruff_cache/

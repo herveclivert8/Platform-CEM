@@ -100,12 +100,12 @@ async def mark_as_read(notification_id: int, db: AsyncSession) -> bool:
 async def mark_all_as_read(user_id: int, db: AsyncSession) -> int:
     """Mark all user notifications as read."""
     try:
-        from sqlalchemy import select, update
+        from sqlalchemy import update
 
         stmt = (
             update(Notification)
             .where(Notification.user_id == user_id, Notification.is_read == False)
-            .values(is_read=True, read_at=datetime.utcnow())
+            .values(is_read=True, read_at=datetime.now(timezone.utc))
         )
         result = await db.execute(stmt)
         await db.commit()

@@ -9,19 +9,24 @@ import { ALL_PILLARS, type Pillar } from "../types/post";
 import { PostCard } from "../components/hub/PostCard";
 import { Skeleton } from "../components/ui/Skeleton";
 import { Button } from "../components/ui/Button";
+import { useTranslation } from "react-i18next";
+import { QueryError } from "../components/ui/QueryError";
+import { usePageMeta } from "../hooks/usePageMeta";
 
 const PAGE_SIZE = 9;
 
 export function BranchPostsPage() {
+  const { t } = useTranslation();
   const { branchId } = useParams<{ branchId: string }>();
   const id = branchId ? Number(branchId) : undefined;
   const { data: branch } = useBranch(id);
+  usePageMeta(branch ? `${t("posts_page.all_news")} — ${branch.cityName}` : undefined);
   const pillarLabels = usePillarLabels();
 
   const [pillar, setPillar] = useState<Pillar | undefined>(undefined);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useBranchPosts(id, { pillar, page, pageSize: PAGE_SIZE });
+  const { data, isLoading, isError, error, refetch } = useBranchPosts(id, { pillar, page, pageSize: PAGE_SIZE });
 
   const changePillar = (p: Pillar | undefined) => {
     setPillar(p);
@@ -35,11 +40,11 @@ export function BranchPostsPage() {
         className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        Retour à l'antenne {branch ? `de ${branch.cityName}` : ""}
+        {branch ? t("posts_page.back_branch_of", { city: branch.cityName }) : t("posts_page.back_branch")}
       </Link>
 
       <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-        Toutes les actualités{branch ? ` — ${branch.cityName}` : ""}
+        {t("posts_page.all_news")}{branch ? ` — ${branch.cityName}` : ""}
       </h1>
 
       <div className="mt-6 flex flex-wrap gap-2">
@@ -78,8 +83,10 @@ export function BranchPostsPage() {
             <Skeleton key={i} className="h-64 w-full" />
           ))}
         </div>
+      ) : isError ? (
+        <QueryError error={error} onRetry={() => refetch()} />
       ) : !data || data.items.length === 0 ? (
-        <p className="mt-10 text-sm text-slate-400">Aucune actualité pour le moment.</p>
+        <p className="mt-10 text-sm text-slate-400">{t("hub.reports.no_news")}</p>
       ) : (
         <>
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -98,7 +105,7 @@ export function BranchPostsPage() {
                 onClick={() => setPage((p) => p - 1)}
                 icon={<ChevronLeft className="h-4 w-4" />}
               >
-                Précédent
+                {t("common.previous")}
               </Button>
               <span className="text-sm text-slate-500 dark:text-slate-400">
                 Page {data.page} / {data.totalPages}
@@ -112,7 +119,7 @@ export function BranchPostsPage() {
                 icon={<ChevronRight className="h-4 w-4" />}
                 iconPosition="right"
               >
-                Suivant
+                {t("common.next")}
               </Button>
             </div>
           )}

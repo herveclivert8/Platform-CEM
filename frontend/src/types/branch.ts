@@ -1,5 +1,11 @@
 export type BranchStatus = "active" | "inactive" | "pending";
 
+export const BRANCH_STATUS_LABELS: Record<BranchStatus, string> = {
+  active: "Active",
+  inactive: "Inactive",
+  pending: "En attente",
+};
+
 export interface TeamMember {
   id: number;
   name: string;

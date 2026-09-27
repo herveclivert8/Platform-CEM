@@ -7,10 +7,17 @@ import { Skeleton } from "../../components/ui/Skeleton";
 import { CreateAccountDrawer } from "../../components/admin/CreateAccountDrawer";
 import { useAdminAccounts, useDeleteAccount } from "../../hooks/useAdminAccounts";
 import { useAuthStore } from "../../store/authStore";
+import { useTranslation } from "react-i18next";
+import { useErrorToast } from "../../hooks/useErrorToast";
+import { QueryError } from "../../components/ui/QueryError";
+import { useSuccessToast } from "../../hooks/useSuccessToast";
 
 export function AccountsPage() {
-  const { data: accounts, isLoading } = useAdminAccounts();
+  const { t } = useTranslation();
+  const { data: accounts, isLoading, isError, error, refetch } = useAdminAccounts();
   const deleteAccount = useDeleteAccount();
+  const showError = useErrorToast();
+  const showSuccess = useSuccessToast();
   const currentUser = useAuthStore((s) => s.user);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -18,11 +25,11 @@ export function AccountsPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Comptes admin</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Créez et gérez les comptes Admin d'Antenne.</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{t("admin.accounts.title")}</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("admin.accounts.subtitle")}</p>
         </div>
         <Button variant="secondary" icon={<Plus className="h-4 w-4" />} onClick={() => setDrawerOpen(true)}>
-          Nouveau compte
+          {t("admin.accounts.new")}
         </Button>
       </div>
 
@@ -32,6 +39,8 @@ export function AccountsPage() {
             <Skeleton key={i} className="h-16 w-full" />
           ))}
         </div>
+      ) : isError ? (
+        <QueryError error={error} onRetry={() => refetch()} />
       ) : (
         <div className="mt-6 space-y-2.5">
           {accounts?.map((account) => (
@@ -52,8 +61,9 @@ export function AccountsPage() {
                     {account.firstName} {account.lastName}
                   </p>
                   <Badge tone={account.role === "SUPER_ADMIN" ? "orange" : "emerald"}>
-                    {account.role === "SUPER_ADMIN" ? "Super Admin" : account.branchName ?? "Antenne"}
+                    {account.role === "SUPER_ADMIN" ? t("admin.nav.super_admin") : account.branchName ?? t("admin.accounts.branch")}
                   </Badge>
+                  {account.mustChangePassword && <Badge tone="slate">{t("admin.accounts.pending_first_login")}</Badge>}
                 </div>
                 <p className="text-xs text-slate-400 dark:text-slate-500">{account.email}</p>
               </div>
@@ -61,11 +71,14 @@ export function AccountsPage() {
                 <button
                   type="button"
                   onClick={() =>
-                    window.confirm(`Supprimer le compte de ${account.firstName} ${account.lastName} ?`) &&
-                    deleteAccount.mutate(account.id)
+                    window.confirm(t("admin.accounts.delete_confirm", { name: `${account.firstName} ${account.lastName}` })) &&
+                    deleteAccount.mutate(account.id, {
+                      onError: showError,
+                      onSuccess: () => showSuccess(t("admin.feedback.account_deleted"), account.email),
+                    })
                   }
                   className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                  aria-label="Supprimer"
+                  aria-label={t("common.delete")}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

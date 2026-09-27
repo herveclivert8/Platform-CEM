@@ -1,9 +1,11 @@
 # Backend
 backend/.venv/
-backend/.env.example/
 backend/__pycache__/
 backend/**/__pycache__/
 backend/.env
+backend/uploads/
+backend/logs/
+backend/*.db
 
 # Frontend
 frontend/node_modules/
@@ -12,3 +14,13 @@ frontend/dist/
 # Misc
 venv/
 .DS_Store
+
+# Déploiement
+.env.production
+
+# Tests / lint
+backend/.pytest_cache/
+backend/.ruff_cache/
+
+# Ancien dépôt imbriqué (non suivi)
+Platform-CEM/

@@ -19,6 +19,12 @@ export interface Project {
   location: string | null;
   startDate: string | null;
   endDate: string | null;
+  /** Numeric goal ("5 200 / 8 000 livres collectés"); no progress bar without it */
+  goalValue: number | null;
+  progressValue: number | null;
+  goalUnit: string | null;
+  /** Admins' choice: a hidden project is never public, even once validated */
+  isVisible: boolean;
   reviewStatus: ProjectReviewStatus;
   rejectionReason: string | null;
   reviewedAt: string | null;
@@ -43,6 +49,10 @@ export interface ProjectDto {
   location: string | null;
   start_date: string | null;
   end_date: string | null;
+  goal_value: number | null;
+  progress_value: number | null;
+  goal_unit: string | null;
+  is_visible?: boolean;
   review_status: ProjectReviewStatus;
   rejection_reason: string | null;
   reviewed_at: string | null;
@@ -68,6 +78,10 @@ export function mapProject(dto: ProjectDto): Project {
     location: dto.location,
     startDate: dto.start_date,
     endDate: dto.end_date,
+    goalValue: dto.goal_value ?? null,
+    progressValue: dto.progress_value ?? null,
+    goalUnit: dto.goal_unit ?? null,
+    isVisible: dto.is_visible ?? true,
     reviewStatus: dto.review_status,
     rejectionReason: dto.rejection_reason,
     reviewedAt: dto.reviewed_at,
@@ -96,6 +110,10 @@ export interface ProjectInput {
   location: string | null;
   start_date: string | null;
   end_date: string | null;
+  goal_value: number | null;
+  progress_value: number | null;
+  goal_unit: string | null;
+  is_visible: boolean;
   images: string[];
 }
 
@@ -103,10 +121,4 @@ export interface ProjectInput {
 export const PHASE_PATH: Record<ProjectPhase, string> = {
   COMPLETED: "realisations",
   ONGOING: "projets-en-cours",
-};
-
-/** Back-office labels (the admin UI is French-only). */
-export const PHASE_LABELS: Record<ProjectPhase, string> = {
-  ONGOING: "Projet en cours",
-  COMPLETED: "Réalisation",
 };

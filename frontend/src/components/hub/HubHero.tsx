@@ -17,7 +17,11 @@ export function HubHero({ branch }: { branch: Branch }) {
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/70 to-slate-900/40" />
 
       <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-20 sm:px-6 lg:px-8">
-        <Badge tone="emerald">{t("hub.official_badge")}</Badge>
+        {branch.status === "inactive" ? (
+          <Badge tone="glass">{t("hub.inactive_badge")}</Badge>
+        ) : (
+          <Badge tone="emerald">{t("hub.official_badge")}</Badge>
+        )}
         <h1 className="mt-5 text-3xl font-extrabold uppercase tracking-tight text-white lg:text-5xl">
           {branch.cityName}, {branch.country}
         </h1>
@@ -42,6 +46,12 @@ export function HubHero({ branch }: { branch: Branch }) {
             </span>
           )}
         </div>
+
+        {branch.status === "inactive" && (
+          <p className="mt-6 max-w-2xl rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-slate-100 backdrop-blur-sm">
+            {t("hub.inactive_notice")}
+          </p>
+        )}
 
         <div className="mt-8">
           <QuickSwitchCombobox currentBranchId={branch.id} />

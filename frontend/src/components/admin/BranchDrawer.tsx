@@ -4,6 +4,8 @@ import { AddressAutocomplete, type GeoSelection } from "./AddressAutocomplete";
 import { Button } from "../ui/Button";
 import { BranchProfileFields } from "./BranchProfileFields";
 import { useCreateBranch, type TeamMemberInput } from "../../hooks/useAdminBranches";
+import { useTranslation } from "react-i18next";
+import { useSuccessToast } from "../../hooks/useSuccessToast";
 
 interface BranchDrawerProps {
   open: boolean;
@@ -12,6 +14,8 @@ interface BranchDrawerProps {
 
 /** Creation only - editing an existing branch happens on its own full page (BranchEditPage). */
 export function BranchDrawer({ open, onClose }: BranchDrawerProps) {
+  const { t } = useTranslation();
+  const showSuccess = useSuccessToast();
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [address, setAddress] = useState("");
@@ -47,7 +51,8 @@ export function BranchDrawer({ open, onClose }: BranchDrawerProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createBranch.mutateAsync({
+    try {
+      await createBranch.mutateAsync({
       name,
       country,
       physical_address: address || undefined,
@@ -59,27 +64,33 @@ export function BranchDrawer({ open, onClose }: BranchDrawerProps) {
       logo_url: logoUrl || undefined,
       team_members: teamMembers.filter((m) => m.name.trim() && m.role.trim()),
     });
+    } catch {
+      return; // affiché sous le formulaire
+    }
+    showSuccess(t("admin.feedback.branch_created"), name);
     onClose();
   };
 
   return (
-    <Drawer open={open} onClose={onClose} title="Nouvelle antenne">
+    <Drawer open={open} onClose={onClose} title={t("admin.branches.new")}>
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
-            Rechercher une adresse (autocomplétion)
+            {t("admin.branch_edit.address_search")}
           </label>
           <AddressAutocomplete onSelect={handleGeoSelect} />
-          {coords && (
+          {coords ? (
             <p className="mt-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-              Coordonnées : {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+              {t("admin.branch_edit.coordinates", { lat: coords.lat.toFixed(4), lng: coords.lng.toFixed(4) })}
             </p>
+          ) : (
+            <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">{t("admin.branch_edit.auto_position")}</p>
           )}
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">Ville</label>
+            <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">{t("admin.branch_edit.city")}</label>
             <input
               required
               value={name}
@@ -88,7 +99,7 @@ export function BranchDrawer({ open, onClose }: BranchDrawerProps) {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">Pays</label>
+            <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">{t("admin.branch_edit.country")}</label>
             <input
               required
               value={country}
@@ -113,13 +124,13 @@ export function BranchDrawer({ open, onClose }: BranchDrawerProps) {
 
         {createBranch.isError && (
           <p className="text-sm text-red-600 dark:text-red-400">
-            Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.
+            {t("admin.branch_edit.save_error")}
           </p>
         )}
 
         <div className="border-t border-slate-200 pt-5 dark:border-slate-800">
           <Button type="submit" variant="secondary" className="w-full justify-center" disabled={createBranch.isPending}>
-            {createBranch.isPending ? "…" : "Créer l'antenne"}
+            {createBranch.isPending ? "…" : t("admin.branch_edit.create")}
           </Button>
         </div>
       </form>

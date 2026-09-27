@@ -2,13 +2,14 @@
 Modèle Project
 Projets d'une antenne : « Projets en cours » (phase ONGOING) puis « Nos réalisations »
 (phase COMPLETED). Contrairement aux posts, toute publication par un Admin d'antenne
-passe par une validation du Super Admin (review_status).
+passe par une validation du Super Admin (review_status), et les admins choisissent d'afficher ou
+non chaque projet sur la plateforme (is_visible).
 """
 
 import enum
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, Enum, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Integer, String, Text, func, true
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -46,6 +47,12 @@ class Project(Base):
     start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
+    # Objectif chiffré (surtout pour les projets en cours) : « 5 200 / 8 000 livres collectés ».
+    # Sans objectif, aucune barre d'avancement n'est affichée.
+    goal_value: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    progress_value: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    goal_unit: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
     phase: Mapped[ProjectPhase] = mapped_column(
         Enum(ProjectPhase, name="project_phase", values_callable=lambda e: [m.value for m in e]),
         nullable=False,
@@ -58,6 +65,10 @@ class Project(Base):
         index=True,
     )
     rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Choix de l'admin (antenne ou siège) : un projet masqué n'est jamais public, même validé ; il reste
+    # dans la liste du back-office (admin de l'antenne + Super Admin). Public = APPROVED et visible.
+    is_visible: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true(), nullable=False, index=True)
     reviewed_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

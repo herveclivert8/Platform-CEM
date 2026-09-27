@@ -34,3 +34,25 @@ export function mapPublication(dto: PublicationDto): Publication {
     createdAt: dto.created_at,
   };
 }
+
+/** A report in the back-office list, with its branch name. */
+export interface AdminPublication extends Publication {
+  branchName: string | null;
+}
+
+export interface AdminPublicationDto extends PublicationDto {
+  branch_name: string | null;
+}
+
+export function mapAdminPublication(dto: AdminPublicationDto): AdminPublication {
+  return { ...mapPublication(dto), branchName: dto.branch_name };
+}
+
+/** Create / update payload (snake_case). Titles and descriptions are typed in French only. */
+export interface PublicationInput {
+  title: string;
+  description: string;
+  file_url: string | null;
+  thumbnail_url: string | null;
+  format: PublicationFormat;
+}

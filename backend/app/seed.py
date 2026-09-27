@@ -4,11 +4,12 @@ from datetime import date, datetime, timezone
 from app.core.security import hash_password
 from app.db.session import AsyncSessionLocal
 from app.models.branch import Branch
-from app.models.donation import Donation
+from app.models.donation import Donation, DonationStatus, MobileOperator, PaymentMethod
 from app.models.post import Post, PostImage, Pillar, PostStatus
 from app.models.project import Project, ProjectImage, ProjectPhase, ProjectReviewStatus
 from app.models.project_submission import ProjectSubmission
 from app.models.publication import Publication, PublicationFormat
+from app.models.settings import AssociationSettings
 from app.models.user import User, UserRole
 
 
@@ -17,6 +18,7 @@ async def seed() -> None:
         branches = [
             Branch(
                 name="Antananarivo",
+                logo_url="/uploads/635d406b-dcba-4d2b-9c00-0e77df69f502.jpg",
                 country="Madagascar",
                 continent="Africa",
                 latitude=-18.8792,
@@ -25,6 +27,7 @@ async def seed() -> None:
             ),
             Branch(
                 name="Fianarantsoa",
+                logo_url="/uploads/7a736129-9908-4f0b-918b-1f8b5bf4eec2.webp",
                 country="Madagascar",
                 continent="Africa",
                 latitude=-21.4529,
@@ -33,6 +36,7 @@ async def seed() -> None:
             ),
             Branch(
                 name="Paris",
+                logo_url="/uploads/9b70efb9-b4c8-41fc-ac4a-9c5311db6c73.jpg",
                 country="France",
                 continent="Europe",
                 latitude=48.8494,
@@ -42,6 +46,7 @@ async def seed() -> None:
             ),
             Branch(
                 name="Lyon",
+                logo_url="/uploads/b23c133f-8e46-4268-85b9-9602a2ec7b20.webp",
                 country="France",
                 continent="Europe",
                 latitude=45.7640,
@@ -50,6 +55,27 @@ async def seed() -> None:
             ),
         ]
         db.add_all(branches)
+
+        # Antennes à l'international sans admin dédié pour l'instant (le Super Admin y publie)
+        rome = Branch(
+            name="Rome",
+            logo_url="/uploads/7e5be5e3-e8b3-4c74-8771-e2d19534d051.jpg",
+            country="Italie",
+            continent="Europe",
+            latitude=41.8933,
+            longitude=12.4829,
+            description="Antenne diaspora en Italie : événements de solidarité et mobilisation de partenaires.",
+        )
+        istanbul = Branch(
+            name="Istanbul",
+            logo_url="/uploads/77a2d9f5-32da-4a15-851b-b0ddbbaa9d37.webp",
+            country="Turquie",
+            continent="Europe",
+            latitude=41.0064,
+            longitude=28.9759,
+            description="Antenne diaspora en Turquie : réseau d'entrepreneurs et d'étudiants malgaches.",
+        )
+        db.add_all([rome, istanbul])
         await db.flush()
 
         super_admin = User(
@@ -158,6 +184,17 @@ async def seed() -> None:
         ]
         db.add_all(posts)
 
+        db.add(
+            Post(
+                branch_id=rome.id,
+                author_id=super_admin.id,
+                title="Soirée de solidarité du CEM à Rome",
+                content="<p>L'antenne de Rome a réuni partenaires et membres de la diaspora pour présenter les actions du réseau et lever des fonds pour la rentrée scolaire.</p>",
+                pillar=Pillar.ENTERPRISE,
+                status=PostStatus.PUBLISHED,
+            )
+        )
+
         publications = [
             Publication(
                 branch_id=branches[0].id,
@@ -195,26 +232,83 @@ async def seed() -> None:
         db.add_all(submissions)
 
         donations = [
-            Donation(branch_id=branches[1].id, amount=20.0, donor_email="donateur1@example.com"),
-            Donation(branch_id=branches[2].id, amount=50.0, donor_email="donateur3@example.com"),
-            Donation(branch_id=None, amount=100.0, donor_email="donateur2@example.com"),
+            Donation(
+                branch_id=branches[1].id, amount=20.0, currency="EUR", donor_email="donateur1@example.com",
+                donor_name="Hery Andriamanana", payment_method=PaymentMethod.CARD,
+                transaction_reference="sim_pi_demo0001", status=DonationStatus.CONFIRMED,
+            ),
+            Donation(
+                branch_id=None, amount=100.0, currency="EUR", donor_email="donateur2@example.com",
+                payment_method=PaymentMethod.CARD, transaction_reference="sim_pi_demo0002",
+                status=DonationStatus.CONFIRMED,
+            ),
+            Donation(
+                branch_id=branches[0].id, amount=50000.0, declared_amount=50000.0, currency="MGA",
+                donor_email="donateur3@example.mg", donor_name="Lova Rakoto", donor_phone="0340000001",
+                payment_method=PaymentMethod.MOBILE_MONEY, mobile_operator=MobileOperator.MVOLA.value,
+                transaction_reference="DEMO123456789", status=DonationStatus.PENDING,
+            ),
+            Donation(
+                branch_id=branches[0].id, amount=20000.0, declared_amount=20000.0, currency="MGA",
+                donor_email="donateur4@example.mg", donor_phone="0320000002",
+                payment_method=PaymentMethod.MOBILE_MONEY, mobile_operator=MobileOperator.ORANGE_MONEY.value,
+                transaction_reference="PP260925.DEMO.A1", status=DonationStatus.CONFIRMED,
+            ),
+            Donation(
+                branch_id=branches[1].id, amount=10000.0, declared_amount=10000.0, currency="MGA",
+                donor_email="donateur5@example.mg", donor_phone="0340000003",
+                payment_method=PaymentMethod.MOBILE_MONEY, mobile_operator=MobileOperator.MVOLA.value,
+                transaction_reference="DEMO987654321", status=DonationStatus.REJECTED,
+                rejection_reason="Référence introuvable dans l'historique MVola",
+            ),
         ]
         db.add_all(donations)
 
-        db.add_all(build_projects(branches, super_admin, branch_admins))
+        db.add_all(build_projects(branches, super_admin, branch_admins, istanbul))
+
+        # Numéros FICTIFS pour la démo : à remplacer dans l'admin (Coordonnées de paiement)
+        settings = await db.get(AssociationSettings, 1) or AssociationSettings(id=1)
+        settings.mobile_money_holder = "CLUB EXCELLENCE MADAGASCAR (DÉMO)"
+        settings.mvola_number = "034 00 000 00"
+        settings.orange_money_number = "032 00 000 00"
+        settings.airtel_money_number = "033 00 000 00"
+        db.add(settings)
 
         await db.commit()
         print("Seed terminé avec succès.")
 
 
-def build_projects(branches: list[Branch], super_admin: User, branch_admins: list[User]) -> list[Project]:
+def build_projects(
+    branches: list[Branch], super_admin: User, branch_admins: list[User], istanbul: Branch | None = None
+) -> list[Project]:
     """Réalisations et projets en cours de démonstration, dans les 3 statuts de validation."""
     now = datetime.now(timezone.utc)
 
     def approved(**kwargs) -> Project:
         return Project(review_status=ProjectReviewStatus.APPROVED, reviewed_by_id=super_admin.id, reviewed_at=now, **kwargs)
 
-    return [
+    istanbul_projects = (
+        [
+            approved(
+                branch_id=istanbul.id,
+                author_id=super_admin.id,
+                title="Forum de la diaspora à Istanbul",
+                summary="Deux jours d'échanges entre entrepreneurs, étudiants et partenaires du réseau CEM en Turquie.",
+                description="<p>Organisé par l'antenne d'Istanbul, le forum a permis de lancer trois partenariats d'entrepreneuriat.</p>",
+                pillar=Pillar.ENTERPRISE,
+                phase=ProjectPhase.COMPLETED,
+                beneficiaries="Entrepreneurs et étudiants",
+                beneficiaries_count=150,
+                location="Istanbul, Turquie",
+                start_date=date(2026, 4, 18),
+                end_date=date(2026, 4, 19),
+            )
+        ]
+        if istanbul is not None
+        else []
+    )
+
+    return istanbul_projects + [
         approved(
             branch_id=branches[0].id,
             author_id=branch_admins[0].id,
@@ -257,6 +351,9 @@ def build_projects(branches: list[Branch], super_admin: User, branch_admins: lis
             beneficiaries_count=12,
             location="Paris 7e",
             start_date=date(2026, 6, 1),
+            goal_value=8000,
+            progress_value=5200,
+            goal_unit="livres collectés",
         ),
         approved(
             branch_id=branches[3].id,
@@ -270,6 +367,9 @@ def build_projects(branches: list[Branch], super_admin: User, branch_admins: lis
             beneficiaries_count=25,
             location="Ambositra / Lyon",
             start_date=date(2026, 2, 1),
+            goal_value=25,
+            progress_value=18,
+            goal_unit="artisanes formées",
         ),
         Project(
             branch_id=branches[0].id,

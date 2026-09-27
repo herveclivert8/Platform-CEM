@@ -57,7 +57,7 @@ export function invalidateProjectQueries(queryClient: QueryClient) {
   }
 }
 
-function useProjectMutation<TVars>(mutationFn: (vars: TVars) => Promise<unknown>) {
+function useProjectMutation<TVars, TResult>(mutationFn: (vars: TVars) => Promise<TResult>) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn,
@@ -75,6 +75,14 @@ export function useCreateProject() {
 export function useUpdateProject(projectId: number | undefined) {
   return useProjectMutation(async (input: Partial<ProjectInput>) => {
     const { data } = await api.put<ProjectDto>(`/projects/${projectId}`, input);
+    return mapProject(data);
+  });
+}
+
+/** Show / hide a project on the platform (no new validation needed). */
+export function useSetProjectVisibility() {
+  return useProjectMutation(async ({ projectId, isVisible }: { projectId: number; isVisible: boolean }) => {
+    const { data } = await api.put<ProjectDto>(`/projects/${projectId}`, { is_visible: isVisible });
     return mapProject(data);
   });
 }

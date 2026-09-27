@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Briefcase, FolderKanban, HeartHandshake, LogOut } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+import { Bell, Briefcase, FolderKanban, HeartHandshake, LogOut, Menu } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useLogout } from "../../hooks/useAuth";
 import { ThemeToggle } from "../layout/ThemeToggle";
+import { LanguageDropdown } from "../layout/LanguageDropdown";
+import { dateLocale } from "../../lib/locale";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import {
   useMarkAllNotificationsRead,
@@ -18,16 +22,17 @@ const NOTIFICATION_ICONS: Record<string, typeof Bell> = {
   project: FolderKanban,
 };
 
-function formatRelativeTime(iso: string): string {
+function formatRelativeTime(iso: string, t: TFunction): string {
   const diffMin = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
-  if (diffMin < 1) return "à l'instant";
-  if (diffMin < 60) return `il y a ${diffMin} min`;
+  if (diffMin < 1) return t("admin.topbar.just_now");
+  if (diffMin < 60) return t("admin.topbar.minutes_ago", { count: diffMin });
   const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `il y a ${diffH} h`;
-  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  if (diffH < 24) return t("admin.topbar.hours_ago", { count: diffH });
+  return new Date(iso).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" });
 }
 
-export function Topbar() {
+export function Topbar({ onMenuClick, menuOpen }: { onMenuClick: () => void; menuOpen: boolean }) {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const logout = useLogout();
   const navigate = useNavigate();
@@ -55,14 +60,25 @@ export function Topbar() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-end gap-2 border-b border-slate-200 bg-white px-6 dark:border-slate-800 dark:bg-slate-900 lg:px-10">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-end gap-1 border-b border-slate-200 bg-white px-3 sm:gap-2 sm:px-6 dark:border-slate-800 dark:bg-slate-900 lg:px-10">
+      <button
+        type="button"
+        onClick={onMenuClick}
+        aria-label={t("admin.nav.open_menu")}
+        aria-controls="admin-sidebar"
+        aria-expanded={menuOpen}
+        className="mr-auto inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 lg:hidden dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+      <LanguageDropdown />
       <ThemeToggle />
 
       <div ref={notifRef} className="relative">
         <button
           type="button"
           onClick={() => setNotifOpen((v) => !v)}
-          aria-label="Notifications"
+          aria-label={t("admin.topbar.notifications")}
           className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
         >
           <Bell className="h-4.5 w-4.5" aria-hidden />
@@ -77,7 +93,7 @@ export function Topbar() {
           <div className="absolute right-0 z-40 mt-2 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg animate-fade-in-up dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between px-3.5 py-2.5">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                Notifications
+                {t("admin.topbar.notifications")}
               </p>
               {unreadCount > 0 && (
                 <button
@@ -85,14 +101,14 @@ export function Topbar() {
                   onClick={() => markAllRead.mutate()}
                   className="text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400"
                 >
-                  Tout marquer comme lu
+                  {t("admin.topbar.mark_all_read")}
                 </button>
               )}
             </div>
 
             {!data || data.items.length === 0 ? (
               <p className="px-3.5 py-4 text-center text-sm text-slate-400 dark:text-slate-500">
-                Aucune notification pour le moment.
+                {t("admin.topbar.no_notifications")}
               </p>
             ) : (
               <div className="max-h-96 overflow-y-auto border-t border-slate-200 dark:border-slate-800">
@@ -127,7 +143,7 @@ export function Topbar() {
                           {notification.message}
                         </span>
                         <span className="mt-1 block text-[11px] text-slate-400 dark:text-slate-600">
-                          {formatRelativeTime(notification.createdAt)}
+                          {formatRelativeTime(notification.createdAt, t)}
                         </span>
                       </span>
                     </button>
@@ -141,7 +157,7 @@ export function Topbar() {
 
       <div className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-800" aria-hidden />
 
-      <div className="min-w-0 text-right">
+      <div className="hidden min-w-0 text-right sm:block">
         <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
           {user?.firstName} {user?.lastName}
         </p>
@@ -151,7 +167,7 @@ export function Topbar() {
       <button
         type="button"
         onClick={() => setConfirmLogoutOpen(true)}
-        aria-label="Déconnexion"
+        aria-label={t("admin.topbar.logout")}
         className="ml-1 inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-red-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-red-400"
       >
         <LogOut className="h-4 w-4" aria-hidden />
@@ -159,9 +175,9 @@ export function Topbar() {
 
       <ConfirmDialog
         open={confirmLogoutOpen}
-        title="Déconnexion"
-        message="Voulez-vous vraiment vous déconnecter ?"
-        confirmLabel="Se déconnecter"
+        title={t("admin.topbar.logout")}
+        message={t("admin.topbar.logout_confirm")}
+        confirmLabel={t("auth.sign_out")}
         onConfirm={logout}
         onCancel={() => setConfirmLogoutOpen(false)}
       />

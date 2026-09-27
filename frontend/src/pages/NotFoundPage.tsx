@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Compass } from "lucide-react";
-import { Button } from "../components/ui/Button";
+import { buttonClasses } from "../components/ui/buttonStyles";
+import { usePageMeta } from "../hooks/usePageMeta";
 
 export function NotFoundPage() {
   const { t } = useTranslation();
+  usePageMeta(t("not_found.title"));
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col items-center px-4 py-32 text-center sm:px-6 lg:px-8">
@@ -15,8 +17,8 @@ export function NotFoundPage() {
         {t("not_found.title")}
       </h1>
       <p className="mt-2 text-slate-500 dark:text-slate-400">{t("not_found.subtitle")}</p>
-      <Link to="/" className="mt-6">
-        <Button variant="secondary">{t("not_found.back_home")}</Button>
+      <Link to="/" className={buttonClasses({ variant: "secondary", className: "mt-6" })}>
+        {t("not_found.back_home")}
       </Link>
     </div>
   );

@@ -6,7 +6,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 
 
 class PublicationFormat(str, Enum):
@@ -48,8 +48,7 @@ class Publication(PublicationBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PublicationWithDetails(Publication):
@@ -61,6 +60,19 @@ class PublicationWithDetails(Publication):
 class PublicationListResponse(BaseModel):
     """Response paginée pour lister les publications"""
     items: list[Publication]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class PublicationAdminItem(Publication):
+    """Bilan dans la liste du back-office, avec le nom de son antenne."""
+    branch_name: Optional[str] = None
+
+
+class PublicationAdminListResponse(BaseModel):
+    items: list[PublicationAdminItem]
     total: int
     page: int
     page_size: int

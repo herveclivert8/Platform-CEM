@@ -33,6 +33,10 @@ class ProjectBase(BaseModel):
     location: Optional[str] = Field(None, max_length=255)
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+    goal_value: Optional[int] = Field(None, gt=0, le=1_000_000_000)
+    progress_value: Optional[int] = Field(None, ge=0, le=1_000_000_000)
+    goal_unit: Optional[str] = Field(None, max_length=100)
+    is_visible: bool = True
 
 
 def _check_dates(phase, start_date, end_date) -> None:
@@ -63,6 +67,10 @@ class ProjectUpdate(BaseModel):
     location: Optional[str] = Field(None, max_length=255)
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+    goal_value: Optional[int] = Field(None, gt=0, le=1_000_000_000)
+    progress_value: Optional[int] = Field(None, ge=0, le=1_000_000_000)
+    goal_unit: Optional[str] = Field(None, max_length=100)
+    is_visible: Optional[bool] = None
     images: Optional[list[str]] = None
 
 
@@ -105,6 +113,10 @@ class Project(ProjectBase):
             location=project.location,
             start_date=project.start_date,
             end_date=project.end_date,
+            goal_value=project.goal_value,
+            progress_value=project.progress_value,
+            goal_unit=project.goal_unit,
+            is_visible=project.is_visible,
             review_status=val(project.review_status),
             rejection_reason=project.rejection_reason,
             reviewed_at=project.reviewed_at,

@@ -6,6 +6,9 @@ from app.api.v1.endpoints import (
     publications,
     posts,
     projects,
+    seo,
+    transparency,
+    newsletter,
     donations,
     submissions,
     upload,
@@ -13,6 +16,7 @@ from app.api.v1.endpoints import (
     admin,
     audit,
     notifications,
+    dashboard,
 )
 
 api_router = APIRouter()
@@ -50,5 +54,17 @@ api_router.include_router(admin.router)
 # Audit logging
 api_router.include_router(audit.router)
 
+# Référencement et aperçus de partage (robots des réseaux sociaux, sitemap)
+api_router.include_router(seo.router)
+
+# Page publique « Transparence »
+api_router.include_router(transparency.router)
+
+# Lettre d'information (inscriptions, export pour l'outil d'envoi)
+api_router.include_router(newsletter.router)
+
 # Notifications
 api_router.include_router(notifications.router)
+
+# Tableau de bord admin
+api_router.include_router(dashboard.router)

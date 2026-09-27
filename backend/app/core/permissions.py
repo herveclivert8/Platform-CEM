@@ -6,6 +6,8 @@ Modèle simplifié : chaque utilisateur est soit SUPER_ADMIN (accès global),
 soit BRANCH_ADMIN rattaché à exactement une antenne via User.branch_id.
 """
 
+from functools import wraps
+
 from fastapi import Depends, HTTPException, status
 
 from app.api.deps import get_current_user
@@ -32,7 +34,16 @@ async def verify_branch_access(user: User, required_branch_id: int) -> None:
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail="Access denied: You can only access your own branch",
+        detail="Accès refusé : vous ne pouvez gérer que votre antenne",
+    )
+
+
+def can_access_branch(user: User | None, branch_id: int) -> bool:
+    """Version booléenne de verify_branch_access, pour les endpoints publics (user facultatif)."""
+    if user is None:
+        return False
+    return user.role == UserRole.SUPER_ADMIN or (
+        user.role == UserRole.BRANCH_ADMIN and user.branch_id == branch_id
     )
 
 
@@ -46,7 +57,7 @@ async def verify_super_admin_only(user: User) -> None:
     if user.role != UserRole.SUPER_ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied: Super admin only",
+            detail="Accès réservé au Super Admin",
         )
 
 
@@ -54,7 +65,6 @@ async def verify_super_admin_only(user: User) -> None:
 # Decorators pour endpoints
 # ============================================
 
-from functools import wraps
 
 def require_super_admin(func):
     """Décorateur pour exiger super admin"""
@@ -72,7 +82,7 @@ def require_admin(func):
         if user.role not in (UserRole.BRANCH_ADMIN, UserRole.SUPER_ADMIN):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Admin access required",
+                detail="Accès réservé aux administrateurs",
             )
         return await func(*args, user=user, **kwargs)
     return wrapper

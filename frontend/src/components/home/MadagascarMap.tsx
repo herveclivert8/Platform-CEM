@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
 import { useBranches } from "../../hooks/useBranches";
+import { useHomePage } from "../../hooks/useHomePage";
+import { networkSummary } from "./networkSummary";
 import type { Branch } from "../../types/branch";
 import { Skeleton } from "../ui/Skeleton";
 
@@ -38,13 +40,16 @@ function FitBounds({ branches }: { branches: Branch[] }) {
 }
 
 export function MadagascarMap() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { data, isLoading } = useBranches();
+  const { data: home } = useHomePage();
 
   const branchesWithCoords = (data?.items ?? []).filter(
     (b) => b.lat !== null && b.lng !== null,
   );
+  // Sentence set by the super admin (auto-translated), otherwise computed from the branches
+  const subtitle = home?.mapSubtitle || networkSummary(data?.items ?? [], t, i18n.language);
 
   return (
     <section id="antennes" className="bg-white py-20 dark:bg-slate-900">
@@ -53,7 +58,7 @@ export function MadagascarMap() {
           <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             {t("map.title")}
           </h2>
-          <p className="mt-2 text-slate-500 dark:text-slate-400">{t("map.subtitle")}</p>
+          <p className="mt-2 text-slate-500 dark:text-slate-400">{isLoading ? " " : subtitle}</p>
         </div>
 
         {isLoading ? (
@@ -86,7 +91,7 @@ export function MadagascarMap() {
                         onClick={() => navigate(`/antennes/${branch.id}`)}
                         className="mt-2 flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:underline"
                       >
-                        Voir l'antenne <ArrowRight className="h-3 w-3" />
+                        {t("map.view_branch")} <ArrowRight className="h-3 w-3" />
                       </button>
                     </div>
                   </Popup>

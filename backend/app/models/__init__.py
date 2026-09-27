@@ -11,6 +11,9 @@ from app.models.audit import AuditLog
 from app.models.statistic import Statistic
 from app.models.settings import AssociationSettings
 from app.models.notification import Notification
+from app.models.translation import ContentTranslation
+from app.models.newsletter import NewsletterSubscriber
+from app.models.uploaded_file import UploadedFile
 
 __all__ = [
     "Publication",
@@ -36,4 +39,7 @@ __all__ = [
     "Statistic",
     "AssociationSettings",
     "Notification",
+    "ContentTranslation",
+    "NewsletterSubscriber",
+    "UploadedFile",
 ]

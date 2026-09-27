@@ -1,4 +1,5 @@
 import type { ReactElement, SVGProps } from "react";
+import { useTranslation } from "react-i18next";
 import { useSocialLinks } from "../../hooks/useSocialLinks";
 import { FacebookIcon, XIcon, LinkedInIcon, YouTubeIcon } from "../icons/BrandIcons";
 
@@ -47,24 +48,51 @@ export const NETWORK_CONFIG: Record<"facebook" | "x" | "linkedin" | "youtube", N
   },
 };
 
+/**
+ * Footer social links. The four networks are always shown; the URLs come from the Super
+ * Admin's "Réseaux sociaux" setting. A network without a URL yet stays visible but greyed
+ * out and not clickable, instead of disappearing from the footer.
+ */
 export function SocialLinks() {
+  const { t } = useTranslation();
   const { data } = useSocialLinks();
 
-  const networks = (
-    [
-      { key: "facebook", url: data?.facebookUrl },
-      { key: "x", url: data?.xUrl },
-      { key: "linkedin", url: data?.linkedinUrl },
-      { key: "youtube", url: data?.youtubeUrl },
-    ] as const
-  ).filter((n): n is { key: typeof n.key; url: string } => Boolean(n.url));
-
-  if (networks.length === 0) return null;
+  const networks = [
+    { key: "facebook", url: data?.facebookUrl },
+    { key: "x", url: data?.xUrl },
+    { key: "linkedin", url: data?.linkedinUrl },
+    { key: "youtube", url: data?.youtubeUrl },
+  ] as const;
 
   return (
     <div className="flex flex-row items-start gap-4">
       {networks.map(({ key, url }) => {
         const network = NETWORK_CONFIG[key];
+        const bubble = (active: boolean) =>
+          active
+            ? `flex h-10 w-10 items-center justify-center rounded-full border bg-white/80 text-slate-600 backdrop-blur-md transition-all duration-300 ease-out group-hover:-translate-y-1 dark:bg-slate-900/60 dark:text-white ${network.border} ${network.shadow} ${network.shadowHover}`
+            : "flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/60 text-slate-300 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-600";
+        const label = (active: boolean) =>
+          `text-[10px] font-semibold uppercase tracking-widest transition-colors duration-300 ${
+            active ? `text-slate-400 dark:text-slate-500 ${network.labelHover}` : "text-slate-300 dark:text-slate-600"
+          }`;
+
+        if (!url) {
+          return (
+            <span
+              key={key}
+              title={t("footer.social_soon", { network: network.name })}
+              aria-label={t("footer.social_soon", { network: network.name })}
+              className="flex cursor-not-allowed flex-col items-center gap-1.5"
+            >
+              <span className={bubble(false)}>
+                <network.icon className="h-4 w-4" aria-hidden />
+              </span>
+              <span className={label(false)}>{network.name}</span>
+            </span>
+          );
+        }
+
         return (
           <a
             key={key}
@@ -74,16 +102,10 @@ export function SocialLinks() {
             aria-label={network.name}
             className="group flex flex-col items-center gap-1.5"
           >
-            <span
-              className={`flex h-10 w-10 items-center justify-center rounded-full border bg-white/80 text-slate-600 backdrop-blur-md transition-all duration-300 ease-out group-hover:-translate-y-1 dark:bg-slate-900/60 dark:text-white ${network.border} ${network.shadow} ${network.shadowHover}`}
-            >
+            <span className={bubble(true)}>
               <network.icon className="h-4 w-4" aria-hidden />
             </span>
-            <span
-              className={`text-[10px] font-semibold uppercase tracking-widest text-slate-400 transition-colors duration-300 dark:text-slate-500 ${network.labelHover}`}
-            >
-              {network.name}
-            </span>
+            <span className={label(true)}>{network.name}</span>
           </a>
         );
       })}

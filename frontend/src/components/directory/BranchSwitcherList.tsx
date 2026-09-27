@@ -3,8 +3,10 @@ import { MapPin, Building2 } from "lucide-react";
 import clsx from "clsx";
 import { Card } from "../ui/Card";
 import { useBranches } from "../../hooks/useBranches";
+import { useTranslation } from "react-i18next";
 
 export function BranchSwitcherList({ currentBranchId }: { currentBranchId: number }) {
+  const { t } = useTranslation();
   const { data } = useBranches();
   const others = (data?.items ?? []).filter((b) => b.id !== currentBranchId);
 
@@ -13,7 +15,7 @@ export function BranchSwitcherList({ currentBranchId }: { currentBranchId: numbe
   return (
     <div>
       <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-        Autres antennes
+        {t("directory.others")}
       </h3>
       <div className="mt-3 max-h-[70vh] space-y-2.5 overflow-y-auto pr-1">
         {others.map((branch) => (

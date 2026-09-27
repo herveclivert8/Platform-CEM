@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { MapPin, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface NominatimResult {
   display_name: string;
@@ -21,6 +22,7 @@ interface AddressAutocompleteProps {
 }
 
 export function AddressAutocomplete({ onSelect }: AddressAutocompleteProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -60,7 +62,7 @@ export function AddressAutocomplete({ onSelect }: AddressAutocompleteProps) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
-          placeholder="Rechercher une ville (ex: Tamatave)…"
+          placeholder={t("admin.address.search")}
           className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none dark:text-white dark:placeholder:text-slate-500"
         />
         {loading && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-slate-400 dark:text-slate-500" aria-hidden />}

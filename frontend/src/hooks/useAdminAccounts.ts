@@ -9,6 +9,8 @@ export interface AdminAccount {
   role: string;
   branchId: number | null;
   branchName: string | null;
+  /** Temporary password not replaced yet */
+  mustChangePassword: boolean;
   createdAt: string;
 }
 
@@ -20,6 +22,7 @@ interface AdminAccountDto {
   role: string;
   branch_id: number | null;
   branch_name: string | null;
+  must_change_password: boolean;
   created_at: string;
 }
 
@@ -37,6 +40,7 @@ function mapAccount(dto: AdminAccountDto): AdminAccount {
     role: dto.role,
     branchId: dto.branch_id,
     branchName: dto.branch_name,
+    mustChangePassword: dto.must_change_password,
     createdAt: dto.created_at,
   };
 }

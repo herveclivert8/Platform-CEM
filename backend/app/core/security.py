@@ -110,3 +110,8 @@ def create_refresh_token(data: dict) -> str:
 def decode_token(token: str) -> dict:
     """Décoder et valider un JWT"""
     return security_manager.decode_token(token)
+
+def create_token_pair(user) -> tuple[str, str]:
+    """(access, refresh) pour un utilisateur ; "ver" permet de révoquer tous ses jetons (User.token_version)."""
+    data = {"sub": str(user.id), "email": user.email, "ver": user.token_version}
+    return create_access_token(data), create_refresh_token(data)

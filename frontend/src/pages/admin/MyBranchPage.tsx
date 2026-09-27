@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Skeleton } from "../../components/ui/Skeleton";
@@ -7,8 +6,14 @@ import { BranchProfileFields } from "../../components/admin/BranchProfileFields"
 import { useAuthStore } from "../../store/authStore";
 import { useBranch } from "../../hooks/useBranches";
 import { useUpdateBranch, type TeamMemberInput } from "../../hooks/useAdminBranches";
+import { useTranslation } from "react-i18next";
+import { UnsavedChangesGuard } from "../../components/admin/UnsavedChangesGuard";
+import { useUnsavedChanges } from "../../hooks/useUnsavedChanges";
+import { useSuccessToast } from "../../hooks/useSuccessToast";
+import { apiErrorMessage } from "../../lib/api";
 
 export function MyBranchPage() {
+  const { t } = useTranslation();
   const branchId = useAuthStore((s) => s.user?.branchId ?? undefined);
   const { data: branch, isLoading } = useBranch(branchId);
   const updateBranch = useUpdateBranch(branchId);
@@ -20,8 +25,20 @@ export function MyBranchPage() {
   const [logoUrl, setLogoUrl] = useState("");
   const [teamMembers, setTeamMembers] = useState<TeamMemberInput[]>([]);
 
+  const values = { address, contactEmail, contactPhone, description, logoUrl, teamMembers };
+  const { isDirty, markSaved } = useUnsavedChanges(values);
+  const showSuccess = useSuccessToast();
+
   useEffect(() => {
     if (branch) {
+      markSaved({
+        address: branch.address ?? "",
+        contactEmail: branch.contactEmail ?? "",
+        contactPhone: branch.contactPhone ?? "",
+        description: branch.description ?? "",
+        logoUrl: branch.logoUrl ?? "",
+        teamMembers: branch.teamMembers?.map((m) => ({ name: m.name, role: m.role, photo_url: m.photoUrl ?? undefined })) ?? [],
+      });
       setAddress(branch.address ?? "");
       setContactEmail(branch.contactEmail ?? "");
       setContactPhone(branch.contactPhone ?? "");
@@ -31,34 +48,41 @@ export function MyBranchPage() {
         branch.teamMembers?.map((m) => ({ name: m.name, role: m.role, photo_url: m.photoUrl ?? undefined })) ?? [],
       );
     }
-  }, [branch]);
+  }, [branch, markSaved]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateBranch.mutateAsync({
-      physical_address: address || undefined,
-      contact_email: contactEmail || undefined,
-      contact_phone: contactPhone || undefined,
-      description: description || undefined,
-      logo_url: logoUrl || undefined,
+    try {
+      await updateBranch.mutateAsync({
+      physical_address: address || null,
+      contact_email: contactEmail || null,
+      contact_phone: contactPhone || null,
+      description: description || null,
+      logo_url: logoUrl || null,
       team_members: teamMembers.filter((m) => m.name.trim() && m.role.trim()),
     });
+    } catch {
+      return; // erreur affichée sous le formulaire
+    }
+    markSaved(values);
+    showSuccess(t("admin.branch_edit.updated"));
   };
 
   if (!branchId) {
     return (
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Mon antenne</h1>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Aucune antenne n'est rattachée à ce compte.</p>
+        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{t("admin.my_branch.title")}</h1>
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("admin.my_branch.none")}</p>
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Mon antenne</h1>
+      <UnsavedChangesGuard when={isDirty} />
+      <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{t("admin.my_branch.title")}</h1>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Ces informations apparaissent dans l'aperçu de votre antenne dans l'annuaire public.
+        {t("admin.my_branch.subtitle")}
       </p>
 
       {isLoading ? (
@@ -71,7 +95,7 @@ export function MyBranchPage() {
 
           <form onSubmit={handleSubmit} className="mt-4 space-y-5">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">Adresse</label>
+              <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">{t("admin.my_branch.address")}</label>
               <input
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
@@ -93,18 +117,13 @@ export function MyBranchPage() {
             />
 
             {updateBranch.isError && (
-              <p className="text-sm text-red-600 dark:text-red-400">
-                Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.
-              </p>
-            )}
-            {updateBranch.isSuccess && (
-              <p className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="h-4 w-4" /> Antenne mise à jour.
+              <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+                {apiErrorMessage(updateBranch.error, t("admin.branch_edit.save_error"))}
               </p>
             )}
 
-            <Button type="submit" variant="secondary" disabled={updateBranch.isPending}>
-              {updateBranch.isPending ? "…" : "Enregistrer"}
+            <Button type="submit" variant="secondary" disabled={updateBranch.isPending || !isDirty}>
+              {updateBranch.isPending ? "…" : t("common.save")}
             </Button>
           </form>
         </Card>

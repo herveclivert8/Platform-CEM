@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Button } from "./Button";
+import { useTranslation } from "react-i18next";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -15,11 +16,14 @@ export function ConfirmDialog({
   open,
   title,
   message,
-  confirmLabel = "Confirmer",
-  cancelLabel = "Annuler",
+  confirmLabel,
+  cancelLabel,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation();
+  confirmLabel ??= t("common.confirm");
+  cancelLabel ??= t("common.cancel");
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => e.key === "Escape" && onCancel();

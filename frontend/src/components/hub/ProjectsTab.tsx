@@ -8,11 +8,12 @@ import { useBranchPosts } from "../../hooks/usePosts";
 import { usePillarLabels } from "../../hooks/usePillarLabels";
 import { PostCard } from "./PostCard";
 import { Skeleton } from "../ui/Skeleton";
+import { QueryError } from "../ui/QueryError";
 
 export function ProjectsTab({ branchId }: { branchId: number }) {
   const { t } = useTranslation();
   const [pillar, setPillar] = useState<Pillar | undefined>(undefined);
-  const { data, isLoading } = useBranchPosts(branchId, { pillar, pageSize: 6 });
+  const { data, isLoading, isError, error, refetch } = useBranchPosts(branchId, { pillar, pageSize: 6 });
   const pillarLabels = usePillarLabels();
 
   return (
@@ -53,6 +54,8 @@ export function ProjectsTab({ branchId }: { branchId: number }) {
             <Skeleton key={i} className="h-64 w-full" />
           ))}
         </div>
+      ) : isError ? (
+        <QueryError error={error} onRetry={() => refetch()} />
       ) : !data || data.items.length === 0 ? (
         <p className="mt-8 text-sm text-slate-400">{t("hub.no_posts")}</p>
       ) : (
@@ -67,7 +70,7 @@ export function ProjectsTab({ branchId }: { branchId: number }) {
               to={`/antennes/${branchId}/actualites`}
               className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
             >
-              Voir toutes les actualités <ArrowRight className="h-3.5 w-3.5" />
+              {t("hub.reports.all_news")} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           )}
         </>

@@ -10,13 +10,12 @@ RÈGLES:
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_current_user, get_db
-from app.api.v1.endpoints.audit import log_audit
 from app.core.permissions import verify_branch_access, verify_super_admin_only
 from app.models import Branch, Project, ProjectImage, User
 from app.models.project import ProjectReviewStatus as ReviewStatusModel
@@ -33,9 +32,23 @@ from app.schemas.project import (
     ProjectUpdate,
     _check_dates,
 )
+from app.services.audit import record_audit
+from app.services.translation import delete_translations, localize_schemas, schedule_translation
 from app.services.notification_service import send_batch_notification
 
 router = APIRouter(prefix="/projects", tags=["projects"])
+
+# Champs traduits automatiquement en anglais (les admins ne saisissent que le français)
+TRANSLATED_FIELDS = ("title", "summary", "description", "beneficiaries", "location", "goal_unit")
+
+
+def _schedule_project_translation(background_tasks: BackgroundTasks, project: ProjectSchema) -> None:
+    # Seuls les projets validés sont publics (et donc traduits) : un projet l'est à sa validation
+    if project.review_status == ProjectReviewStatus.APPROVED:
+        schedule_translation(
+            background_tasks, "project", project.id, {f: getattr(project, f) for f in TRANSLATED_FIELDS}
+        )
+
 
 PHASE_LABELS = {"ONGOING": "le projet en cours", "COMPLETED": "la réalisation"}
 
@@ -88,6 +101,25 @@ async def _notify_super_admins(db: AsyncSession, project: Project, author: User,
     )
 
 
+async def _notify_progress(db: AsyncSession, project: Project, author: User) -> None:
+    """Information (pas de validation requise) : avancement mis à jour sur un projet publié."""
+    result = await db.execute(select(User.id).where(User.role == UserRole.SUPER_ADMIN))
+    progress = f"{project.progress_value or 0:,}".replace(",", "\u202f")
+    goal = f"{project.goal_value:,}".replace(",", "\u202f") if project.goal_value else "?"
+    await send_batch_notification(
+        list(result.scalars().all()),
+        title="Avancement mis à jour",
+        message=(
+            f"{author.full_name} ({project.branch.name}) : « {project.title} » — "
+            f"{progress} / {goal} {project.goal_unit or ''}".rstrip()
+        ),
+        notification_type="info",
+        action_url=_admin_url(project.id),
+        icon="project",
+        db=db,
+    )
+
+
 def _paginate(total: int, page: int, page_size: int) -> dict:
     return {"total": total, "page": page, "page_size": page_size, "total_pages": (total + page_size - 1) // page_size}
 
@@ -105,9 +137,10 @@ async def list_projects(
     pillar: str | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(12, ge=1, le=100),
+    lang: str | None = Query(None, description="« en » : contenus traduits automatiquement"),
 ):
     """Lister les projets validés (publiés). Accessible: Public."""
-    filters = [Project.review_status == ReviewStatusModel.APPROVED]
+    filters = [Project.review_status == ReviewStatusModel.APPROVED, Project.is_visible.is_(True)]
     if phase:
         filters.append(Project.phase == phase.value)
     if branch_id:
@@ -120,8 +153,9 @@ async def list_projects(
     result = await db.execute(
         _query().where(*filters).order_by(order, Project.id.desc()).offset((page - 1) * page_size).limit(page_size)
     )
+    items = [ProjectSchema.from_orm_project(p) for p in result.scalars().all()]
     return ProjectListResponse(
-        items=[ProjectSchema.from_orm_project(p) for p in result.scalars().all()],
+        items=await localize_schemas(db, "project", items, TRANSLATED_FIELDS, lang),
         **_paginate(total, page, page_size),
     )
 
@@ -193,17 +227,23 @@ async def get_project_admin(
 
 
 @router.get("/{project_id}", response_model=ProjectSchema)
-async def get_project(project_id: int, db: AsyncSession = Depends(get_db)):
+async def get_project(
+    project_id: int,
+    db: AsyncSession = Depends(get_db),
+    lang: str | None = Query(None, description="« en » : contenu traduit automatiquement"),
+):
     """Récupérer un projet validé. Accessible: Public."""
     project = await _get_project_or_404(db, project_id)
-    if project.review_status != ReviewStatusModel.APPROVED:
+    if project.review_status != ReviewStatusModel.APPROVED or not project.is_visible:
         raise HTTPException(status_code=404, detail="Project not found")
-    return ProjectSchema.from_orm_project(project)
+    [item] = await localize_schemas(db, "project", [ProjectSchema.from_orm_project(project)], TRANSLATED_FIELDS, lang)
+    return item
 
 
 @router.post("", response_model=ProjectSchema, status_code=status.HTTP_201_CREATED)
 async def create_project(
     data: ProjectCreate,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -234,40 +274,61 @@ async def create_project(
     if not is_super:
         await _notify_super_admins(db, project, user, is_update=False)
 
-    return await _reload(db, project.id)
+    result = await _reload(db, project.id)
+    _schedule_project_translation(background_tasks, result)
+    return result
 
 
 @router.put("/{project_id}", response_model=ProjectSchema)
 async def update_project(
     project_id: int,
     data: ProjectUpdate,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Modifier un projet (y compris le passer de « en cours » à « réalisé »).
-    Admin d'antenne → repasse en PENDING (retiré du site) + notification aux Super Admins.
+    Admin d'antenne → repasse en PENDING (retiré du site) + notification aux Super Admins, sauf si
+    seule la valeur atteinte d'un projet publié change (« 5 200 → 5 600 livres ») : il reste en
+    ligne et le siège en est simplement informé.
     Super Admin → le statut de validation est conservé.
     """
     project = await _get_project_or_404(db, project_id)
     await verify_branch_access(user, project.branch_id)
 
+    # Le formulaire renvoie tous les champs : on compare les valeurs réellement modifiées
     update_data = data.dict(exclude_unset=True, exclude={"images"})
+    changed: set[str] = set()
     for key, value in update_data.items():
-        setattr(project, key, value.value if hasattr(value, "value") else value)
+        new = value.value if hasattr(value, "value") else value
+        old = getattr(project, key)
+        if (old.value if hasattr(old, "value") else old) != new:
+            changed.add(key)
+        setattr(project, key, new)
 
     try:
         _check_dates(ProjectPhase(getattr(project.phase, "value", project.phase)), project.start_date, project.end_date)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
 
+    if data.images is not None and [img.url for img in project.images] != data.images:
+        changed.add("images")
     if data.images is not None:
         project.images.clear()
         for i, url in enumerate(data.images):
             project.images.append(ProjectImage(url=url, position=i))
 
     is_super = user.role == UserRole.SUPER_ADMIN
-    if not is_super:
+    # Sans nouvelle validation : afficher / masquer (le contenu ne change pas), et mettre à jour la
+    # seule valeur atteinte d'un projet déjà validé.
+    visibility_only = changed == {"is_visible"}
+    progress_only = (
+        bool(changed) and changed <= {"progress_value", "is_visible"} and "progress_value" in changed
+        and project.review_status == ReviewStatusModel.APPROVED
+    )
+    needs_review = not is_super and bool(changed) and not visibility_only and not progress_only
+    if needs_review:
         project.review_status = ReviewStatusModel.PENDING
         project.rejection_reason = None
         project.reviewed_by_id = None
@@ -275,15 +336,20 @@ async def update_project(
 
     await db.commit()
 
-    if not is_super:
+    if not is_super and (needs_review or progress_only):
         project = await _get_project_or_404(db, project.id)
-        await _notify_super_admins(db, project, user, is_update=True)
+        if needs_review:
+            await _notify_super_admins(db, project, user, is_update=True)
+        else:
+            await _notify_progress(db, project, user)
 
-    return await _reload(db, project_id)
+    result = await _reload(db, project_id)
+    _schedule_project_translation(background_tasks, result)
+    return result
 
 
 async def _review(
-    request: Request,
+    background_tasks: BackgroundTasks,
     project_id: int,
     user: User,
     db: AsyncSession,
@@ -298,19 +364,16 @@ async def _review(
     project.rejection_reason = None if approve else reason
     project.reviewed_by_id = user.id
     project.reviewed_at = datetime.now(timezone.utc)
-    await db.commit()
-
-    await log_audit(
+    record_audit(
         db,
-        user_id=user.id,
-        user_email=user.email,
-        action="project_approved" if approve else "project_rejected",
+        action="confirm" if approve else "reject",
         resource_type="project",
+        user=user,
         resource_id=project.id,
         branch_id=project.branch_id,
         details={"title": project.title, **({} if approve else {"reason": reason})},
-        ip_address=request.client.host if request.client else None,
     )
+    await db.commit()
 
     if project.author_id and project.author_id != user.id:
         if approve:
@@ -335,30 +398,32 @@ async def _review(
             db=db,
         )
 
-    return await _reload(db, project_id)
+    result = await _reload(db, project_id)
+    _schedule_project_translation(background_tasks, result)  # publié dès la validation : traduit aussitôt
+    return result
 
 
 @router.post("/{project_id}/approve", response_model=ProjectSchema)
 async def approve_project(
     project_id: int,
-    request: Request,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Valider (et publier immédiatement) un projet. Accessible: Super Admin uniquement."""
-    return await _review(request, project_id, user, db, approve=True)
+    return await _review(background_tasks, project_id, user, db, approve=True)
 
 
 @router.post("/{project_id}/reject", response_model=ProjectSchema)
 async def reject_project(
     project_id: int,
     data: ProjectReject,
-    request: Request,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Refuser un projet, avec un motif transmis à l'auteur. Accessible: Super Admin uniquement."""
-    return await _review(request, project_id, user, db, approve=False, reason=data.reason)
+    return await _review(background_tasks, project_id, user, db, approve=False, reason=data.reason)
 
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -370,6 +435,7 @@ async def delete_project(
     """Supprimer un projet. Accessible: Admin de la branche concernée + Super Admin."""
     project = await _get_project_or_404(db, project_id)
     await verify_branch_access(user, project.branch_id)
+    await delete_translations(db, "project", [project.id])
     await db.delete(project)
     await db.commit()
     return None

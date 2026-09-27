@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, ScrollRestoration } from "react-router-dom";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { DonationModal } from "../donation/DonationModal";
@@ -12,6 +12,8 @@ export function RootLayout() {
       </main>
       <Footer />
       <DonationModal />
+      {/* New page: back to the top; browser Back: previous scroll position */}
+      <ScrollRestoration />
     </div>
   );
 }

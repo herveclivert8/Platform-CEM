@@ -1,17 +1,20 @@
 import { lazy, Suspense } from "react";
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RootLayout } from "./components/layout/RootLayout";
 import { HomePage } from "./pages/HomePage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { RequireAuth } from "./components/auth/RequireAuth";
 import { RequireSuperAdmin } from "./components/auth/RequireSuperAdmin";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { DashboardPage } from "./pages/admin/DashboardPage";
 import { PostsPage } from "./pages/admin/PostsPage";
 import { ProjectsPage } from "./pages/admin/ProjectsPage";
+import { ReportsPage } from "./pages/admin/ReportsPage";
+import { SubscribersPage } from "./pages/admin/SubscribersPage";
 import { SubmissionsPage } from "./pages/admin/SubmissionsPage";
 import { DonationsPage } from "./pages/admin/DonationsPage";
 import { SettingsPage } from "./pages/admin/SettingsPage";
@@ -21,6 +24,8 @@ import { MyBranchPage } from "./pages/admin/MyBranchPage";
 import { AccountsPage } from "./pages/admin/AccountsPage";
 import { AuditPage } from "./pages/admin/AuditPage";
 import { SocialLinksPage } from "./pages/admin/SocialLinksPage";
+import { HomePageSettingsPage } from "./pages/admin/HomePageSettingsPage";
+import { PaymentInfoPage } from "./pages/admin/PaymentInfoPage";
 
 const BranchesDirectoryPage = lazy(() =>
   import("./pages/BranchesDirectoryPage").then((m) => ({ default: m.BranchesDirectoryPage })),
@@ -33,6 +38,12 @@ const BranchPostsPage = lazy(() =>
 );
 const PostDetailPage = lazy(() =>
   import("./pages/PostDetailPage").then((m) => ({ default: m.PostDetailPage })),
+);
+const TransparencyPage = lazy(() =>
+  import("./pages/TransparencyPage").then((m) => ({ default: m.TransparencyPage })),
+);
+const NewsletterStatusPage = lazy(() =>
+  import("./pages/NewsletterStatusPage").then((m) => ({ default: m.NewsletterStatusPage })),
 );
 const ProjectsListPage = lazy(() =>
   import("./pages/ProjectsListPage").then((m) => ({ default: m.ProjectsListPage })),
@@ -90,6 +101,10 @@ export const router = createBrowserRouter([
         ),
       },
       // Keyed by phase: both lists share one component, so switching between them must reset its filters.
+      { path: "cem-international", element: <Navigate to="/antennes" replace /> },
+      { path: "transparence", element: lazyPage(<TransparencyPage />) },
+      { path: "newsletter/confirmation", element: lazyPage(<NewsletterStatusPage key="confirm" action="confirm" />) },
+      { path: "newsletter/desinscription", element: lazyPage(<NewsletterStatusPage key="unsubscribe" action="unsubscribe" />) },
       { path: "realisations", element: lazyPage(<ProjectsListPage key="COMPLETED" phase="COMPLETED" />) },
       { path: "realisations/:projectId", element: lazyPage(<ProjectDetailPage phase="COMPLETED" />) },
       { path: "projets-en-cours", element: lazyPage(<ProjectsListPage key="ONGOING" phase="ONGOING" />) },
@@ -100,6 +115,7 @@ export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
   { path: "/reset-password", element: <ResetPasswordPage /> },
+  { path: "/change-password", element: <ChangePasswordPage /> },
   {
     path: "/admin",
     element: <RequireAuth />,
@@ -110,6 +126,7 @@ export const router = createBrowserRouter([
           { index: true, element: <DashboardPage /> },
           { path: "posts", element: <PostsPage /> },
           { path: "projects", element: <ProjectsPage /> },
+          { path: "reports", element: <ReportsPage /> },
           { path: "submissions", element: <SubmissionsPage /> },
           { path: "donations", element: <DonationsPage /> },
           { path: "settings", element: <SettingsPage /> },
@@ -121,7 +138,11 @@ export const router = createBrowserRouter([
               { path: "branches/:branchId", element: <BranchEditPage /> },
               { path: "accounts", element: <AccountsPage /> },
               { path: "audit", element: <AuditPage /> },
+              { path: "home-page", element: <HomePageSettingsPage /> },
+              { path: "home-hero", element: <Navigate to="/admin/home-page" replace /> },
               { path: "social-links", element: <SocialLinksPage /> },
+              { path: "subscribers", element: <SubscribersPage /> },
+              { path: "payment-info", element: <PaymentInfoPage /> },
             ],
           },
         ],

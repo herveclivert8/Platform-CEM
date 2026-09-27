@@ -8,6 +8,8 @@ export interface CurrentUser {
   role: UserRole;
   branchId: number | null;
   branchName: string | null;
+  /** Temporary password: must be replaced before accessing the admin area */
+  mustChangePassword: boolean;
 }
 
 /** DTO shape returned by the FastAPI backend (snake_case). */
@@ -19,6 +21,7 @@ export interface CurrentUserDto {
   role: UserRole;
   branch_id: number | null;
   branch_name: string | null;
+  must_change_password?: boolean;
 }
 
 export function mapCurrentUser(dto: CurrentUserDto): CurrentUser {
@@ -30,5 +33,6 @@ export function mapCurrentUser(dto: CurrentUserDto): CurrentUser {
     role: dto.role,
     branchId: dto.branch_id,
     branchName: dto.branch_name,
+    mustChangePassword: dto.must_change_password ?? false,
   };
 }

@@ -9,9 +9,9 @@ from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 
-from app.api.deps import bearer_scheme, get_current_user
+from app.api.deps import bearer_scheme, get_current_user, get_user_from_token
 from app.core.security import decode_token
 from app.db.session import AsyncSessionLocal, get_db
 from app.models.notification import Notification
@@ -39,8 +39,7 @@ class NotificationRead(BaseModel):
     icon: str | None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class NotificationList(BaseModel):
@@ -81,7 +80,7 @@ async def get_notifications(
     notifications = result.scalars().all()
 
     return NotificationList(
-        data=[NotificationRead.from_orm(n) for n in notifications],
+        data=[NotificationRead.model_validate(n) for n in notifications],
         total=total or 0,
         unread_count=unread_count or 0,
     )
@@ -104,13 +103,12 @@ async def stream_notifications(
     if credentials is None:
         raise unauthorized
     payload = decode_token(credentials.credentials)
-    if payload.get("type") != "access":
+    if payload is None:
         raise unauthorized
 
+    # Mêmes contrôles que get_current_user (type de jeton, compte supprimé, sessions révoquées).
     async with AsyncSessionLocal() as db:
-        user = await db.get(User, int(payload["sub"]))
-    if user is None:
-        raise unauthorized
+        user = await get_user_from_token(db, credentials.credentials, "access")
 
     user_id = user.id
     expires_at = float(payload.get("exp", time.time() + 1800))
@@ -149,7 +147,7 @@ async def mark_notification_read(
     # Verify ownership
     notification = await db.get(Notification, notification_id)
     if not notification or notification.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Notification not found")
+        raise HTTPException(status_code=404, detail="Notification introuvable")
 
     await mark_as_read(notification_id, db)
 
@@ -173,7 +171,7 @@ async def delete_notification_endpoint(
     # Verify ownership
     notification = await db.get(Notification, notification_id)
     if not notification or notification.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Notification not found")
+        raise HTTPException(status_code=404, detail="Notification introuvable")
 
     await delete_notification(notification_id, db)
 

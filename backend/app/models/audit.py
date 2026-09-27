@@ -4,7 +4,7 @@ Model d'audit logging - Tracer toutes les opérations critiques
 
 from sqlalchemy import Column, Integer, String, DateTime, JSON, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from app.db.base import Base
 
 
@@ -16,7 +16,7 @@ class AuditLog(Base):
     id = Column(Integer, primary_key=True)
     
     # Qui
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     user_email = Column(String(255))
 
     # Quoi
@@ -25,7 +25,7 @@ class AuditLog(Base):
     resource_id = Column(Integer, nullable=True)
 
     # Branch isolation
-    branch_id = Column(Integer, ForeignKey("branches.id"), nullable=True)
+    branch_id = Column(Integer, ForeignKey("branches.id", ondelete="SET NULL"), nullable=True)
     
     # Détails
     details = Column(JSON, nullable=True)  # Données additionnelles
@@ -37,7 +37,8 @@ class AuditLog(Base):
     error_message = Column(String(500), nullable=True)
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
+    # Heure UTC sans fuseau (colonne historique "timestamp without time zone")
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), index=True)
     
     # Relations
     user = relationship("User", foreign_keys=[user_id])

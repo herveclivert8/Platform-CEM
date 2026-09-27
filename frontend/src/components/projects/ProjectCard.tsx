@@ -6,6 +6,8 @@ import { Badge } from "../ui/Badge";
 import { usePillarLabels } from "../../hooks/usePillarLabels";
 import { PHASE_PATH, type Project } from "../../types/project";
 import { formatProjectPeriod } from "./formatProjectPeriod";
+import { PillarPlaceholder } from "./PillarPlaceholder";
+import { ProjectProgress } from "./ProjectProgress";
 
 export function ProjectCard({ project }: { project: Project }) {
   const { t, i18n } = useTranslation();
@@ -16,13 +18,15 @@ export function ProjectCard({ project }: { project: Project }) {
     <Link to={`/${PHASE_PATH[project.phase]}/${project.id}`} className="block h-full">
       <Card className="flex h-full flex-col overflow-hidden transition-transform duration-300 hover:-translate-y-1">
         <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
-          {project.images[0] && (
+          {project.images[0] ? (
             <img
               src={project.images[0]}
               alt=""
               loading="lazy"
               className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
             />
+          ) : (
+            <PillarPlaceholder pillar={project.pillar} />
           )}
           <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-slate-700 backdrop-blur-sm dark:bg-slate-900/80 dark:text-slate-200">
             {project.branchName}
@@ -34,6 +38,11 @@ export function ProjectCard({ project }: { project: Project }) {
           </Badge>
           <h3 className="mt-3 text-lg font-bold tracking-tight text-slate-900 dark:text-white">{project.title}</h3>
           <p className="mt-2 line-clamp-3 text-sm text-slate-500 dark:text-slate-400">{project.summary}</p>
+          {project.phase === "ONGOING" && project.goalValue ? (
+            <div className="mt-4">
+              <ProjectProgress project={project} />
+            </div>
+          ) : null}
           <div className="mt-auto space-y-1.5 pt-4 text-xs text-slate-500 dark:text-slate-400">
             <p className="flex items-center gap-1.5">
               <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />

@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import clsx from "clsx";
-import { Check, ImageOff, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, Eye, EyeOff, ImageOff, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Card, IconBadge } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { ProjectDrawer } from "../../components/admin/ProjectDrawer";
 import { RejectDialog } from "../../components/admin/RejectDialog";
-import { ProjectPhaseBadge, ProjectStatusBadge } from "../../components/admin/ProjectStatusBadge";
+import { ProjectHiddenBadge, ProjectPhaseBadge, ProjectStatusBadge } from "../../components/admin/ProjectStatusBadge";
 import type { Project, ProjectPhase, ProjectReviewStatus } from "../../types/project";
 import {
   useAdminProject,
@@ -16,25 +17,32 @@ import {
   useApproveProject,
   useDeleteProject,
   useRejectProject,
+  useSetProjectVisibility,
 } from "../../hooks/useAdminProjects";
 import { usePillarLabels } from "../../hooks/usePillarLabels";
 import { useAdminScopeStore } from "../../store/adminScopeStore";
 import { useAuthStore } from "../../store/authStore";
+import { QueryError } from "../../components/ui/QueryError";
+import { useErrorToast } from "../../hooks/useErrorToast";
+import { useSuccessToast } from "../../hooks/useSuccessToast";
 
-const STATUS_TABS: { value: ProjectReviewStatus | undefined; label: string }[] = [
-  { value: "PENDING", label: "En attente" },
-  { value: "APPROVED", label: "Publiés" },
-  { value: "REJECTED", label: "Refusés" },
-  { value: undefined, label: "Tous" },
+const STATUS_TABS: { value: ProjectReviewStatus | undefined; labelKey: string }[] = [
+  { value: "PENDING", labelKey: "admin.projects.tab_pending" },
+  { value: "APPROVED", labelKey: "admin.projects.tab_approved" },
+  { value: "REJECTED", labelKey: "admin.projects.tab_rejected" },
+  { value: undefined, labelKey: "admin.projects.tab_all" },
 ];
 
-const PHASE_FILTERS: { value: ProjectPhase | undefined; label: string }[] = [
-  { value: undefined, label: "Tous les types" },
-  { value: "COMPLETED", label: "Réalisations" },
-  { value: "ONGOING", label: "Projets en cours" },
+const PHASE_FILTERS: { value: ProjectPhase | undefined; labelKey: string }[] = [
+  { value: undefined, labelKey: "admin.projects.filter_all" },
+  { value: "COMPLETED", labelKey: "admin.projects.filter_completed" },
+  { value: "ONGOING", labelKey: "admin.projects.filter_ongoing" },
 ];
 
 export function ProjectsPage() {
+  const { t } = useTranslation();
+  const showError = useErrorToast();
+  const showSuccess = useSuccessToast();
   const user = useAuthStore((s) => s.user);
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const { selectedBranchId } = useAdminScopeStore();
@@ -42,7 +50,7 @@ export function ProjectsPage() {
 
   const [reviewStatus, setReviewStatus] = useState<ProjectReviewStatus | undefined>(isSuperAdmin ? "PENDING" : undefined);
   const [phase, setPhase] = useState<ProjectPhase | undefined>(undefined);
-  const { data, isLoading } = useAdminProjects({ reviewStatus, phase });
+  const { data, isLoading, isError, error, refetch } = useAdminProjects({ reviewStatus, phase });
 
   // Drawer target: either a row clicked here, or ?id=… from a notification / toast link.
   const [searchParams, setSearchParams] = useSearchParams();
@@ -62,6 +70,7 @@ export function ProjectsPage() {
   const approve = useApproveProject();
   const reject = useRejectProject();
   const deleteProject = useDeleteProject();
+  const setVisibility = useSetProjectVisibility();
   const [rejecting, setRejecting] = useState<Project | undefined>(undefined);
   const [deleting, setDeleting] = useState<Project | undefined>(undefined);
 
@@ -71,11 +80,9 @@ export function ProjectsPage() {
     <div>
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Réalisations & projets</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{t("admin.projects.title")}</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            {isSuperAdmin
-              ? "Validez les ajouts des antennes : ils sont publiés sur le site dès votre validation."
-              : "Vos ajouts sont publiés sur le site après validation par le siège."}
+            {t(isSuperAdmin ? "admin.projects.subtitle_super" : "admin.projects.subtitle_branch")}
           </p>
         </div>
         <Button
@@ -86,7 +93,7 @@ export function ProjectsPage() {
             setCreating(true);
           }}
         >
-          Ajouter
+          {t("admin.projects.add")}
         </Button>
       </div>
 
@@ -96,7 +103,7 @@ export function ProjectsPage() {
             const count = tab.value ? counts?.[tab.value] : undefined;
             return (
               <button
-                key={tab.label}
+                key={tab.labelKey}
                 type="button"
                 onClick={() => setReviewStatus(tab.value)}
                 className={clsx(
@@ -106,7 +113,7 @@ export function ProjectsPage() {
                     : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white",
                 )}
               >
-                {tab.label}
+                {t(tab.labelKey)}
                 {count !== undefined && count > 0 && (
                   <span
                     className={clsx(
@@ -128,8 +135,8 @@ export function ProjectsPage() {
           className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
         >
           {PHASE_FILTERS.map((f) => (
-            <option key={f.label} value={f.value ?? ""}>
-              {f.label}
+            <option key={f.labelKey} value={f.value ?? ""}>
+              {t(f.labelKey)}
             </option>
           ))}
         </select>
@@ -141,9 +148,11 @@ export function ProjectsPage() {
             <Skeleton key={i} className="h-20 w-full" />
           ))}
         </div>
+      ) : isError ? (
+        <QueryError error={error} onRetry={() => refetch()} />
       ) : !data || data.items.length === 0 ? (
         <p className="mt-8 text-sm text-slate-400 dark:text-slate-500">
-          {reviewStatus === "PENDING" ? "Aucun ajout en attente de validation." : "Aucun élément pour le moment."}
+          {t(reviewStatus === "PENDING" ? "admin.projects.empty_pending" : "admin.projects.empty")}
         </p>
       ) : (
         <div className="mt-6 space-y-3">
@@ -159,6 +168,7 @@ export function ProjectsPage() {
                   <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{project.title}</p>
                   <ProjectStatusBadge status={project.reviewStatus} />
                   <ProjectPhaseBadge phase={project.phase} />
+                  {!project.isVisible && <ProjectHiddenBadge />}
                 </div>
                 <p className="mt-1 truncate text-xs text-slate-400 dark:text-slate-500">
                   {(isSuperAdmin && selectedBranchId === "all") ? `${project.branchName} · ` : ""}
@@ -166,7 +176,7 @@ export function ProjectsPage() {
                   {project.authorName ? ` · ${project.authorName}` : ""}
                 </p>
                 {project.reviewStatus === "REJECTED" && project.rejectionReason && (
-                  <p className="mt-1 truncate text-xs text-red-600 dark:text-red-400">Motif : {project.rejectionReason}</p>
+                  <p className="mt-1 truncate text-xs text-red-600 dark:text-red-400">{t("admin.projects.reason_inline", { reason: project.rejectionReason })}</p>
                 )}
               </div>
 
@@ -177,9 +187,9 @@ export function ProjectsPage() {
                     size="sm"
                     icon={<Check className="h-4 w-4" />}
                     disabled={approve.isPending}
-                    onClick={() => approve.mutate(project.id)}
+                    onClick={() => approve.mutate(project.id, { onError: showError, onSuccess: () => showSuccess(t("admin.feedback.project_approved"), project.title) })}
                   >
-                    Valider
+                    {t("admin.projects.approve")}
                   </Button>
                   <Button
                     size="sm"
@@ -187,11 +197,31 @@ export function ProjectsPage() {
                     icon={<X className="h-4 w-4" />}
                     onClick={() => setRejecting(project)}
                   >
-                    Refuser
+                    {t("admin.projects.reject")}
                   </Button>
                 </div>
               )}
 
+              <button
+                type="button"
+                onClick={() =>
+                  setVisibility.mutate(
+                    { projectId: project.id, isVisible: !project.isVisible },
+                    {
+                      onError: showError,
+                      onSuccess: (saved) =>
+                        showSuccess(t(saved.isVisible ? "admin.feedback.project_shown" : "admin.feedback.project_hidden"), saved.title),
+                    },
+                  )
+                }
+                disabled={setVisibility.isPending}
+                title={t(project.isVisible ? "admin.projects.hide" : "admin.projects.show")}
+                aria-label={t(project.isVisible ? "admin.projects.hide" : "admin.projects.show")}
+                aria-pressed={!project.isVisible}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                {project.isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -199,7 +229,7 @@ export function ProjectsPage() {
                   setEditing(project);
                 }}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-                aria-label="Modifier"
+                aria-label={t("common.edit")}
               >
                 <Pencil className="h-4 w-4" />
               </button>
@@ -207,7 +237,7 @@ export function ProjectsPage() {
                 type="button"
                 onClick={() => setDeleting(project)}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                aria-label="Supprimer"
+                aria-label={t("common.delete")}
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -229,19 +259,27 @@ export function ProjectsPage() {
         isPending={reject.isPending}
         onConfirm={async (reason) => {
           if (!rejecting) return;
-          await reject.mutateAsync({ projectId: rejecting.id, reason });
-          setRejecting(undefined);
+          try {
+            await reject.mutateAsync({ projectId: rejecting.id, reason });
+            showSuccess(t("admin.feedback.project_rejected"), rejecting.title, { tone: "info" });
+            setRejecting(undefined);
+          } catch (err) {
+            showError(err);
+          }
         }}
         onCancel={() => setRejecting(undefined)}
       />
 
       <ConfirmDialog
         open={!!deleting}
-        title="Supprimer"
-        message={`Supprimer définitivement « ${deleting?.title ?? ""} » ? S'il est publié, il disparaîtra du site.`}
-        confirmLabel="Supprimer"
+        title={t("common.delete")}
+        message={t("admin.projects.delete_confirm", { title: deleting?.title ?? "" })}
+        confirmLabel={t("common.delete")}
         onConfirm={() => {
-          if (deleting) deleteProject.mutate(deleting.id);
+          if (deleting) {
+            const title = deleting.title;
+            deleteProject.mutate(deleting.id, { onError: showError, onSuccess: () => showSuccess(t("admin.feedback.project_deleted"), title) });
+          }
           setDeleting(undefined);
         }}
         onCancel={() => setDeleting(undefined)}

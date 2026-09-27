@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -10,6 +11,8 @@ import type { ProjectPhase } from "../types/project";
 import { ProjectCard } from "../components/projects/ProjectCard";
 import { Skeleton } from "../components/ui/Skeleton";
 import { Button } from "../components/ui/Button";
+import { QueryError } from "../components/ui/QueryError";
+import { usePageMeta } from "../hooks/usePageMeta";
 
 const PAGE_SIZE = 9;
 
@@ -17,13 +20,16 @@ const PAGE_SIZE = 9;
 export function ProjectsListPage({ phase }: { phase: ProjectPhase }) {
   const { t } = useTranslation();
   const pillarLabels = usePillarLabels();
-  const { data: branches } = useBranches({ pageSize: 100 });
-  const [branchId, setBranchId] = useState<number | undefined>(undefined);
+  const { data: branches } = useBranches();
+  const [searchParams] = useSearchParams();
+  const initialBranch = Number(searchParams.get("antenne")) || undefined;
+  const [branchId, setBranchId] = useState<number | undefined>(initialBranch);
   const [pillar, setPillar] = useState<Pillar | undefined>(undefined);
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useProjects({ phase, branchId, pillar, page, pageSize: PAGE_SIZE });
+  const { data, isLoading, isError, error, refetch } = useProjects({ phase, branchId, pillar, page, pageSize: PAGE_SIZE });
 
   const key = phase === "COMPLETED" ? "completed" : "ongoing";
+  usePageMeta(t(`projects.${key}_title`), t(`projects.${key}_subtitle`));
 
   const pillButton = (active: boolean) =>
     clsx(
@@ -88,6 +94,8 @@ export function ProjectsListPage({ phase }: { phase: ProjectPhase }) {
             <Skeleton key={i} className="h-80 w-full" />
           ))}
         </div>
+      ) : isError ? (
+        <QueryError error={error} onRetry={() => refetch()} />
       ) : !data || data.items.length === 0 ? (
         <p className="mt-10 text-sm text-slate-400">{t(`projects.empty_${key}`)}</p>
       ) : (

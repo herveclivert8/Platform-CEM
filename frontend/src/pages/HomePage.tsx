@@ -1,9 +1,11 @@
 import { lazy, Suspense } from "react";
 import { Hero } from "../components/home/Hero";
 import { BentoGrid } from "../components/home/BentoGrid";
-import { ModelSection } from "../components/home/ModelSection";
+import { NetworkSection } from "../components/home/NetworkSection";
+import { HomeProjectsSection } from "../components/home/HomeProjectsSection";
 import { PartnersCarousel } from "../components/home/PartnersCarousel";
 import { Skeleton } from "../components/ui/Skeleton";
+import { usePageMeta } from "../hooks/usePageMeta";
 
 // Leaflet pulls in a non-trivial amount of JS; keep it out of the initial
 // bundle so the hero/CTA are interactive as fast as possible on mobile.
@@ -12,6 +14,7 @@ const MadagascarMap = lazy(() =>
 );
 
 export function HomePage() {
+  usePageMeta("");
   return (
     <>
       <Hero />
@@ -25,7 +28,8 @@ export function HomePage() {
       >
         <MadagascarMap />
       </Suspense>
-      <ModelSection />
+      <HomeProjectsSection />
+      <NetworkSection />
       <PartnersCarousel />
     </>
   );

@@ -2,10 +2,12 @@ import { Link } from "react-router-dom";
 import { MapPin, Mail, Phone, Building2, ArrowRight, User } from "lucide-react";
 import { Card } from "../ui/Card";
 import { Skeleton } from "../ui/Skeleton";
-import { Button } from "../ui/Button";
+import { buttonClasses } from "../ui/buttonStyles";
 import { useBranch } from "../../hooks/useBranches";
+import { useTranslation } from "react-i18next";
 
 export function BranchPreviewPanel({ branchId }: { branchId: number }) {
+  const { t } = useTranslation();
   const { data: branch, isLoading, isError } = useBranch(branchId);
 
   if (isLoading) {
@@ -21,7 +23,7 @@ export function BranchPreviewPanel({ branchId }: { branchId: number }) {
   if (isError || !branch) {
     return (
       <p className="text-sm text-slate-400">
-        Cette antenne est introuvable.
+        {t("directory.not_found")}
       </p>
     );
   }
@@ -76,7 +78,7 @@ export function BranchPreviewPanel({ branchId }: { branchId: number }) {
         {branch.manager && (
           <div className="mt-6">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Responsable de l'antenne
+              {t("directory.manager")}
             </h3>
             <div className="mt-3 flex items-center gap-3">
               {branch.manager.avatarUrl ? (
@@ -105,7 +107,7 @@ export function BranchPreviewPanel({ branchId }: { branchId: number }) {
         {branch.teamMembers && branch.teamMembers.length > 0 && (
           <div className="mt-6">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Équipe
+              {t("directory.team")}
             </h3>
             <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {branch.teamMembers.map((member) => (
@@ -139,11 +141,9 @@ export function BranchPreviewPanel({ branchId }: { branchId: number }) {
         )}
 
         <div className="mt-auto pt-8">
-          <Link to={`/antennes/${branch.id}`}>
-            <Button variant="secondary" className="w-full justify-center">
-              Voir la page complète
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Button>
+          <Link to={`/antennes/${branch.id}`} className={buttonClasses({ variant: "secondary", className: "w-full" })}>
+            {t("directory.see_full")}
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
         </div>
       </div>

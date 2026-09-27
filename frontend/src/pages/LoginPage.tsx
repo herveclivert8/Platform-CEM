@@ -1,12 +1,17 @@
 import { useState } from "react";
+import { isAxiosError } from "axios";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, LogIn } from "lucide-react";
 import { AuthShell } from "../components/auth/AuthShell";
 import { Button } from "../components/ui/Button";
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { useLogin } from "../hooks/useAuth";
+import { useTranslation } from "react-i18next";
+import { usePageMeta } from "../hooks/usePageMeta";
 
 export function LoginPage() {
+  const { t } = useTranslation();
+  usePageMeta(t("seo.admin"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const login = useLogin();
@@ -30,14 +35,14 @@ export function LoginPage() {
         className="fixed left-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white sm:left-6 sm:top-6"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden />
-        Retour à l'accueil
+        {t("auth.back_home")}
       </Link>
 
-      <AuthShell title="Espace Admin" subtitle="Connectez-vous pour accéder au back-office.">
+      <AuthShell title={t("auth.login_title")} subtitle={t("auth.login_subtitle")}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
-            Email
+            {t("auth.email")}
           </label>
           <input
             id="email"
@@ -52,10 +57,10 @@ export function LoginPage() {
         <div>
           <div className="mb-1.5 flex items-center justify-between">
             <label htmlFor="password" className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              Mot de passe
+              {t("auth.password")}
             </label>
             <Link to="/forgot-password" className="text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400">
-              Mot de passe oublié ?
+              {t("auth.forgot_link")}
             </Link>
           </div>
           <PasswordInput
@@ -69,7 +74,11 @@ export function LoginPage() {
         </div>
 
         {login.isError && (
-          <p className="text-sm text-red-600 dark:text-red-400">Email ou mot de passe incorrect.</p>
+          <p className="text-sm text-red-600 dark:text-red-400">
+            {isAxiosError(login.error) && login.error.response?.status === 429
+              ? t("auth.too_many_logins")
+              : t("auth.bad_credentials")}
+          </p>
         )}
 
         <Button
@@ -79,7 +88,7 @@ export function LoginPage() {
           disabled={login.isPending}
           className="w-full justify-center"
         >
-          {login.isPending ? "Connexion…" : "Se connecter"}
+          {login.isPending ? t("auth.signing_in") : t("auth.sign_in")}
         </Button>
       </form>
       </AuthShell>

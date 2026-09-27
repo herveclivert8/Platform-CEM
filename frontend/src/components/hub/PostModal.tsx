@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { PostContent } from "./PostContent";
 import type { Post } from "../../types/post";
+import { useTranslation } from "react-i18next";
 
 interface PostModalProps {
   post: Post;
@@ -15,6 +16,7 @@ interface PostModalProps {
  * shareable/direct-link entry point - this modal is a same-page shortcut only.
  */
 export function PostModal({ post, onClose }: PostModalProps) {
+  const { t } = useTranslation();
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKeyDown);
@@ -48,7 +50,7 @@ export function PostModal({ post, onClose }: PostModalProps) {
         <button
           type="button"
           onClick={onClose}
-          aria-label="Fermer"
+          aria-label={t("common.close")}
           className="absolute right-4 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/60 text-white backdrop-blur-md transition-colors hover:bg-slate-900/80"
         >
           <X className="h-4 w-4" />

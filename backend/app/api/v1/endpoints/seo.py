@@ -112,12 +112,12 @@ async def _resolve(db: AsyncSession, path: str, lang: str) -> dict:
     def num(value: str) -> int | None:
         return int(value) if value.isdigit() else None
 
-    # /realisations/{id} ou /projets-en-cours/{id}
+    # /realisations/{id} (les projets en cours, réservés aux membres, n'ont pas d'aperçu public)
     if len(parts) == 2 and parts[0] in ("realisations", "projets-en-cours") and num(parts[1]):
         project = await db.scalar(
             select(Project).options(selectinload(Project.images)).where(
                 Project.id == num(parts[1]), Project.review_status == ProjectReviewStatus.APPROVED,
-                Project.is_visible.is_(True),
+                Project.is_visible.is_(True), Project.phase == ProjectPhase.COMPLETED,
             )
         )
         if project:
@@ -209,7 +209,8 @@ async def sitemap(db: AsyncSession = Depends(get_db)):
     """Plan du site : pages publiques et contenus publiés (servi à la racine par nginx / Vite)."""
     base = settings.FRONTEND_URL.rstrip("/")
     urls: list[tuple[str, datetime | None]] = [
-        (p, None) for p in ("/", "/antennes", "/realisations", "/projets-en-cours", "/transparence")
+        # « Projets en cours » est réservé aux membres : pas dans le plan du site
+        (p, None) for p in ("/", "/antennes", "/realisations", "/transparence")
     ]
     branches = (await db.execute(
         select(Branch).where(Branch.status == BranchStatus.ACTIVE)
@@ -220,12 +221,13 @@ async def sitemap(db: AsyncSession = Depends(get_db)):
     posts = (await db.execute(select(Post).where(Post.status == PostStatus.PUBLISHED))).scalars().all()
     urls += [(f"/antennes/{p.branch_id}/actualites/{p.id}", p.updated_at) for p in posts if p.branch_id in active_ids]
     projects = (await db.execute(
-        select(Project).where(Project.review_status == ProjectReviewStatus.APPROVED, Project.is_visible.is_(True))
+        select(Project).where(
+            Project.review_status == ProjectReviewStatus.APPROVED,
+            Project.is_visible.is_(True),
+            Project.phase == ProjectPhase.COMPLETED,
+        )
     )).scalars().all()
-    urls += [
-        (f"/{'realisations' if p.phase == ProjectPhase.COMPLETED else 'projets-en-cours'}/{p.id}", p.updated_at)
-        for p in projects
-    ]
+    urls += [(f"/realisations/{p.id}", p.updated_at) for p in projects]
     entries = "".join(
         f"<url><loc>{xml_escape(base + path)}</loc>"
         + (f"<lastmod>{updated.date().isoformat()}</lastmod>" if updated else "")

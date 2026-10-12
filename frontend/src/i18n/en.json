@@ -5,14 +5,19 @@
     "achievements": "Our Achievements",
     "ongoing": "Ongoing Projects",
     "donate": "Support CEM",
-    "admin": "Admin Area"
+    "admin": "Admin Area",
+    "login": "Sign in",
+    "register": "Join",
+    "member_area": "Member area",
+    "my_area": "My area"
   },
   "hero": {
     "badge": "Facilitator of Sustainable Development & Education",
     "title": "Fostering excellence and sustainable development in Madagascar.",
     "subtitle": "An international network committed to education, social aid, entrepreneurship and social inclusion through sport, in Madagascar and wherever our members are active.",
     "cta_primary": "Donate now",
-    "cta_secondary": "Discover our branches"
+    "cta_secondary": "Discover our branches",
+    "cta_member": "Become a member"
   },
   "bento": {
     "education_label": "Books & school supplies distributed",
@@ -84,7 +89,11 @@
     "share_on": "Share on {{network}}",
     "copy_link": "Copy link",
     "link_copied": "Link copied!",
-    "related": "See also"
+    "related": "See also",
+    "members_only_title": "Members only",
+    "members_only_text": "Ongoing projects are reserved for Club Excellence Madagascar members. Join the association to discover and take part in them.",
+    "members_only_unpaid": "Ongoing projects are reserved for members whose fee is up to date. Go to your area to pay it.",
+    "published_by": "Published by {{name}}"
   },
   "partners": {
     "title": "They trust us",
@@ -266,8 +275,8 @@
   "auth": {
     "back_home": "Back to home",
     "back_login": "Back to sign in",
-    "login_title": "Admin area",
-    "login_subtitle": "Sign in to access the back office.",
+    "login_title": "Sign in",
+    "login_subtitle": "Sign in to your member or admin area.",
     "email": "Email",
     "password": "Password",
     "forgot_link": "Forgot password?",
@@ -297,7 +306,36 @@
     "change_title": "Choose your password",
     "change_subtitle": "Your account was created with a temporary password. Replace it to access the admin area.",
     "temporary_password": "Temporary password",
-    "change_submit": "Save my password"
+    "change_submit": "Save my password",
+    "no_account": "Not a member yet?",
+    "already_member": "Already registered?",
+    "register_link": "Join",
+    "register_title": "Become a member",
+    "register_subtitle": "Join Club Excellence Madagascar in the branch of your choice.",
+    "first_name": "First name",
+    "last_name": "Last name",
+    "branch": "Branch",
+    "branch_placeholder": "Choose a branch",
+    "password_min": "Password (8 characters minimum)",
+    "registering": "Registering…",
+    "register_error": "Registration failed. Please check the information you entered.",
+    "too_many_registrations": "Too many registrations from this connection. Try again in an hour.",
+    "step_account": "{{step}}. Your account",
+    "step_payment": "{{step}}. Membership fee",
+    "register_continue": "Continue to payment",
+    "payment_title": "Membership fee",
+    "payment_subtitle": "Your account has been created. Pay your membership fee: it covers your first month. As soon as your branch administrator approves your membership, you can publish projects and join discussions.",
+    "pay_later": "Pay later from my member area",
+    "sign_out_to_register": "Sign out and register",
+    "go_admin": "Go to the admin area",
+    "go_member": "Go to my member area",
+    "signed_in_as_admin_short": "You are signed in with the administrator account {{name}} ({{email}}).",
+    "signed_in_as_member_short": "You are signed in with the member account {{name}} ({{email}}).",
+    "sign_out_to_switch_text": "To sign in with another account, sign out first.",
+    "sign_out_to_register_text": "To register a new member, sign out first.",
+    "sign_out_to_switch": "Sign out and switch account",
+    "phone": "Phone",
+    "phone_hint": "Shown to other members on the projects you publish."
   },
   "admin": {
     "nav": {
@@ -319,7 +357,9 @@
       "super_admin": "Super Admin",
       "home_page": "Home page & footer",
       "menu": "Back-office menu",
-      "open_menu": "Open menu"
+      "open_menu": "Open menu",
+      "members": "Members",
+      "social_publishing": "Auto-posting"
     },
     "scope": {
       "all": "All branches"
@@ -720,8 +760,8 @@
     },
     "projects": {
       "title": "Achievements & projects",
-      "subtitle_super": "Validate the branches' submissions: they go live on the site as soon as you validate them.",
-      "subtitle_branch": "Your submissions go live on the site once headquarters validates them.",
+      "subtitle_super": "All branches. Projects proposed by members are approved by their branch admin; you are notified of every publication and can delete any project.",
+      "subtitle_branch": "Your additions are published directly. Projects proposed by your branch's members await your approval.",
       "add": "Add",
       "tab_pending": "Pending",
       "tab_approved": "Published",
@@ -748,8 +788,8 @@
       "added_by": "added by {{name}}",
       "awaiting_title": "Awaiting your validation",
       "awaiting_text": "Once validated, it is published on the site immediately and the author is notified.",
-      "notice_online": "This item is live. A change takes it off the site until headquarters validates it — except updating the reached value alone, which is published right away.",
-      "notice_review": "Your submission will be reviewed by headquarters before it is published on the site.",
+      "notice_online": "This item is online: your changes are published directly.",
+      "notice_review": "Your addition will be published on the site as soon as it is saved.",
       "field_type": "Type",
       "type_completed": "Achievement (completed)",
       "type_ongoing": "Ongoing project",
@@ -777,7 +817,7 @@
       "publish": "Publish",
       "submit": "Submit for validation",
       "reject_title": "Reject “{{title}}”",
-      "reject_text": "The reason is sent to the branch admin, who can fix it and submit again.",
+      "reject_text": "The reason will be shown to the project's author in their area.",
       "reject_placeholder": "e.g. please add photos and the exact project dates.",
       "field_goal": "Numeric goal (optional)",
       "goal_progress": "Reached",
@@ -846,7 +886,7 @@
       "post_published": "Post published",
       "post_draft": "Draft saved",
       "post_deleted": "Post deleted",
-      "project_submitted": "Project submitted to headquarters for validation",
+      "project_submitted": "Project saved, awaiting approval",
       "project_published": "Project published on the platform",
       "project_saved_hidden": "Project saved (hidden from the platform)",
       "project_saved": "Project saved",
@@ -868,6 +908,69 @@
       "submission_deleted": "Submission deleted",
       "export_done": "Export downloaded",
       "subscriber_deleted": "Subscriber deleted"
+    },
+    "members": {
+      "title": "Members",
+      "subtitle": "Memberships, registration fees and monthly fees.",
+      "tab_payments": "Payments",
+      "tab_members": "Memberships",
+      "filter_all": "All",
+      "no_payments": "No payments.",
+      "no_members": "No members.",
+      "reference": "Ref.",
+      "confirm_payment": "Confirm receipt",
+      "reject": "Decline",
+      "payment_confirmed": "Payment confirmed",
+      "reject_payment_title": "Reject {{name}}'s payment",
+      "reject_payment_text": "Say why (transaction not found, wrong amount…). The member will be able to declare a new payment.",
+      "search": "Name, email, phone",
+      "registration_paid": "Registration paid",
+      "registration_unpaid": "Registration not paid",
+      "pending_payments_one": "{{count}} payment to check",
+      "pending_payments_other": "{{count}} payments to check",
+      "registered_on": "registered on {{date}}",
+      "approve": "Approve membership",
+      "approve_needs_fee": "The registration fee must be confirmed first.",
+      "member_approved": "Membership approved",
+      "reject_member_title": "Decline {{name}}'s membership",
+      "reject_member_text": "Give the reason for declining.",
+      "record_cash": "Record cash",
+      "cash_title": "Cash received from {{name}}",
+      "cash_text": "Record money handed over at the counter: the payment is confirmed right away, and a monthly fee extends the member's access by one month.",
+      "cash_kind": "Payment",
+      "cash_nothing_due": "Nothing to collect: the registration fee is paid and the membership is not approved yet.",
+      "cash_submit": "Record {{amount}}",
+      "cash_recorded": "Cash payment recorded",
+      "reactivate": "Reactivate",
+      "reactivate_needs_fee": "This month's fee must be paid first.",
+      "member_reactivated": "Account reactivated"
+    },
+    "social_publishing": {
+      "title": "Auto-posting",
+      "subtitle": "Every published news item, and every approved and visible project or achievement, is shared once on Facebook, Instagram and LinkedIn.",
+      "mode_simulation": "Simulation mode",
+      "mode_simulation_text": "Nothing is sent to the networks: the history shows what would be posted. Real posting is enabled on the server (SOCIAL_PUBLISHING=live) once CEM's accounts are connected.",
+      "mode_live": "Live posting",
+      "mode_live_text": "Content is posted on every network configured below.",
+      "mode_disabled": "Posting disabled",
+      "mode_disabled_text": "No content is shared on social networks.",
+      "configured": "Account connected",
+      "not_configured": "Not connected yet",
+      "history": "History",
+      "empty": "No posts yet.",
+      "filter_ALL": "All",
+      "filter_PUBLISHED": "Posted",
+      "filter_FAILED": "Failed",
+      "filter_SKIPPED": "Skipped",
+      "status_PUBLISHED": "Posted",
+      "status_FAILED": "Failed",
+      "status_SKIPPED": "Skipped",
+      "simulated": "Simulation",
+      "type_post": "News",
+      "type_project": "Project",
+      "show_message": "Show posted text",
+      "view": "View",
+      "retry": "Retry"
     }
   },
   "posts_page": {
@@ -894,7 +997,10 @@
   "seo": {
     "branch_of": "{{city}} branch",
     "admin": "Admin Area",
-    "branch_of_elided": "{{city}} branch"
+    "branch_of_elided": "{{city}} branch",
+    "login": "Sign in",
+    "register": "Join",
+    "member": "Member area"
   },
   "transparency": {
     "title": "Transparency",
@@ -938,5 +1044,156 @@
     "subtitle": "The network's latest achievements and projects you can support today.",
     "latest_achievements": "Latest achievements",
     "ongoing": "Ongoing projects"
+  },
+  "member": {
+    "title": "Member area",
+    "greeting": "Hello {{name}}",
+    "branch": "Branch",
+    "status_label": "Membership",
+    "status": {
+      "PENDING": "Awaiting approval",
+      "ACTIVE": "Active",
+      "REJECTED": "Declined",
+      "SUSPENDED": "Account deactivated"
+    },
+    "rejected_text": "Your membership request was not accepted. Contact your branch to find out more.",
+    "dues_label": "Monthly fee",
+    "paid_until": "Paid until {{date}}",
+    "dues_unpaid": "Month not paid",
+    "registration_title": "Registration fee",
+    "registration_text": "To complete your membership, pay the membership fee: it covers your first month. Your branch administrator or headquarters will then approve your membership.",
+    "awaiting_approval": "Your membership fee has been received. Your membership is awaiting approval by your branch administrator or headquarters. Your first month as a member starts on approval.",
+    "payment_being_checked": "Your payment is being checked by your branch administrator.",
+    "dues_title": "Monthly fee",
+    "dues_text_paid": "Your fee is up to date. It renews on the 30th of each month: pay the next one before that date to keep your member rights (you can pay in advance).",
+    "dues_text_unpaid": "The fee renews on the 30th of each month. Without payment by that date, your account is deactivated.",
+    "pay_dues": "Pay the fee",
+    "projects_title": "My projects",
+    "projects_locked": "Publishing a project is reserved for members whose fee is up to date.",
+    "payments_title": "Payment history",
+    "project": {
+      "new": "Propose a project",
+      "title": "Project title",
+      "summary": "Summary (one sentence)",
+      "description": "Description",
+      "pillar": "Area",
+      "location": "Location",
+      "beneficiaries": "Beneficiaries",
+      "submit": "Send for approval",
+      "error": "The project could not be sent.",
+      "photo": "Photo",
+      "photo_hint": "A photo makes your project stand out (JPEG, PNG or WebP, 5 MB maximum)."
+    },
+    "suspended_text": "Your monthly fee was not paid by the 30th: your account is deactivated. Pay this month's fee; your branch administrator will then reactivate your account.",
+    "suspended_paid_text": "This month's fee is paid. Your branch administrator will reactivate your account.",
+    "hello": "Hello {{name}}",
+    "tabs": {
+      "dashboard": "Dashboard",
+      "dues": "Fees",
+      "projects": "My projects",
+      "discussions": "My discussions",
+      "profile": "My profile"
+    },
+    "steps": {
+      "title": "Your membership",
+      "account": "Account created",
+      "fee": "Membership fee",
+      "fee_checking": "Payment being checked",
+      "approval": "Approval by the branch",
+      "pay_fee": "Pay my membership fee"
+    },
+    "card": {
+      "title": "Member card",
+      "inactive": "Inactive card",
+      "branch": "{{branch}} branch",
+      "since": "Member since {{date}}"
+    },
+    "due": {
+      "ok": "Up to date",
+      "soon": "Due soon",
+      "today": "Today",
+      "next": "Next due date: {{date}}",
+      "pay_ahead": "Pay in advance",
+      "suspended": "Your account is deactivated for an unpaid fee. Pay this month's fee to have it reactivated.",
+      "pending": "Your first month starts when your membership is approved.",
+      "none": "No fee in progress."
+    },
+    "contact_branch": "Contact my branch",
+    "see_all": "See all",
+    "in_branch": "In your branch",
+    "no_projects": "You have not proposed a project yet.",
+    "no_discussions": "You have not taken part in any discussion yet. Comment on a project to find it here.",
+    "no_branch_projects": "No ongoing project in your branch at the moment.",
+    "ongoing_since": "Ongoing project · published on {{date}}",
+    "last_activity": "last message on {{date}}",
+    "comment_counts": "{{mine}} from you · {{total}} in total",
+    "review_status": {
+      "PENDING": "Pending",
+      "APPROVED": "Published",
+      "REJECTED": "Declined"
+    },
+    "profile": {
+      "phone": "Phone",
+      "email_fixed": "Your sign-in identifier: contact your branch to change it.",
+      "save": "Save",
+      "saved": "Profile saved.",
+      "save_error": "The profile could not be saved.",
+      "password_title": "Password",
+      "current_password": "Current password",
+      "change_password": "Change password",
+      "password_saved": "Password changed.",
+      "password_error": "The password could not be changed.",
+      "photo_add": "Add a photo",
+      "photo_change": "Change photo",
+      "photo_remove": "Remove",
+      "photo_hint": "JPEG, PNG or WebP, 5 MB maximum. Shown to members on your card, projects and comments.",
+      "photo_error": "The photo could not be saved."
+    }
+  },
+  "membership": {
+    "currency": "Currency",
+    "method": "Payment method",
+    "mobile_money_mga_only": "Mobile Money is paid in ariary only.",
+    "methods": {
+      "CARD": "Card",
+      "MOBILE_MONEY": "Mobile Money",
+      "CASH": "Cash"
+    },
+    "kinds": {
+      "REGISTRATION": "Registration fee",
+      "MONTHLY": "Monthly fee"
+    },
+    "payment_status": {
+      "PENDING": "To check",
+      "CONFIRMED": "Confirmed",
+      "REJECTED": "Rejected"
+    },
+    "card_invalid": "Check your card number, expiry date and security code.",
+    "test_card_hint": "Simulation mode: use the test card 4242 4242 4242 4242, any future date and any CVC.",
+    "mm_send_to": "Send {{amount}} to:",
+    "mm_phone": "Number that sent the money",
+    "mm_reference": "Transaction reference",
+    "mm_reference_hint": "You will find it in your operator's confirmation SMS.",
+    "cash_text": "Hand {{amount}} to your branch. The administrator will confirm your payment once the money is received.",
+    "declare_mm": "I have sent the money",
+    "declare_cash": "I will pay in cash"
+  },
+  "discussion": {
+    "title": "Discussion",
+    "placeholder": "Write a comment…",
+    "reply_placeholder": "Write a reply…",
+    "send": "Post",
+    "reply": "Reply",
+    "team": "Team",
+    "delete_confirm": "Delete this comment?",
+    "empty": "No comments yet. Start the discussion!",
+    "locked_member": "The discussion is reserved for members whose fee is up to date.",
+    "locked_visitor": "Join the association to take part in the discussion on this project."
+  },
+  "join": {
+    "title_before": "Your place is ",
+    "title_accent": "here",
+    "text": "Join the branch of your choice to follow ongoing projects, propose your own and connect with the network.",
+    "cta": "Join CEM"
   }
 }

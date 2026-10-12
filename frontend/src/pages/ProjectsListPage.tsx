@@ -3,7 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useProjects } from "../hooks/useProjects";
+import { useCanSeeMemberContent, useProjects } from "../hooks/useProjects";
+import { MembersOnlyNotice } from "../components/projects/MembersOnlyNotice";
 import { useBranches } from "../hooks/useBranches";
 import { usePillarLabels } from "../hooks/usePillarLabels";
 import { ALL_PILLARS, type Pillar } from "../types/post";
@@ -30,6 +31,7 @@ export function ProjectsListPage({ phase }: { phase: ProjectPhase }) {
 
   const key = phase === "COMPLETED" ? "completed" : "ongoing";
   usePageMeta(t(`projects.${key}_title`), t(`projects.${key}_subtitle`));
+  const memberView = useCanSeeMemberContent();
 
   const pillButton = (active: boolean) =>
     clsx(
@@ -38,6 +40,16 @@ export function ProjectsListPage({ phase }: { phase: ProjectPhase }) {
         ? "border-emerald-600 bg-emerald-600 text-white"
         : "border-slate-200 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:text-slate-400",
     );
+
+  // Ongoing projects are reserved for members (fee up to date) and admins
+  if (phase === "ONGOING" && !memberView) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-4xl">{t("projects.ongoing_title")}</h1>
+        <MembersOnlyNotice />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">

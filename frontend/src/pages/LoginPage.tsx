@@ -3,30 +3,39 @@ import { isAxiosError } from "axios";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, LogIn } from "lucide-react";
 import { AuthShell } from "../components/auth/AuthShell";
+import { SignedInNotice } from "../components/auth/SignedInNotice";
 import { Button } from "../components/ui/Button";
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { useLogin } from "../hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { useAuthStore } from "../store/authStore";
+import { homePathFor } from "../types/user";
 
 export function LoginPage() {
   const { t } = useTranslation();
-  usePageMeta(t("seo.admin"));
+  usePageMeta(t("seo.login"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const login = useLogin();
   const navigate = useNavigate();
+  const signedInUser = useAuthStore((s) => (s.isAuthenticated ? s.user : null));
   const location = useLocation() as { state?: { from?: string } };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login.mutateAsync({ email, password });
-      navigate(location.state?.from ?? "/admin", { replace: true });
+      const { user } = await login.mutateAsync({ email, password });
+      // Back to the page that required sign-in, if it belongs to this user's area
+      const home = homePathFor(user.role);
+      const from = location.state?.from;
+      navigate(from?.startsWith(home) ? from : home, { replace: true });
     } catch {
       // error surfaced below via login.isError
     }
   };
+
+
 
   return (
     <>
@@ -39,6 +48,10 @@ export function LoginPage() {
       </Link>
 
       <AuthShell title={t("auth.login_title")} subtitle={t("auth.login_subtitle")}>
+      {signedInUser && !login.isPending && !login.isSuccess ? (
+        <SignedInNotice user={signedInUser} action="login" />
+      ) : (
+      <>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -91,6 +104,15 @@ export function LoginPage() {
           {login.isPending ? t("auth.signing_in") : t("auth.sign_in")}
         </Button>
       </form>
+
+      <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+        {t("auth.no_account")}{" "}
+        <Link to="/inscription" className="font-medium text-emerald-600 hover:underline dark:text-emerald-400">
+          {t("auth.register_link")}
+        </Link>
+      </p>
+      </>
+      )}
       </AuthShell>
     </>
   );

@@ -8,10 +8,13 @@ interface RejectDialogProps {
   isPending: boolean;
   onConfirm: (reason: string) => void;
   onCancel: () => void;
+  /** Overrides the project wording (e.g. refusing a membership or a payment) */
+  title?: string;
+  text?: string;
 }
 
 /** Refusal needs a reason: it is sent to the branch admin in their notification. */
-export function RejectDialog({ open, projectTitle, isPending, onConfirm, onCancel }: RejectDialogProps) {
+export function RejectDialog({ open, projectTitle, isPending, onConfirm, onCancel, title, text }: RejectDialogProps) {
   const { t } = useTranslation();
   const [reason, setReason] = useState("");
 
@@ -40,10 +43,10 @@ export function RejectDialog({ open, projectTitle, isPending, onConfirm, onCance
         className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl animate-fade-in-up dark:border-slate-800 dark:bg-slate-900"
       >
         <h2 id="reject-dialog-title" className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
-          {t("admin.projects.reject_title", { title: projectTitle })}
+          {title ?? t("admin.projects.reject_title", { title: projectTitle })}
         </h2>
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          {t("admin.projects.reject_text")}
+          {text ?? t("admin.projects.reject_text")}
         </p>
         <textarea
           autoFocus

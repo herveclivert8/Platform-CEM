@@ -1,4 +1,6 @@
-# Sert le build React et relaie l'API vers le conteneur backend.
+# Sert le build React et relaie l'API vers le backend.
+# Modèle : au démarrage, l'image nginx remplace ${PORT}, ${BACKEND_ADDRESS} et ${NGINX_LOCAL_RESOLVERS}
+# par les variables d'environnement (valeurs par défaut dans le Dockerfile). Les variables nginx ($host...) restent intactes.
 
 # Robots des réseaux sociaux : ils n'exécutent pas le JavaScript. On leur sert une page d'aperçu
 # (titre, résumé, image de l'élément partagé) générée par l'API. Google exécute le JavaScript : absent.
@@ -6,11 +8,20 @@ map $http_user_agent $is_share_bot {
     default 0;
     ~*(facebookexternalhit|facebookcatalog|Facebot|LinkedInBot|Twitterbot|WhatsApp|Slackbot|TelegramBot|Discordbot|Pinterest|SkypeUriPreview|redditbot|Applebot|Embedly|vkShare) 1;
 }
+# Journal : IP du visiteur, puis adresse de connexion et X-Forwarded-For reçus (pour vérifier TRUSTED_PROXIES, voir real-ip.sh)
+log_format visitor '$remote_addr (via $realip_remote_addr, xff "$http_x_forwarded_for") - [$time_local] '
+                   '"$request" $status $body_bytes_sent "$http_user_agent"';
 # En production, placez un reverse proxy HTTPS (Caddy, Traefik, nginx + certbot...) devant ce conteneur.
 server {
-    listen 80;
+    listen ${PORT};
     server_name _;
     root /usr/share/nginx/html;
+    access_log /var/log/nginx/access.log visitor;
+
+    # Adresse du backend recherchée à chaque requête (cache 10 s) et non une seule fois au démarrage :
+    # sur Render, l'IP privée du backend change à chaque redéploiement.
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;
+    set $backend "http://${BACKEND_ADDRESS}";
 
     server_tokens off;
     add_header X-Content-Type-Options "nosniff" always;
@@ -24,16 +35,17 @@ server {
     gzip_types text/plain text/css application/javascript application/json image/svg+xml;
 
     location /api/ {
-        proxy_pass http://backend:8000;
+        proxy_pass $backend;
         proxy_set_header Host $host;
-        # IP réelle du visiteur (rate limit, journal d'audit). $remote_addr : jamais la valeur envoyée par le client
+        # IP réelle du visiteur (rate limit, journal d'audit). $remote_addr : celle de la connexion, ou celle retenue
+        # par real-ip.sh derrière un proxy de confiance ; jamais une valeur envoyée telle quelle par le client
         proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_read_timeout 60s;
     }
 
     location /uploads/ {
-        proxy_pass http://backend:8000;
+        proxy_pass $backend;
         proxy_set_header Host $host;
         expires 30d;
         add_header Cache-Control "public";
@@ -42,16 +54,16 @@ server {
 
     # Référencement : générés à partir du contenu publié
     location = /sitemap.xml {
-        proxy_pass http://backend:8000/api/v1/seo/sitemap.xml;
+        proxy_pass $backend/api/v1/seo/sitemap.xml;
         proxy_set_header Host $host;
     }
     location = /robots.txt {
-        proxy_pass http://backend:8000/api/v1/seo/robots.txt;
+        proxy_pass $backend/api/v1/seo/robots.txt;
         proxy_set_header Host $host;
     }
 
     location /health {
-        proxy_pass http://backend:8000/health;
+        proxy_pass $backend/health;
     }
 
     # Fichiers du build (noms avec empreinte) : cache long

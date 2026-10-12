@@ -16,12 +16,15 @@ import {
   FolderKanban,
   FileText,
   Mail,
+  UserPlus,
+  Send,
   X,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { ScopeSelector } from "./ScopeSelector";
 import { useTranslation } from "react-i18next";
 import { useAdminProjects } from "../../hooks/useAdminProjects";
+import { FEATURES } from "../../config/features";
 
 const NAV_ITEMS = [
   { to: "/admin", labelKey: "admin.nav.dashboard", icon: LayoutDashboard, end: true },
@@ -30,6 +33,7 @@ const NAV_ITEMS = [
   { to: "/admin/reports", labelKey: "admin.nav.reports", icon: FileText },
   { to: "/admin/submissions", labelKey: "admin.nav.submissions", icon: Briefcase },
   { to: "/admin/donations", labelKey: "admin.nav.donations", icon: HeartHandshake },
+  { to: "/admin/members", labelKey: "admin.nav.members", icon: UserPlus },
   { to: "/admin/settings", labelKey: "admin.nav.settings", icon: Settings },
 ];
 
@@ -41,7 +45,8 @@ const SUPER_ADMIN_ITEMS = [
   { to: "/admin/accounts", labelKey: "admin.nav.accounts", icon: Users },
   { to: "/admin/audit", labelKey: "admin.nav.audit", icon: ScrollText },
   { to: "/admin/social-links", labelKey: "admin.nav.social_links", icon: Share2 },
-  { to: "/admin/subscribers", labelKey: "admin.nav.subscribers", icon: Mail },
+  { to: "/admin/social-publishing", labelKey: "admin.nav.social_publishing", icon: Send },
+  ...(FEATURES.newsletter ? [{ to: "/admin/subscribers", labelKey: "admin.nav.subscribers", icon: Mail }] : []),
   { to: "/admin/payment-info", labelKey: "admin.nav.payment_info", icon: Wallet },
 ];
 
@@ -64,7 +69,8 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const isBranchAdmin = user?.role === "BRANCH_ADMIN";
   const { data: projects } = useAdminProjects();
-  const pendingCount = isSuperAdmin ? (projects?.counts.PENDING ?? 0) : 0;
+  // Projets proposés par les membres, en attente de validation (dans le périmètre de l'admin)
+  const pendingCount = projects?.counts.PENDING ?? 0;
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     clsx(

@@ -17,7 +17,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_admin, get_db
 from app.api.scope import like_pattern, resolve_branch_scope
 from app.core.email import email_service
 from app.core.permissions import verify_branch_access, verify_super_admin_only
@@ -332,7 +332,7 @@ async def declare_mobile_money_donation(
 
 @router.get("", response_model=DonationListResponse)
 async def list_donations(
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
     branch_id: int | None = Query(None, description="Super Admin : limiter à une antenne"),
     status_filter: DonationStatusModel | None = Query(None, alias="status"),
@@ -388,7 +388,7 @@ async def list_donations(
 async def record_manual_donation(
     data: ManualDonationCreate,
     background_tasks: BackgroundTasks,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -444,7 +444,7 @@ async def confirm_donation(
     donation_id: int,
     data: DonationConfirm,
     background_tasks: BackgroundTasks,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Valider un don après avoir retrouvé le paiement ; envoie l'email de remerciement."""
@@ -473,7 +473,7 @@ async def confirm_donation(
 async def reject_donation(
     donation_id: int,
     data: DonationReject,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Rejeter un don dont le paiement est introuvable ou non conforme (pas d'email)."""
@@ -493,7 +493,7 @@ async def reject_donation(
 @router.post("/{donation_id}/reopen", response_model=DonationSchema)
 async def reopen_donation(
     donation_id: int,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Remettre un don validé ou rejeté "à vérifier" (erreur de manipulation)."""
@@ -517,7 +517,7 @@ async def reopen_donation(
 @router.delete("/{donation_id}", status_code=204)
 async def delete_donation(
     donation_id: int,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """

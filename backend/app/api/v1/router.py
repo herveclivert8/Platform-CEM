@@ -17,6 +17,9 @@ from app.api.v1.endpoints import (
     audit,
     notifications,
     dashboard,
+    members,
+    comments,
+    social,
 )
 
 api_router = APIRouter()
@@ -35,6 +38,12 @@ api_router.include_router(posts.router)
 
 # Projets en cours / réalisations (avec validation Super Admin)
 api_router.include_router(projects.router)
+
+# Discussions sous les projets (membres à jour de cotisation et admins)
+api_router.include_router(comments.router)
+
+# Adhésion des membres (frais d'inscription, cotisations, projets proposés)
+api_router.include_router(members.router)
 
 # Dons
 api_router.include_router(donations.router)
@@ -65,6 +74,9 @@ api_router.include_router(newsletter.router)
 
 # Notifications
 api_router.include_router(notifications.router)
+
+# Publication automatique sur Facebook, Instagram et LinkedIn
+api_router.include_router(social.router)
 
 # Tableau de bord admin
 api_router.include_router(dashboard.router)

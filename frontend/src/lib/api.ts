@@ -70,7 +70,8 @@ api.interceptors.response.use(
       return api(originalRequest);
     } catch {
       useAuthStore.getState().logout();
-      if (window.location.pathname.startsWith("/admin")) {
+      const path = window.location.pathname;
+      if (path.startsWith("/admin") || path.startsWith("/espace-membre")) {
         window.location.assign("/login");
       }
       return Promise.reject(error);

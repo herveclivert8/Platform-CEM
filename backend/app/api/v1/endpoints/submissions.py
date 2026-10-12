@@ -9,7 +9,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
-from app.api.deps import get_current_user, get_db, get_optional_user
+from app.api.deps import get_current_admin, get_db, get_optional_user
 from app.api.scope import like_pattern, resolve_branch_scope
 from app.core.email import email_service
 from app.core.permissions import verify_branch_access
@@ -125,7 +125,7 @@ async def create_submission(
 
 @router.get("/submissions", response_model=ProjectSubmissionListResponse)
 async def list_submissions(
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
     branch_id: int | None = Query(None, description="Super Admin : limiter à une antenne"),
     status_filter: SubmissionStatus | None = Query(None, alias="status"),
@@ -180,7 +180,7 @@ async def update_submission(
     branch_id: int,
     submission_id: int,
     data: ProjectSubmissionUpdate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Suivre un dossier : statut et notes internes. Accessible: Admin de la branche + Super Admin."""
@@ -208,7 +208,7 @@ async def update_submission(
 async def delete_submission(
     branch_id: int,
     submission_id: int,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Supprimer un dossier. Accessible: Admin de la branche + Super Admin."""

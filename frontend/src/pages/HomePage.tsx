@@ -4,6 +4,7 @@ import { BentoGrid } from "../components/home/BentoGrid";
 import { NetworkSection } from "../components/home/NetworkSection";
 import { HomeProjectsSection } from "../components/home/HomeProjectsSection";
 import { PartnersCarousel } from "../components/home/PartnersCarousel";
+import { JoinSection } from "../components/home/JoinSection";
 import { Skeleton } from "../components/ui/Skeleton";
 import { usePageMeta } from "../hooks/usePageMeta";
 
@@ -30,6 +31,7 @@ export function HomePage() {
       </Suspense>
       <HomeProjectsSection />
       <NetworkSection />
+      <JoinSection />
       <PartnersCarousel />
     </>
   );

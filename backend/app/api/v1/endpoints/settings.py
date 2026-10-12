@@ -6,7 +6,7 @@ page d'accueil : couverture, « Nos valeurs », contact)
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_admin
 from app.core.permissions import verify_super_admin_only
 from app.services.audit import record_audit
 from app.services.translation import localize, normalize_lang, schedule_translation
@@ -47,7 +47,7 @@ async def get_social_links(db: AsyncSession = Depends(get_db)):
 @router.put("/social-links", response_model=SocialLinksRead)
 async def update_social_links(
     data: SocialLinksUpdate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Mettre à jour les URLs des réseaux sociaux. Accessible: Super Admin only."""
@@ -75,7 +75,7 @@ async def get_payment_info(db: AsyncSession = Depends(get_db)):
 @router.put("/payment-info", response_model=PaymentInfoRead)
 async def update_payment_info(
     data: PaymentInfoUpdate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Mettre à jour le RIB et les numéros Mobile Money. Accessible: Super Admin only."""
@@ -104,7 +104,7 @@ async def get_home_hero(db: AsyncSession = Depends(get_db)):
 @router.put("/home-hero", response_model=HomeHeroRead)
 async def update_home_hero(
     data: HomeHeroUpdate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Modifier la photo et les textes de couverture. Accessible: Super Admin only."""
@@ -167,7 +167,7 @@ async def get_home_page(
 async def update_home_page(
     data: HomePageUpdate,
     background_tasks: BackgroundTasks,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """

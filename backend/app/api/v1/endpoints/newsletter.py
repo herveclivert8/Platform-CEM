@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_admin, get_db
 from app.api.scope import like_pattern
 from app.core.config import settings
 from app.core.email import email_service
@@ -207,7 +207,7 @@ class SubscriberListResponse(BaseModel):
 
 @router.get("/subscribers", response_model=SubscriberListResponse)
 async def list_subscribers(
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
     status_filter: Optional[Literal["PENDING", "CONFIRMED", "UNSUBSCRIBED"]] = Query(None, alias="status"),
     q: str | None = Query(None, max_length=100, description="Recherche dans l'e-mail"),
@@ -241,7 +241,7 @@ async def list_subscribers(
 
 
 @router.get("/subscribers/export")
-async def export_subscribers(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def export_subscribers(user: User = Depends(get_current_admin), db: AsyncSession = Depends(get_db)):
     """Export CSV des abonnés confirmés, à importer dans l'outil d'envoi. Accessible: Super Admin only."""
     await verify_super_admin_only(user)
     result = await db.execute(
@@ -267,7 +267,7 @@ async def export_subscribers(user: User = Depends(get_current_user), db: AsyncSe
 
 
 @router.delete("/subscribers/{subscriber_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_subscriber(subscriber_id: int, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def delete_subscriber(subscriber_id: int, user: User = Depends(get_current_admin), db: AsyncSession = Depends(get_db)):
     """Supprimer définitivement un abonné (droit à l'effacement, RGPD). Accessible: Super Admin only."""
     await verify_super_admin_only(user)
     subscriber = await db.get(NewsletterSubscriber, subscriber_id)

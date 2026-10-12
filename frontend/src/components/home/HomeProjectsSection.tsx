@@ -1,9 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { ProjectsShowcase } from "../projects/ProjectsShowcase";
+import { useCanSeeMemberContent } from "../../hooks/useProjects";
 
 /** Home page: latest achievements and ongoing projects (each row hidden when empty). */
 export function HomeProjectsSection() {
   const { t } = useTranslation();
+  const memberView = useCanSeeMemberContent();
   return (
     <section id="realisations" className="bg-white py-20 dark:bg-slate-900">
       <div className="mx-auto max-w-7xl space-y-14 px-4 sm:px-6 lg:px-8">
@@ -12,7 +14,8 @@ export function HomeProjectsSection() {
           <p className="mx-auto mt-2 max-w-2xl text-slate-500 dark:text-slate-400">{t("home_projects.subtitle")}</p>
         </div>
         <ProjectsShowcase phase="COMPLETED" title={t("home_projects.latest_achievements")} />
-        <ProjectsShowcase phase="ONGOING" title={t("home_projects.ongoing")} />
+        {/* Ongoing projects: members (fee up to date) and admins only */}
+        {memberView && <ProjectsShowcase phase="ONGOING" title={t("home_projects.ongoing")} />}
       </div>
     </section>
   );

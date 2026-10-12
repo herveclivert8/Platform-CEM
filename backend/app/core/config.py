@@ -4,7 +4,7 @@ Configuration production - Sécurité, CORS, Cookies
 
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import AliasChoices, Field, model_validator
+from pydantic import AliasChoices, Field, field_validator, model_validator
 
 DEFAULT_SECRET_KEY = "change-this-in-production-use-strong-secret-key"
 # Valeurs d'exemple publiques (code, .env.example) : ne signent jamais de vrais jetons en production
@@ -81,6 +81,21 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     TRANSLATION_MODEL: str = "claude-opus-5"
 
+    # Publication automatique sur les réseaux sociaux des actualités et projets rendus publics.
+    # "simulation" : rien n'est envoyé, l'historique montre ce qui serait publié (désactivé en production) ;
+    # "live" : vraie publication sur chaque réseau dont les identifiants ci-dessous sont renseignés ;
+    # "disabled" : aucune publication.
+    SOCIAL_PUBLISHING: str = "simulation"
+    # Facebook + Instagram (API Graph de Meta) : Page Facebook et compte Instagram professionnel relié
+    META_GRAPH_VERSION: str = "v21.0"
+    META_PAGE_ID: str = ""
+    META_PAGE_ACCESS_TOKEN: str = ""
+    INSTAGRAM_ACCOUNT_ID: str = ""
+    # LinkedIn : page entreprise (identifiant numérique) et jeton avec la permission w_organization_social
+    LINKEDIN_ORGANIZATION_ID: str = ""
+    LINKEDIN_ACCESS_TOKEN: str = ""
+    LINKEDIN_API_VERSION: str = "202509"
+
     # Géolocalisation des antennes sans coordonnées (OpenStreetMap Nominatim, 1 requête/s maximum)
     GEOCODING_ENABLED: bool = True
 
@@ -97,6 +112,15 @@ class Settings(BaseSettings):
         # Tolerate unrelated keys left in .env by not-yet-mounted features (e.g. OAuth).
         extra="ignore",
     )
+
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def use_asyncpg_driver(cls, url: str) -> str:
+        """Hébergeurs (Render, Heroku...) : postgres:// ou postgresql:// → postgresql+asyncpg:// (pilote async)."""
+        for prefix in ("postgres://", "postgresql://"):
+            if url.startswith(prefix):
+                return "postgresql+asyncpg://" + url.removeprefix(prefix)
+        return url
 
     @model_validator(mode="after")
     def check_production_secret_key(self) -> "Settings":

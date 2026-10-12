@@ -19,3 +19,19 @@ def test_production_accepts_strong_secret():
 
 def test_development_allows_default_secret():
     Settings(ENVIRONMENT="development")
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "postgresql://cem:mdp@dpg-abc-a:5432/cem",  # Render
+        "postgres://cem:mdp@dpg-abc-a:5432/cem",  # Heroku
+        "postgresql+asyncpg://cem:mdp@dpg-abc-a:5432/cem",  # déjà au bon format
+    ],
+)
+def test_database_url_uses_asyncpg(url):
+    assert Settings(DATABASE_URL=url).DATABASE_URL == "postgresql+asyncpg://cem:mdp@dpg-abc-a:5432/cem"
+
+
+def test_database_url_keeps_sqlite():
+    assert Settings(DATABASE_URL="sqlite+aiosqlite:///./cem.db").DATABASE_URL == "sqlite+aiosqlite:///./cem.db"

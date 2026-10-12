@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select, func
 
-from app.api.deps import get_db, get_current_user, get_optional_user
+from app.api.deps import get_db, get_current_admin, get_optional_user
 from app.models import Branch, Publication, TeamMember, User
 from app.models.branch import BranchStatus
 from app.models.user import UserRole
@@ -163,7 +163,7 @@ async def get_branch_publications(
 @router.post("/admin", response_model=BranchSchema, status_code=status.HTTP_201_CREATED)
 async def create_branch(
     data: BranchCreate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -199,7 +199,7 @@ async def create_branch(
 async def update_branch(
     branch_id: int,
     data: BranchUpdate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -261,7 +261,7 @@ async def update_branch(
 @router.delete("/{branch_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_branch(
     branch_id: int,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -279,7 +279,9 @@ async def delete_branch(
         raise HTTPException(status_code=404, detail="Antenne introuvable")
 
     # Ses admins resteraient sans antenne (connectés mais sans accès à rien)
-    admin_count = await db.scalar(select(func.count(User.id)).where(User.branch_id == branch_id))
+    admin_count = await db.scalar(
+        select(func.count(User.id)).where(User.branch_id == branch_id, User.role == UserRole.BRANCH_ADMIN)
+    )
     if admin_count:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

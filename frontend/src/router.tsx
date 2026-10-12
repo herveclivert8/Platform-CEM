@@ -4,6 +4,8 @@ import { RootLayout } from "./components/layout/RootLayout";
 import { HomePage } from "./pages/HomePage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
+import { MemberSpacePage } from "./pages/MemberSpacePage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
@@ -26,6 +28,8 @@ import { AuditPage } from "./pages/admin/AuditPage";
 import { SocialLinksPage } from "./pages/admin/SocialLinksPage";
 import { HomePageSettingsPage } from "./pages/admin/HomePageSettingsPage";
 import { PaymentInfoPage } from "./pages/admin/PaymentInfoPage";
+import { MembersPage } from "./pages/admin/MembersPage";
+import { SocialPublishingPage } from "./pages/admin/SocialPublishingPage";
 
 const BranchesDirectoryPage = lazy(() =>
   import("./pages/BranchesDirectoryPage").then((m) => ({ default: m.BranchesDirectoryPage })),
@@ -109,16 +113,22 @@ export const router = createBrowserRouter([
       { path: "realisations/:projectId", element: lazyPage(<ProjectDetailPage phase="COMPLETED" />) },
       { path: "projets-en-cours", element: lazyPage(<ProjectsListPage key="ONGOING" phase="ONGOING" />) },
       { path: "projets-en-cours/:projectId", element: lazyPage(<ProjectDetailPage phase="ONGOING" />) },
+      {
+        path: "espace-membre",
+        element: <RequireAuth area="member" />,
+        children: [{ index: true, element: <MemberSpacePage /> }],
+      },
       { path: "*", element: <NotFoundPage /> },
     ],
   },
   { path: "/login", element: <LoginPage /> },
+  { path: "/inscription", element: <RegisterPage /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
   { path: "/reset-password", element: <ResetPasswordPage /> },
   { path: "/change-password", element: <ChangePasswordPage /> },
   {
     path: "/admin",
-    element: <RequireAuth />,
+    element: <RequireAuth area="admin" />,
     children: [
       {
         element: <AdminLayout />,
@@ -129,6 +139,7 @@ export const router = createBrowserRouter([
           { path: "reports", element: <ReportsPage /> },
           { path: "submissions", element: <SubmissionsPage /> },
           { path: "donations", element: <DonationsPage /> },
+          { path: "members", element: <MembersPage /> },
           { path: "settings", element: <SettingsPage /> },
           { path: "my-branch", element: <MyBranchPage /> },
           {
@@ -141,6 +152,7 @@ export const router = createBrowserRouter([
               { path: "home-page", element: <HomePageSettingsPage /> },
               { path: "home-hero", element: <Navigate to="/admin/home-page" replace /> },
               { path: "social-links", element: <SocialLinksPage /> },
+              { path: "social-publishing", element: <SocialPublishingPage /> },
               { path: "subscribers", element: <SubscribersPage /> },
               { path: "payment-info", element: <PaymentInfoPage /> },
             ],

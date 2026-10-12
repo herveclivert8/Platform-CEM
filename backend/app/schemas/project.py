@@ -84,6 +84,10 @@ class Project(ProjectBase):
     branch_name: str
     author_id: Optional[int] = None
     author_name: Optional[str] = None
+    # Réservé aux membres et aux admins (retiré des réponses aux visiteurs)
+    author_email: Optional[str] = None
+    author_phone: Optional[str] = None
+    author_avatar_url: Optional[str] = None
     review_status: ProjectReviewStatus
     rejection_reason: Optional[str] = None
     reviewed_at: Optional[datetime] = None
@@ -103,6 +107,9 @@ class Project(ProjectBase):
             branch_name=project.branch.name,
             author_id=project.author_id,
             author_name=f"{author.first_name} {author.last_name}".strip() if author else None,
+            author_email=author.email if author else None,
+            author_phone=author.phone if author else None,
+            author_avatar_url=author.avatar_url if author else None,
             title=project.title,
             summary=project.summary,
             description=project.description,

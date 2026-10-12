@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_admin
 from app.api.scope import like_pattern, resolve_branch_scope
 from app.services.audit import record_audit
 from app.services.translation import delete_translations, localize_schemas, schedule_translation
@@ -24,6 +24,9 @@ from app.schemas.post import (
     Pillar,
 )
 from app.core.permissions import verify_branch_access
+from app.models.user import UserRole
+from app.services.notification_service import send_batch_notification
+from app.services.social import delete_social_history, safe_share_resource
 
 router = APIRouter(tags=["posts"])
 
@@ -38,6 +41,25 @@ def _schedule_post_translation(background_tasks: BackgroundTasks, post: Post) ->
         schedule_translation(
             background_tasks, "post", post.id, {f: getattr(post, f) for f in TRANSLATED_FIELDS}
         )
+        # Partagé une seule fois par réseau : une modification ultérieure ne republie pas
+        background_tasks.add_task(safe_share_resource, "post", post.id)
+
+
+async def _inform_super_admins_of_post(db: AsyncSession, post: Post, author: User, verb: str) -> None:
+    """Le Super Admin est informé des actualités publiées par les antennes (pas de validation requise)."""
+    if author.role == UserRole.SUPER_ADMIN:
+        return
+    branch = await db.get(Branch, post.branch_id)
+    result = await db.execute(select(User.id).where(User.role == UserRole.SUPER_ADMIN))
+    await send_batch_notification(
+        list(result.scalars().all()),
+        title="Nouvelle actualité" if verb == "publié" else "Actualité modifiée",
+        message=f"{author.full_name} ({branch.name if branch else ''}) a {verb} l'actualité « {post.title} ».",
+        notification_type="info",
+        action_url="/admin/posts",
+        icon="post",
+        db=db,
+    )
 
 
 async def _get_post_or_404(db: AsyncSession, post_id: int) -> Post:
@@ -93,7 +115,7 @@ async def list_branch_posts(
 
 @router.get("/posts/admin", response_model=PostListResponse)
 async def list_posts_admin(
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
     branch_id: int | None = Query(None, description="Super Admin : limiter à une antenne"),
     status_filter: PostStatus | None = Query(None, alias="status"),
@@ -162,7 +184,7 @@ async def create_post(
     branch_id: int,
     data: PostCreate,
     background_tasks: BackgroundTasks,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -192,6 +214,8 @@ async def create_post(
     await db.refresh(post)
     await db.refresh(post, attribute_names=["images"])
     _schedule_post_translation(background_tasks, post)
+    if post.status == PostStatusModel.PUBLISHED:
+        await _inform_super_admins_of_post(db, post, user, "publié")
 
     return PostSchema.from_orm_post(post)
 
@@ -201,13 +225,14 @@ async def update_post(
     post_id: int,
     data: PostUpdate,
     background_tasks: BackgroundTasks,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Modifier un post. Accessible: Admin de la branche concernée + Super Admin."""
     post = await _get_post_or_404(db, post_id)
     await verify_branch_access(user, post.branch_id)
 
+    was_published = post.status == PostStatusModel.PUBLISHED
     update_data = data.model_dump(exclude_unset=True, exclude={"images"})
     for key, value in update_data.items():
         setattr(post, key, value.value if hasattr(value, "value") else value)
@@ -225,6 +250,8 @@ async def update_post(
     await db.refresh(post)
     await db.refresh(post, attribute_names=["images"])
     _schedule_post_translation(background_tasks, post)
+    if post.status == PostStatusModel.PUBLISHED:
+        await _inform_super_admins_of_post(db, post, user, "modifié" if was_published else "publié")
 
     return PostSchema.from_orm_post(post)
 
@@ -232,7 +259,7 @@ async def update_post(
 @router.delete("/posts/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_post(
     post_id: int,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Supprimer un post. Accessible: Admin de la branche concernée + Super Admin."""
@@ -244,6 +271,7 @@ async def delete_post(
         branch_id=post.branch_id, details={"title": post.title},
     )
     await delete_translations(db, "post", [post.id])
+    await delete_social_history(db, "post", [post.id])
     await db.delete(post)
     await db.commit()
 

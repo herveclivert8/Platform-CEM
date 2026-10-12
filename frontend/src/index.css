@@ -1,10 +1,14 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap");
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   color-scheme: light;
+  /* Bouton principal hors site public (espace admin) : orange d'origine */
+  --btn-primary-bg: var(--color-orange-600);
+  --btn-primary-hover: var(--color-orange-700);
+  --btn-primary-fg: #ffffff;
 }
 
 html.dark {
@@ -41,6 +45,67 @@ body {
 
 .dark :focus-visible {
   @apply ring-offset-slate-950;
+}
+
+/*
+ * Style « Éditorial » du site public (maquette 4) : encre, crème et vert acidulé, titres en Syne,
+ * texte en Manrope. Appliqué par la classe html.site-theme (posée au chargement, retirée dans
+ * l'espace admin, qui garde son style) : les couleurs Tailwind existantes sont redéfinies ici,
+ * si bien que toutes les pages publiques en héritent sans changer leurs classes.
+ */
+html.site-theme {
+  /* Neutres : crème (clair) et encre (sombre) */
+  --color-slate-50: #f4f1ea;
+  --color-slate-100: #eae6dc;
+  --color-slate-200: #d9d4c8;
+  --color-slate-300: #bdb8ac;
+  --color-slate-400: #8c9096;
+  --color-slate-500: #62676d;
+  --color-slate-600: #4a4f55;
+  --color-slate-700: #33373c;
+  --color-slate-800: #2a2d31;
+  --color-slate-900: #1b1e21;
+  --color-slate-950: #111315;
+  /* Accent : vert acidulé, foncé en olive pour rester lisible sur fond clair */
+  --color-emerald-50: #f3f9e1;
+  --color-emerald-100: #e6f3c2;
+  --color-emerald-200: #d2ec8f;
+  --color-emerald-300: #d7f86e;
+  --color-emerald-400: #c6f432;
+  --color-emerald-500: #6e9a00;
+  --color-emerald-600: #4a6a00;
+  --color-emerald-700: #3f5a00;
+  --color-emerald-800: #2f4400;
+  --color-emerald-900: #223100;
+  --color-emerald-950: #141e00;
+  /* Bouton principal : vert acidulé, texte encre */
+  --btn-primary-bg: #c6f432;
+  --btn-primary-hover: #b3e01f;
+  --btn-primary-fg: #111315;
+  /* Coins plus nets que le style d'origine */
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.625rem;
+  --radius-3xl: 0.75rem;
+  --font-display: "Syne", "Manrope", ui-sans-serif, system-ui, sans-serif;
+}
+
+html.site-theme,
+html.site-theme body {
+  font-family: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+html.site-theme h1,
+html.site-theme h2,
+html.site-theme h3,
+.font-display {
+  font-family: var(--font-display, "Syne", sans-serif);
+  letter-spacing: -0.02em;
+}
+
+html.site-theme ::selection {
+  background: #c6f432;
+  color: #111315;
 }
 
 /* Leaflet map container needs an explicit height, and default popups look dated -

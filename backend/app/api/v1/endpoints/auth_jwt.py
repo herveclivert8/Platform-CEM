@@ -19,7 +19,9 @@ from app.core.rate_limit import rate_limit
 from app.services.audit import record_audit
 from app.db.session import get_db
 from app.core.security import create_token_pair, hash_password, verify_password
-from app.models.user import User
+from app.services.notification_service import get_branch_notification_recipients, send_batch_notification
+from app.models.branch import Branch, BranchStatus
+from app.models.user import MembershipStatus, User, UserRole
 from app.models.password_reset_token import PasswordResetToken
 from app.schemas.auth import (
     ChangePasswordRequest,
@@ -30,6 +32,7 @@ from app.schemas.auth import (
     LoginResponse,
     LogoutResponse,
     RefreshTokenRequest,
+    RegisterRequest,
     ResetPasswordRequest,
 )
 
@@ -49,6 +52,11 @@ def _build_current_user_response(user: User) -> CurrentUserResponse:
         branch_id=user.branch_id,
         branch_name=user.branch.name if user.branch else None,
         must_change_password=user.must_change_password,
+        membership_status=user.membership_status.value if user.membership_status else None,
+        paid_until=user.paid_until,
+        phone=user.phone,
+        avatar_url=user.avatar_url,
+        member_access=user.has_member_access(datetime.now(timezone.utc).date()),
     )
 
 
@@ -104,6 +112,57 @@ async def login(
 
     record_audit(db, user=user, action="login", resource_type="user", resource_id=user.id, branch_id=user.branch_id)
     await db.commit()
+    return _token_response(user)
+
+
+@router.post(
+    "/register",
+    response_model=LoginResponse,
+    status_code=201,
+    dependencies=[Depends(rate_limit("register", limit=5, window=60 * 60))],
+)
+async def register(
+    data: RegisterRequest,
+    db: AsyncSession = Depends(get_db),
+) -> LoginResponse:
+    """
+    Inscription d'un visiteur comme membre d'une antenne. Le compte est créé « en attente » et
+    connecté aussitôt ; l'adhésion doit ensuite être validée par le Super Admin ou l'admin de l'antenne.
+    """
+    branch = await db.get(Branch, data.branch_id)
+    if not branch or branch.status != BranchStatus.ACTIVE:
+        raise HTTPException(status_code=404, detail="Antenne introuvable")
+
+    email = data.email.strip().lower()
+    if await db.scalar(select(User.id).where(func.lower(User.email) == email)):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Un compte existe déjà avec cet email")
+
+    user = User(
+        email=email,
+        hashed_password=hash_password(data.password),
+        first_name=data.first_name,
+        last_name=data.last_name,
+        phone=data.phone,
+        role=UserRole.MEMBER,
+        branch_id=branch.id,
+        membership_status=MembershipStatus.PENDING,
+    )
+    db.add(user)
+    await db.flush()
+    record_audit(db, user=user, action="register", resource_type="user", resource_id=user.id, branch_id=branch.id)
+    await db.commit()
+
+    await send_batch_notification(
+        await get_branch_notification_recipients(db, branch.id),
+        title="Nouvelle demande d'adhésion",
+        message=f"{user.full_name} souhaite rejoindre l'antenne {branch.name}.",
+        notification_type="info",
+        action_url="/admin/members",
+        icon="user",
+        db=db,
+    )
+
+    user = await _get_user_with_branch(db, user.id)
     return _token_response(user)
 
 

@@ -96,7 +96,7 @@ Redis est optionnel (`USE_REDIS=false` par défaut) : sans lui, la limite de req
 
 ### Comptes de démonstration (créés par `app.seed`)
 
-La page de connexion n'est pas liée depuis le site public : les admins s'y rendent directement à l'adresse `/login` (par ex. http://localhost:5173/login). Une fois connecté, le lien « Espace Admin » apparaît dans la barre de navigation.
+Admins et membres se connectent par le bouton « Se connecter » de la barre de navigation (page `/login`, par ex. http://localhost:5173/login) : un admin arrive dans le back-office, un membre dans son espace membre. Les visiteurs deviennent membres par le bouton « S'inscrire » (page `/inscription`). Pour changer de compte, déconnectez-vous d'abord (la page de connexion le propose si un compte est encore connecté).
 
 | Email | Mot de passe | Rôle |
 |---|---|---|
@@ -184,6 +184,52 @@ Le site est alors servi sur le port 8080 (`HTTP_PORT` pour en changer). Pour une
 
 > Le paiement par carte y est désactivé (`CARD_PAYMENT_PROVIDER=disabled`) tant qu'aucun vrai prestataire n'est branché, et les données de démo ne sont pas chargées.
 
+**Variables de l'image du site** (valeurs par défaut adaptées à docker-compose) :
+
+| Variable | Défaut | Rôle |
+|---|---|---|
+| `BACKEND_ADDRESS` | `backend:8000` | `hôte:port` de l'API, relayée pour `/api`, `/uploads`, `/sitemap.xml`, `/robots.txt` |
+| `PORT` | `80` | port d'écoute de nginx (fourni par l'hébergeur) |
+| `TRUSTED_PROXIES` | *(vide)* | proxys de l'hébergeur placés devant nginx : l'IP du visiteur est alors lue dans `X-Forwarded-For` ([`frontend/real-ip.sh`](frontend/real-ip.sh)) |
+
+La configuration nginx est un modèle ([`frontend/nginx.conf.template`](frontend/nginx.conf.template)) rempli au démarrage avec ces variables.
+
+**Premier compte admin** (base de production, sans données de démo) — dans le conteneur de l'API :
+
+```bash
+python -m app.create_admin admin@exemple.org --first-name Prénom --last-name Nom
+```
+
+La commande affiche un mot de passe temporaire, à changer à la première connexion sur `/login`. `--reset-password` en donne un nouveau à un compte existant (mot de passe oublié sans SMTP) et ferme ses sessions.
+
+## Déploiement sur Render
+
+[`render.yaml`](render.yaml) décrit l'hébergement complet (région Frankfurt) :
+
+| Service | Type | Plan |
+|---|---|---|
+| `cem-db` | PostgreSQL 16, inaccessible depuis Internet | `basic-256mb` (la base gratuite expire au bout de 30 jours) |
+| `cem-backend` | service privé (API) + disque de 1 Go sur `/app/uploads` | `starter` (obligatoire pour un service privé et un disque) |
+| `cem-frontend` | service web public (nginx + React) | `starter` |
+
+Les visiteurs n'accèdent qu'au site, qui relaie l'API par le réseau privé de Render : un seul domaine, pas de CORS.
+
+1. Poussez le dépôt sur GitHub, puis dans Render : **New → Blueprint**, choisissez le dépôt.
+2. Render demande les variables marquées `sync: false` :
+   - `FRONTEND_URL` : adresse publique du site, par ex. `https://cem-frontend.onrender.com` (liens des emails) ;
+   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `FROM_EMAIL` : voir [Emails](#emails-smtp) (vides : aucun email ne part) ;
+   - `ANTHROPIC_API_KEY` : facultatif.
+
+   `SECRET_KEY` est générée par Render, `DATABASE_URL` et l'adresse de l'API sont reliées automatiquement.
+3. Une fois déployé, ouvrez l'onglet **Shell** du service `cem-backend` et créez le premier compte : `python -m app.create_admin ...` (voir ci-dessus). Les migrations sont appliquées à chaque démarrage de l'API.
+4. Connectez-vous sur `https://<site>/login`, changez le mot de passe, puis renseignez **Coordonnées de paiement**, la couverture de la page d'accueil, les antennes et les comptes d'antenne.
+5. Vérifications après le premier déploiement :
+   - **IP des visiteurs** — dans les *Logs* de `cem-frontend`, chaque requête est notée `IP_visiteur (via IP_connexion, xff "...")`. La première adresse doit être la vôtre (comparez avec https://ifconfig.me). Sinon, ajoutez la plage de l'adresse affichée après `via` à `TRUSTED_PROXIES`. Sans cela, tous les visiteurs partagent la même limite de requêtes et le journal d'audit enregistre l'IP de Render.
+   - **Disque** — envoyez une image depuis l'admin. Si les *Logs* de `cem-backend` affichent `ATTENTION : le dossier uploads ... n'est pas accessible en écriture`, les envois échouent : corrigez les droits du disque.
+6. *(Facultatif)* Domaine personnalisé : **Settings → Custom Domains** du service `cem-frontend` (certificat HTTPS fourni par Render), puis mettez `FRONTEND_URL` à jour.
+
+> Chaque `git push` sur la branche suivie redéploie le service concerné (`backend/**` ou `frontend/**`). Avec un disque, l'API a une seule instance : un redéploiement provoque une courte coupure.
+
 ## Dons
 
 Le bouton « Faire un don » (page d'accueil, pages d'antenne) propose deux moyens de paiement.
@@ -241,6 +287,9 @@ Dans **Admin → Coordonnées de paiement** (super admin) : nom du titulaire et 
 - `frontend/src/components/donation/` — formulaire de don (carte et Mobile Money)
 - `backend/tests/` — tests automatiques (pytest)
 - `backend/Dockerfile`, `frontend/Dockerfile` — images de déploiement
+- `frontend/nginx.conf.template`, `frontend/real-ip.sh` — configuration nginx de l'image du site
+- `backend/app/create_admin.py` — création du premier Super Admin, déblocage d'un compte
+- `render.yaml` — déploiement sur Render
 
 > Les fichiers `docker-compose*.yml`, `.env.production.example` et la CI (`.github/`) ne sont pas publiés dans ce dépôt.
 

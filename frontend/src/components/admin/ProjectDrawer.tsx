@@ -179,7 +179,7 @@ function ProjectForm({
         </div>
       )}
 
-      {isSuperAdmin && project?.reviewStatus === "PENDING" && (
+      {project?.reviewStatus === "PENDING" && (
         <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 dark:border-orange-500/30 dark:bg-orange-500/10">
           <p className="flex items-center gap-2 text-sm font-semibold text-orange-700 dark:text-orange-300">
             <AlertTriangle className="h-4 w-4" aria-hidden /> {t("admin.projects.awaiting_title")}
@@ -360,7 +360,7 @@ function ProjectForm({
 
       <div className="border-t border-slate-200 pt-5 dark:border-slate-800">
         <Button variant="secondary" className="w-full justify-center" disabled={!canSave || isSaving} onClick={save}>
-          {isSaving ? "…" : t(isSuperAdmin ? (project ? "admin.projects.save" : "admin.projects.publish") : "admin.projects.submit")}
+          {isSaving ? "…" : t(project ? "admin.projects.save" : "admin.projects.publish")}
         </Button>
       </div>
 

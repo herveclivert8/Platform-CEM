@@ -8,7 +8,7 @@ from sqlalchemy.future import select
 from sqlalchemy import desc, func
 from datetime import datetime, timedelta, timezone
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_admin
 from app.core.permissions import verify_super_admin_only
 from app.models.user import User
 from app.models.audit import AuditLog
@@ -54,7 +54,7 @@ router = APIRouter(prefix="/super-admin/audit", tags=["audit"])
 
 @router.get("", response_model=AuditLogListResponse, status_code=200)
 async def list_audit_logs(
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -117,7 +117,7 @@ async def list_audit_logs(
 
 @router.get("/stats", response_model=AuditStatsResponse, status_code=200)
 async def get_audit_stats(
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
     days: int = Query(7, ge=1, le=90),
 ) -> AuditStatsResponse:

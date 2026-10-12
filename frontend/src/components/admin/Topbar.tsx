@@ -168,9 +168,11 @@ export function Topbar({ onMenuClick, menuOpen }: { onMenuClick: () => void; men
         type="button"
         onClick={() => setConfirmLogoutOpen(true)}
         aria-label={t("admin.topbar.logout")}
-        className="ml-1 inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-red-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-red-400"
+        className="ml-1 inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-red-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-red-400"
       >
         <LogOut className="h-4 w-4" aria-hidden />
+        {/* Very small screens: icon only, the top bar has little room */}
+        <span className="hidden sm:inline">{t("auth.sign_out")}</span>
       </button>
 
       <ConfirmDialog

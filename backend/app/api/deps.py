@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
@@ -48,8 +50,16 @@ async def get_current_user_allow_password_change(
 async def get_current_user(
     user: User = Depends(get_current_user_allow_password_change),
 ) -> User:
+    """Utilisateur connecté, quel que soit son rôle (admin ou membre)."""
     if user.must_change_password:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=PASSWORD_CHANGE_REQUIRED)
+    return user
+
+
+async def get_current_admin(user: User = Depends(get_current_user)) -> User:
+    """Administrateur connecté (Super Admin ou admin d'antenne) : refuse les membres."""
+    if not user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès réservé aux administrateurs")
     return user
 
 
@@ -57,14 +67,35 @@ async def get_optional_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User | None:
-    """Utilisateur connecté, ou None pour un visiteur (routes publiques qu'un admin utilise aussi)."""
+    """Admin connecté, ou None pour un visiteur ou un membre (routes publiques qu'un admin utilise aussi)."""
     if credentials is None:
         return None
     try:
         user = await get_user_from_token(db, credentials.credentials, "access")
     except HTTPException:
         return None
-    return None if user.must_change_password else user
+    return None if user.must_change_password or not user.is_admin else user
+
+
+async def get_optional_member_viewer(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    """
+    Admin, ou membre validé et à jour de cotisation : celui qui voit les contenus réservés aux membres
+    (projets en cours, email des auteurs). None pour un visiteur ou un membre sans accès.
+    """
+    if credentials is None:
+        return None
+    try:
+        user = await get_user_from_token(db, credentials.credentials, "access")
+    except HTTPException:
+        return None
+    if user.must_change_password:
+        return None
+    if user.is_admin or user.has_member_access(datetime.now(timezone.utc).date()):
+        return user
+    return None
 
 
 def require_role(allowed_roles: list[str | UserRole]):

@@ -12,6 +12,12 @@ export function AdminLayout() {
   usePageMeta(t("seo.admin"));
   useNotificationStream();
 
+  // The back-office keeps its own style: no public "Éditorial" theme while it is open
+  useEffect(() => {
+    document.documentElement.classList.remove("site-theme");
+    return () => document.documentElement.classList.add("site-theme");
+  }, []);
+
   // Small screens: the sidebar is a drawer opened from the top bar (☰); closed on each navigation
   const [navOpen, setNavOpen] = useState(false);
   const { pathname } = useLocation();

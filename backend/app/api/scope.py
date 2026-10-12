@@ -12,7 +12,7 @@ def resolve_branch_scope(user: User, branch_id: int | None) -> int | None:
     """
     if user.role == UserRole.SUPER_ADMIN:
         return branch_id
-    if user.branch_id is None or (branch_id is not None and branch_id != user.branch_id):
+    if user.role != UserRole.BRANCH_ADMIN or user.branch_id is None or (branch_id is not None and branch_id != user.branch_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Accès refusé : vous ne pouvez gérer que votre antenne",

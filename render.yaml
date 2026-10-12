@@ -1,0 +1,80 @@
+# Déploiement sur Render (Blueprint) : Render → New → Blueprint → ce dépôt.
+# Crée la base PostgreSQL, l'API (service privé + disque pour les fichiers envoyés) et le site (nginx + React).
+# Les visiteurs passent par le site, qui relaie /api et /uploads vers l'API par le réseau privé de Render.
+# Détails, variables et premier compte admin : README, section « Déploiement sur Render ».
+
+databases:
+  - name: cem-db
+    databaseName: cem
+    user: cem
+    plan: basic-256mb          # la base gratuite est supprimée au bout de 30 jours
+    region: frankfurt
+    postgresMajorVersion: "16"
+    ipAllowList: []            # aucun accès depuis Internet : uniquement depuis les services Render
+
+services:
+  # API FastAPI — joignable seulement par le site (réseau privé)
+  - type: pserv
+    name: cem-backend
+    runtime: docker
+    plan: starter              # service privé et disque : plan payant obligatoire
+    region: frankfurt
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    buildFilter:
+      paths:
+        - backend/**
+    disk:
+      name: uploads
+      mountPath: /app/uploads  # images et PDF envoyés depuis l'admin, conservés entre les déploiements
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cem-db
+          property: connectionString   # adresse interne ; « postgresql:// » est converti par app/core/config.py
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+      - key: FRONTEND_URL                # adresse publique du site (liens des emails), ex. https://cem-frontend.onrender.com
+        sync: false
+      - key: CARD_PAYMENT_PROVIDER       # aucun prestataire de paiement par carte branché pour l'instant
+        value: disabled
+      - key: FORWARDED_ALLOW_IPS         # seul le site (nginx) peut joindre ce service privé
+        value: "*"
+      - key: WEB_CONCURRENCY             # limite de requêtes en mémoire : un seul processus sans Redis
+        value: "1"
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: FROM_EMAIL
+        sync: false
+      - key: ANTHROPIC_API_KEY           # facultatif : traduction automatique FR → EN
+        sync: false
+
+  # Site public : build React servi par nginx (adresse publique du projet)
+  - type: web
+    name: cem-frontend
+    runtime: docker
+    plan: starter              # toujours disponible ; le plan gratuit (mise en veille) n'est pas garanti sur le réseau privé
+    region: frankfurt
+    dockerContext: ./frontend
+    dockerfilePath: ./frontend/Dockerfile
+    buildFilter:
+      paths:
+        - frontend/**
+    healthCheckPath: /
+    envVars:
+      - key: BACKEND_ADDRESS
+        fromService:
+          type: pserv
+          name: cem-backend
+          property: hostport
+      - key: TRUSTED_PROXIES             # proxys de Render devant nginx : à vérifier dans les logs (voir frontend/real-ip.sh)
+        value: 10.0.0.0/8

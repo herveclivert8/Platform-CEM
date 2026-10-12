@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_admin, get_db
 from app.api.scope import resolve_branch_scope
 from app.models import Donation, Post, ProjectSubmission, User
 from app.models.donation import DonationStatus
@@ -37,7 +37,7 @@ class DashboardSummary(BaseModel):
 
 @router.get("/summary", response_model=DashboardSummary)
 async def get_dashboard_summary(
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
     branch_id: int | None = Query(None, description="Super Admin : limiter à une antenne"),
 ):

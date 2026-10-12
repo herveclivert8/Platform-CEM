@@ -7,7 +7,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, s
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_admin
 from app.api.scope import like_pattern, resolve_branch_scope
 from app.services.audit import record_audit
 from app.services.translation import delete_translations, localize_schemas, schedule_translation
@@ -36,7 +36,7 @@ def _schedule_publication_translation(background_tasks: BackgroundTasks, publica
 # Déclarée avant « /publications/{pub_id} » : sinon « admin » serait lu comme un identifiant
 @router.get("/publications/admin", response_model=PublicationAdminListResponse)
 async def list_publications_admin(
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
     branch_id: int | None = Query(None, description="Super Admin : limiter à une antenne"),
     q: str | None = Query(None, max_length=100, description="Recherche dans le titre"),
@@ -81,7 +81,7 @@ async def create_publication(
     branch_id: int,
     data: PublicationCreate,
     background_tasks: BackgroundTasks,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -119,7 +119,7 @@ async def update_publication(
     pub_id: int,
     data: PublicationUpdate,
     background_tasks: BackgroundTasks,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -155,7 +155,7 @@ async def update_publication(
 @router.delete("/publications/{pub_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_publication(
     pub_id: int,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """

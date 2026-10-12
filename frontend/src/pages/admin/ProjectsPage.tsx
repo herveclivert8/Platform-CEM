@@ -48,7 +48,7 @@ export function ProjectsPage() {
   const { selectedBranchId } = useAdminScopeStore();
   const pillarLabels = usePillarLabels();
 
-  const [reviewStatus, setReviewStatus] = useState<ProjectReviewStatus | undefined>(isSuperAdmin ? "PENDING" : undefined);
+  const [reviewStatus, setReviewStatus] = useState<ProjectReviewStatus | undefined>(undefined);
   const [phase, setPhase] = useState<ProjectPhase | undefined>(undefined);
   const { data, isLoading, isError, error, refetch } = useAdminProjects({ reviewStatus, phase });
 
@@ -180,7 +180,8 @@ export function ProjectsPage() {
                 )}
               </div>
 
-              {isSuperAdmin && project.reviewStatus === "PENDING" && (
+              {/* Projets proposés par les membres : validés par l'admin de l'antenne (ou le Super Admin) */}
+              {project.reviewStatus === "PENDING" && (
                 <div className="flex shrink-0 gap-2">
                   <Button
                     variant="secondary"

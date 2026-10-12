@@ -11,7 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import ConfigDict, BaseModel
 
-from app.api.deps import bearer_scheme, get_current_user, get_user_from_token
+from app.api.deps import bearer_scheme, get_current_admin, get_user_from_token
 from app.core.security import decode_token
 from app.db.session import AsyncSessionLocal, get_db
 from app.models.notification import Notification
@@ -53,7 +53,7 @@ async def get_notifications(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     unread_only: bool = Query(False),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Get user notifications."""
@@ -106,9 +106,11 @@ async def stream_notifications(
     if payload is None:
         raise unauthorized
 
-    # Mêmes contrôles que get_current_user (type de jeton, compte supprimé, sessions révoquées).
+    # Mêmes contrôles que get_current_admin (type de jeton, compte supprimé, sessions révoquées).
     async with AsyncSessionLocal() as db:
         user = await get_user_from_token(db, credentials.credentials, "access")
+    if not user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès réservé aux administrateurs")
 
     user_id = user.id
     expires_at = float(payload.get("exp", time.time() + 1800))
@@ -140,7 +142,7 @@ async def stream_notifications(
 @router.post("/{notification_id}/read", status_code=status.HTTP_204_NO_CONTENT)
 async def mark_notification_read(
     notification_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Mark notification as read."""
@@ -154,7 +156,7 @@ async def mark_notification_read(
 
 @router.post("/read-all", status_code=status.HTTP_204_NO_CONTENT)
 async def mark_all_notifications_read(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Mark all notifications as read."""
@@ -164,7 +166,7 @@ async def mark_all_notifications_read(
 @router.delete("/{notification_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_notification_endpoint(
     notification_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a notification."""
@@ -178,7 +180,7 @@ async def delete_notification_endpoint(
 
 @router.get("/unread-count", response_model=dict)
 async def get_unread_count(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Get unread notification count."""

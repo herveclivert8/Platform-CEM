@@ -14,6 +14,9 @@ from app.models.notification import Notification
 from app.models.translation import ContentTranslation
 from app.models.newsletter import NewsletterSubscriber
 from app.models.uploaded_file import UploadedFile
+from app.models.membership import MembershipPayment
+from app.models.project_comment import ProjectComment
+from app.models.social_publication import SocialPublication
 
 __all__ = [
     "Publication",
@@ -42,4 +45,7 @@ __all__ = [
     "ContentTranslation",
     "NewsletterSubscriber",
     "UploadedFile",
+    "MembershipPayment",
+    "ProjectComment",
+    "SocialPublication",
 ]

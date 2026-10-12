@@ -4,8 +4,9 @@ export type ButtonVariant = "primary" | "secondary" | "ghost" | "outline";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const variantClasses: Record<ButtonVariant, string> = {
+  // Colors from CSS variables: orange in the back-office, acid green on the public site (index.css)
   primary:
-    "bg-orange-600 text-white font-semibold shadow-sm hover:bg-orange-700 hover:shadow-orange-600/20 hover:shadow-lg",
+    "bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-semibold shadow-sm hover:bg-[var(--btn-primary-hover)] hover:shadow-lg",
   secondary:
     "bg-emerald-600 text-white font-semibold shadow-sm hover:bg-emerald-700 hover:shadow-emerald-600/20 hover:shadow-lg",
   outline:

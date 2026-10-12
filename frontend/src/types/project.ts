@@ -9,6 +9,11 @@ export interface Project {
   branchName: string;
   authorId: number | null;
   authorName: string | null;
+  /** Members and admins only (absent for visitors) */
+  authorEmail: string | null;
+  /** Members and admins only (absent for visitors) */
+  authorPhone: string | null;
+  authorAvatarUrl: string | null;
   title: string;
   summary: string;
   description: string;
@@ -39,6 +44,9 @@ export interface ProjectDto {
   branch_name: string;
   author_id: number | null;
   author_name: string | null;
+  author_email?: string | null;
+  author_phone?: string | null;
+  author_avatar_url?: string | null;
   title: string;
   summary: string;
   description: string;
@@ -68,6 +76,9 @@ export function mapProject(dto: ProjectDto): Project {
     branchName: dto.branch_name,
     authorId: dto.author_id,
     authorName: dto.author_name,
+    authorEmail: dto.author_email ?? null,
+    authorPhone: dto.author_phone ?? null,
+    authorAvatarUrl: dto.author_avatar_url ?? null,
     title: dto.title,
     summary: dto.summary,
     description: dto.description,

@@ -4,15 +4,16 @@ from io import BytesIO
 from pathlib import Path
 
 from PIL import Image
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, require_role
+from app.api.deps import get_current_user, get_db, require_role
+from app.core.rate_limit import rate_limit
 from app.core.config import settings
 from app.core.storage import get_storage_backend
 from app.models.uploaded_file import UploadedFile
 from app.services.audit import record_audit
-from app.models.user import User, UserRole
+from app.models.user import MembershipStatus, User, UserRole
 from app.schemas.upload import FileUploadResponse
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,23 @@ MIME_TYPE_MAP = {
 }
 
 
+# Photos des projets proposés par les membres : limite anti-abus (les admins ne sont pas limités)
+_member_upload_limit = rate_limit("member_upload", limit=20, window=60 * 60)
+
+
+async def get_image_uploader(request: Request, user: User = Depends(get_current_user)) -> User:
+    """
+    Admin, ou membre (photo de profil, photo d'un projet proposé) dont l'adhésion n'a pas été refusée.
+    Joindre la photo à un projet reste réservé aux membres à jour de cotisation (voir members.py).
+    """
+    if user.is_admin:
+        return user
+    if user.membership_status != MembershipStatus.REJECTED:
+        await _member_upload_limit(request)
+        return user
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
+
+
 def _validate_image_content(file_content: bytes, file_ext: str) -> bool:
     """Validate image content using PIL."""
     try:
@@ -49,7 +67,7 @@ def _validate_image_content(file_content: bytes, file_ext: str) -> bool:
 @router.post("/image", response_model=FileUploadResponse)
 async def upload_image(
     file: UploadFile = File(...),
-    current_user: User = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.BRANCH_ADMIN])),
+    current_user: User = Depends(get_image_uploader),
     db: AsyncSession = Depends(get_db),
 ) -> FileUploadResponse:
     """Upload an image file (hero image, profile picture, etc.)."""

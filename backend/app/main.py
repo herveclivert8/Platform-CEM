@@ -16,6 +16,7 @@ from app.middleware.rate_limit import RateLimitMiddleware
 from app.services.audit import AuditContextMiddleware
 from app.db.session import AsyncSessionLocal
 from app.services.geocoding import backfill_branch_coordinates
+from app.services.membership import run_suspension_sweeps
 
 setup_logging()
 
@@ -46,6 +47,8 @@ async def lifespan(app: FastAPI):
     startup_tasks = [
         asyncio.create_task(_backfill_branch_coordinates()),
         asyncio.create_task(_translate_stale_content()),
+        # Désactivation automatique des membres dont la cotisation n'est pas payée au 30
+        asyncio.create_task(run_suspension_sweeps()),
     ]
     yield
     for task in startup_tasks:

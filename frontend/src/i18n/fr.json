@@ -5,14 +5,19 @@
     "achievements": "Nos réalisations",
     "ongoing": "Projets en cours",
     "donate": "Soutenir le CEM",
-    "admin": "Espace Admin"
+    "admin": "Espace Admin",
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "member_area": "Espace membre",
+    "my_area": "Mon espace"
   },
   "hero": {
     "badge": "Facilitateur de Développement Durable & Éducation",
     "title": "Faire émerger l'excellence et le développement durable à Madagascar.",
     "subtitle": "Un réseau international engagé pour l'éducation, l'aide sociale, l'entrepreneuriat et l'insertion par le sport, à Madagascar et partout où nos membres agissent.",
     "cta_primary": "Faire un don",
-    "cta_secondary": "Découvrir nos antennes"
+    "cta_secondary": "Découvrir nos antennes",
+    "cta_member": "Devenir membre"
   },
   "bento": {
     "education_label": "Livres & ouvrages distribués",
@@ -84,7 +89,11 @@
     "share_on": "Partager sur {{network}}",
     "copy_link": "Copier le lien",
     "link_copied": "Lien copié !",
-    "related": "Voir aussi"
+    "related": "Voir aussi",
+    "members_only_title": "Réservé aux membres",
+    "members_only_text": "Les projets en cours sont réservés aux membres du Club Excellence Madagascar. Rejoignez l'association pour les découvrir et y participer.",
+    "members_only_unpaid": "Les projets en cours sont réservés aux membres à jour de leur cotisation. Rendez-vous dans votre espace pour la régler.",
+    "published_by": "Publié par {{name}}"
   },
   "partners": {
     "title": "Ils nous font confiance",
@@ -266,8 +275,8 @@
   "auth": {
     "back_home": "Retour à l'accueil",
     "back_login": "Retour à la connexion",
-    "login_title": "Espace Admin",
-    "login_subtitle": "Connectez-vous pour accéder au back-office.",
+    "login_title": "Connexion",
+    "login_subtitle": "Connectez-vous à votre espace membre ou administrateur.",
     "email": "Email",
     "password": "Mot de passe",
     "forgot_link": "Mot de passe oublié ?",
@@ -297,7 +306,36 @@
     "change_title": "Choisissez votre mot de passe",
     "change_subtitle": "Votre compte a été créé avec un mot de passe temporaire. Remplacez-le pour accéder à l'administration.",
     "temporary_password": "Mot de passe temporaire",
-    "change_submit": "Enregistrer mon mot de passe"
+    "change_submit": "Enregistrer mon mot de passe",
+    "no_account": "Pas encore membre ?",
+    "already_member": "Déjà inscrit ?",
+    "register_link": "S'inscrire",
+    "register_title": "Devenir membre",
+    "register_subtitle": "Rejoignez le Club Excellence Madagascar dans l'antenne de votre choix.",
+    "first_name": "Prénom",
+    "last_name": "Nom",
+    "branch": "Antenne",
+    "branch_placeholder": "Choisissez une antenne",
+    "password_min": "Mot de passe (8 caractères minimum)",
+    "registering": "Inscription…",
+    "register_error": "L'inscription a échoué. Vérifiez les informations saisies.",
+    "too_many_registrations": "Trop d'inscriptions depuis cette connexion. Réessayez dans une heure.",
+    "step_account": "{{step}}. Votre compte",
+    "step_payment": "{{step}}. Frais d'adhésion",
+    "register_continue": "Continuer vers le paiement",
+    "payment_title": "Frais d'adhésion",
+    "payment_subtitle": "Votre compte est créé. Réglez vos frais d'adhésion : ils valent cotisation de votre premier mois. Dès que l'administrateur de votre antenne aura validé votre adhésion, vous pourrez publier des projets et participer aux discussions.",
+    "pay_later": "Payer plus tard depuis mon espace membre",
+    "sign_out_to_register": "Se déconnecter et s'inscrire",
+    "go_admin": "Aller à l'espace admin",
+    "go_member": "Aller à mon espace membre",
+    "signed_in_as_admin_short": "Vous êtes connecté avec le compte administrateur {{name}} ({{email}}).",
+    "signed_in_as_member_short": "Vous êtes connecté avec le compte membre {{name}} ({{email}}).",
+    "sign_out_to_switch_text": "Pour vous connecter avec un autre compte, déconnectez-vous d'abord.",
+    "sign_out_to_register_text": "Pour inscrire un nouveau membre, déconnectez-vous d'abord.",
+    "sign_out_to_switch": "Se déconnecter et changer de compte",
+    "phone": "Téléphone",
+    "phone_hint": "Visible des autres membres sur les projets que vous publierez."
   },
   "admin": {
     "nav": {
@@ -319,7 +357,9 @@
       "super_admin": "Super Admin",
       "home_page": "Page d'accueil & pied de page",
       "menu": "Menu du back-office",
-      "open_menu": "Ouvrir le menu"
+      "open_menu": "Ouvrir le menu",
+      "members": "Membres",
+      "social_publishing": "Publication automatique"
     },
     "scope": {
       "all": "Toutes les antennes"
@@ -720,8 +760,8 @@
     },
     "projects": {
       "title": "Réalisations & projets",
-      "subtitle_super": "Validez les ajouts des antennes : ils sont publiés sur le site dès votre validation.",
-      "subtitle_branch": "Vos ajouts sont publiés sur le site après validation par le siège.",
+      "subtitle_super": "Toutes les antennes. Les projets proposés par les membres sont validés par l'admin de leur antenne ; vous êtes informé de chaque publication et pouvez supprimer tout projet.",
+      "subtitle_branch": "Vos ajouts sont publiés directement. Les projets proposés par les membres de votre antenne attendent votre validation.",
       "add": "Ajouter",
       "tab_pending": "En attente",
       "tab_approved": "Publiés",
@@ -748,8 +788,8 @@
       "added_by": "ajouté par {{name}}",
       "awaiting_title": "En attente de votre validation",
       "awaiting_text": "Une fois validé, l'élément est publié immédiatement sur le site et l'auteur est notifié.",
-      "notice_online": "Cet élément est en ligne. Une modification le retire du site jusqu’à ce que le siège la valide — sauf la mise à jour de la seule valeur atteinte, publiée directement.",
-      "notice_review": "Votre ajout sera soumis à la validation du siège avant d'être publié sur le site.",
+      "notice_online": "Cet élément est en ligne : vos modifications sont publiées directement.",
+      "notice_review": "Votre ajout sera publié sur le site dès son enregistrement.",
       "field_type": "Type",
       "type_completed": "Réalisation (terminé)",
       "type_ongoing": "Projet en cours",
@@ -777,7 +817,7 @@
       "publish": "Publier",
       "submit": "Soumettre pour validation",
       "reject_title": "Refuser « {{title}} »",
-      "reject_text": "Le motif sera transmis à l'admin de l'antenne, qui pourra corriger puis soumettre à nouveau.",
+      "reject_text": "Le motif sera visible par l'auteur du projet dans son espace.",
       "reject_placeholder": "Ex. : merci d'ajouter des photos et les dates exactes du projet.",
       "field_goal": "Objectif chiffré (facultatif)",
       "goal_progress": "Atteint",
@@ -846,7 +886,7 @@
       "post_published": "Post publié",
       "post_draft": "Brouillon enregistré",
       "post_deleted": "Post supprimé",
-      "project_submitted": "Projet soumis à la validation du siège",
+      "project_submitted": "Projet enregistré, en attente de validation",
       "project_published": "Projet publié sur la plateforme",
       "project_saved_hidden": "Projet enregistré (masqué sur la plateforme)",
       "project_saved": "Projet enregistré",
@@ -868,6 +908,69 @@
       "submission_deleted": "Dossier supprimé",
       "export_done": "Export téléchargé",
       "subscriber_deleted": "Abonné supprimé"
+    },
+    "members": {
+      "title": "Membres",
+      "subtitle": "Adhésions, frais d'inscription et cotisations mensuelles.",
+      "tab_payments": "Paiements",
+      "tab_members": "Adhésions",
+      "filter_all": "Tous",
+      "no_payments": "Aucun paiement.",
+      "no_members": "Aucun membre.",
+      "reference": "Réf.",
+      "confirm_payment": "Confirmer la réception",
+      "reject": "Refuser",
+      "payment_confirmed": "Paiement confirmé",
+      "reject_payment_title": "Rejeter le paiement de {{name}}",
+      "reject_payment_text": "Indiquez pourquoi (transaction introuvable, montant incorrect…). Le membre pourra déclarer un nouveau paiement.",
+      "search": "Nom, email, téléphone",
+      "registration_paid": "Inscription payée",
+      "registration_unpaid": "Inscription non payée",
+      "pending_payments_one": "{{count}} paiement à vérifier",
+      "pending_payments_other": "{{count}} paiements à vérifier",
+      "registered_on": "inscrit le {{date}}",
+      "approve": "Valider l'adhésion",
+      "approve_needs_fee": "Les frais d'inscription doivent d'abord être confirmés.",
+      "member_approved": "Adhésion validée",
+      "reject_member_title": "Refuser l'adhésion de {{name}}",
+      "reject_member_text": "Indiquez le motif du refus.",
+      "record_cash": "Encaisser des espèces",
+      "cash_title": "Espèces reçues de {{name}}",
+      "cash_text": "Enregistrez l'argent remis au guichet : le paiement est confirmé aussitôt, et une cotisation prolonge l'accès du membre d'un mois.",
+      "cash_kind": "Paiement",
+      "cash_nothing_due": "Rien à encaisser : les frais d'inscription sont payés et l'adhésion n'est pas encore validée.",
+      "cash_submit": "Enregistrer {{amount}}",
+      "cash_recorded": "Paiement en espèces enregistré",
+      "reactivate": "Réactiver",
+      "reactivate_needs_fee": "La cotisation du mois en cours doit d'abord être payée.",
+      "member_reactivated": "Compte réactivé"
+    },
+    "social_publishing": {
+      "title": "Publication automatique",
+      "subtitle": "Chaque actualité publiée, et chaque projet ou réalisation validé et visible, est partagé une fois sur Facebook, Instagram et LinkedIn.",
+      "mode_simulation": "Mode simulation",
+      "mode_simulation_text": "Rien n'est envoyé aux réseaux : l'historique montre ce qui serait publié. La vraie publication s'active sur le serveur (SOCIAL_PUBLISHING=live) une fois les comptes du CEM reliés.",
+      "mode_live": "Publication réelle",
+      "mode_live_text": "Les contenus sont publiés sur chaque réseau configuré ci-dessous.",
+      "mode_disabled": "Publication désactivée",
+      "mode_disabled_text": "Aucun contenu n'est partagé sur les réseaux sociaux.",
+      "configured": "Compte relié",
+      "not_configured": "Pas encore relié",
+      "history": "Historique",
+      "empty": "Aucune publication pour le moment.",
+      "filter_ALL": "Toutes",
+      "filter_PUBLISHED": "Publiées",
+      "filter_FAILED": "En échec",
+      "filter_SKIPPED": "Ignorées",
+      "status_PUBLISHED": "Publié",
+      "status_FAILED": "Échec",
+      "status_SKIPPED": "Ignoré",
+      "simulated": "Simulation",
+      "type_post": "Actualité",
+      "type_project": "Projet",
+      "show_message": "Voir le texte publié",
+      "view": "Voir",
+      "retry": "Réessayer"
     }
   },
   "posts_page": {
@@ -894,7 +997,10 @@
   "seo": {
     "branch_of": "Antenne de {{city}}",
     "admin": "Espace Admin",
-    "branch_of_elided": "Antenne d’{{city}}"
+    "branch_of_elided": "Antenne d’{{city}}",
+    "login": "Connexion",
+    "register": "Inscription",
+    "member": "Espace membre"
   },
   "transparency": {
     "title": "Transparence",
@@ -938,5 +1044,156 @@
     "subtitle": "Les dernières réalisations du réseau et les projets à soutenir dès aujourd'hui.",
     "latest_achievements": "Dernières réalisations",
     "ongoing": "Projets en cours"
+  },
+  "member": {
+    "title": "Espace membre",
+    "greeting": "Bonjour {{name}}",
+    "branch": "Antenne",
+    "status_label": "Adhésion",
+    "status": {
+      "PENDING": "En attente de validation",
+      "ACTIVE": "Active",
+      "REJECTED": "Refusée",
+      "SUSPENDED": "Compte désactivé"
+    },
+    "rejected_text": "Votre demande d'adhésion n'a pas été acceptée. Contactez votre antenne pour en savoir plus.",
+    "dues_label": "Cotisation",
+    "paid_until": "Payée jusqu'au {{date}}",
+    "dues_unpaid": "Mois non payé",
+    "registration_title": "Frais d'inscription",
+    "registration_text": "Pour finaliser votre adhésion, réglez vos frais d'adhésion : ils valent cotisation de votre premier mois. L'administrateur de votre antenne ou le siège validera ensuite votre adhésion.",
+    "awaiting_approval": "Vos frais d'adhésion ont bien été reçus. Votre adhésion est en attente de validation par l'administrateur de votre antenne ou par le siège. Votre premier mois de membre commencera à la validation.",
+    "payment_being_checked": "Votre paiement est en cours de vérification par l'administrateur de votre antenne.",
+    "dues_title": "Cotisation mensuelle",
+    "dues_text_paid": "Votre cotisation est à jour. Elle se renouvelle le 30 de chaque mois : payez la suivante avant cette date pour garder vos droits de membre (vous pouvez la payer à l'avance).",
+    "dues_text_unpaid": "La cotisation se renouvelle le 30 de chaque mois. Sans paiement à cette date, votre compte est désactivé.",
+    "pay_dues": "Payer la cotisation",
+    "projects_title": "Mes projets",
+    "projects_locked": "Publier un projet est réservé aux membres à jour de leur cotisation.",
+    "payments_title": "Historique des paiements",
+    "project": {
+      "new": "Proposer un projet",
+      "title": "Titre du projet",
+      "summary": "Résumé (une phrase)",
+      "description": "Description",
+      "pillar": "Domaine",
+      "location": "Lieu",
+      "beneficiaries": "Bénéficiaires",
+      "submit": "Envoyer pour validation",
+      "error": "Le projet n'a pas pu être envoyé.",
+      "photo": "Photo",
+      "photo_hint": "Une photo rend votre projet plus visible (JPEG, PNG ou WebP, 5 Mo maximum)."
+    },
+    "suspended_text": "Votre cotisation n'a pas été payée à l'échéance du 30 : votre compte est désactivé. Payez la cotisation du mois en cours ; l'administrateur de votre antenne réactivera ensuite votre compte.",
+    "suspended_paid_text": "Votre cotisation du mois est payée. L'administrateur de votre antenne va réactiver votre compte.",
+    "hello": "Bonjour {{name}}",
+    "tabs": {
+      "dashboard": "Tableau de bord",
+      "dues": "Cotisations",
+      "projects": "Mes projets",
+      "discussions": "Mes discussions",
+      "profile": "Mon profil"
+    },
+    "steps": {
+      "title": "Votre adhésion",
+      "account": "Compte créé",
+      "fee": "Frais d'adhésion",
+      "fee_checking": "Paiement en cours de vérification",
+      "approval": "Validation par l'antenne",
+      "pay_fee": "Régler mes frais d'adhésion"
+    },
+    "card": {
+      "title": "Carte de membre",
+      "inactive": "Carte inactive",
+      "branch": "Antenne de {{branch}}",
+      "since": "Membre depuis {{date}}"
+    },
+    "due": {
+      "ok": "À jour",
+      "soon": "Échéance proche",
+      "today": "Aujourd'hui",
+      "next": "Prochaine échéance : {{date}}",
+      "pay_ahead": "Payer à l'avance",
+      "suspended": "Votre compte est désactivé faute de cotisation. Payez le mois en cours pour le faire réactiver.",
+      "pending": "Votre première cotisation commencera à la validation de votre adhésion.",
+      "none": "Aucune cotisation en cours."
+    },
+    "contact_branch": "Contacter mon antenne",
+    "see_all": "Tout voir",
+    "in_branch": "Dans votre antenne",
+    "no_projects": "Vous n'avez pas encore proposé de projet.",
+    "no_discussions": "Vous n'avez encore participé à aucune discussion. Commentez un projet pour la retrouver ici.",
+    "no_branch_projects": "Aucun projet en cours dans votre antenne pour le moment.",
+    "ongoing_since": "Projet en cours · publié le {{date}}",
+    "last_activity": "dernier message le {{date}}",
+    "comment_counts": "{{mine}} de vous · {{total}} au total",
+    "review_status": {
+      "PENDING": "En attente",
+      "APPROVED": "Publié",
+      "REJECTED": "Refusé"
+    },
+    "profile": {
+      "phone": "Téléphone",
+      "email_fixed": "Votre identifiant de connexion : contactez votre antenne pour le changer.",
+      "save": "Enregistrer",
+      "saved": "Profil enregistré.",
+      "save_error": "Le profil n'a pas pu être enregistré.",
+      "password_title": "Mot de passe",
+      "current_password": "Mot de passe actuel",
+      "change_password": "Changer le mot de passe",
+      "password_saved": "Mot de passe modifié.",
+      "password_error": "Le mot de passe n'a pas pu être modifié.",
+      "photo_add": "Ajouter une photo",
+      "photo_change": "Changer la photo",
+      "photo_remove": "Retirer",
+      "photo_hint": "JPEG, PNG ou WebP, 5 Mo maximum. Visible des membres sur votre carte, vos projets et vos commentaires.",
+      "photo_error": "La photo n'a pas pu être enregistrée."
+    }
+  },
+  "membership": {
+    "currency": "Devise",
+    "method": "Mode de paiement",
+    "mobile_money_mga_only": "Le Mobile Money se paie uniquement en ariary.",
+    "methods": {
+      "CARD": "Carte",
+      "MOBILE_MONEY": "Mobile Money",
+      "CASH": "Espèces"
+    },
+    "kinds": {
+      "REGISTRATION": "Frais d'inscription",
+      "MONTHLY": "Cotisation mensuelle"
+    },
+    "payment_status": {
+      "PENDING": "À vérifier",
+      "CONFIRMED": "Confirmé",
+      "REJECTED": "Rejeté"
+    },
+    "card_invalid": "Vérifiez le numéro, la date d'expiration et le code de votre carte.",
+    "test_card_hint": "Mode simulation : utilisez la carte de test 4242 4242 4242 4242, une date future et un CVC quelconque.",
+    "mm_send_to": "Envoyez {{amount}} au numéro :",
+    "mm_phone": "Numéro qui a envoyé l'argent",
+    "mm_reference": "Référence de la transaction",
+    "mm_reference_hint": "Elle figure dans le SMS de confirmation de votre opérateur.",
+    "cash_text": "Remettez {{amount}} à votre antenne. Votre paiement sera confirmé par l'administrateur à la réception de l'argent.",
+    "declare_mm": "J'ai envoyé l'argent",
+    "declare_cash": "Je paierai en espèces"
+  },
+  "discussion": {
+    "title": "Discussion",
+    "placeholder": "Écrivez un commentaire…",
+    "reply_placeholder": "Écrivez une réponse…",
+    "send": "Publier",
+    "reply": "Répondre",
+    "team": "Équipe",
+    "delete_confirm": "Supprimer ce commentaire ?",
+    "empty": "Aucun commentaire pour l'instant. Lancez la discussion !",
+    "locked_member": "La discussion est réservée aux membres à jour de leur cotisation.",
+    "locked_visitor": "Rejoignez l'association pour participer à la discussion sur ce projet."
+  },
+  "join": {
+    "title_before": "Votre place est ",
+    "title_accent": "ici",
+    "text": "Inscrivez-vous dans l'antenne de votre choix pour suivre les projets en cours, proposer les vôtres et échanger avec le réseau.",
+    "cta": "Rejoindre le CEM"
   }
 }

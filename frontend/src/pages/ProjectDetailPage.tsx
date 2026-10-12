@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import DOMPurify from "dompurify";
-import { ArrowLeft, ArrowRight, CalendarDays, Expand, MapPin, Users } from "lucide-react";
-import { useProject, useProjects } from "../hooks/useProjects";
+import { isAxiosError } from "axios";
+import { ArrowLeft, ArrowRight, CalendarDays, Expand, Mail, MapPin, Phone, UserRound, Users } from "lucide-react";
+import { useCanSeeMemberContent, useProject, useProjects } from "../hooks/useProjects";
+import { MembersOnlyNotice } from "../components/projects/MembersOnlyNotice";
+import { Avatar } from "../components/ui/Avatar";
 import { usePillarLabels } from "../hooks/usePillarLabels";
 import { useDonationUiStore } from "../store/donationUiStore";
 import { PHASE_PATH, type Project, type ProjectPhase } from "../types/project";
@@ -12,6 +15,7 @@ import { ProjectProgress } from "../components/projects/ProjectProgress";
 import { ProjectCard } from "../components/projects/ProjectCard";
 import { ImageLightbox } from "../components/projects/ImageLightbox";
 import { ShareButtons } from "../components/projects/ShareButtons";
+import { ProjectComments } from "../components/projects/ProjectComments";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { Skeleton } from "../components/ui/Skeleton";
@@ -31,7 +35,8 @@ function pickRelated(current: Project, candidates: Project[]): Project[] {
 export function ProjectDetailPage({ phase }: { phase: ProjectPhase }) {
   const { t, i18n } = useTranslation();
   const { projectId } = useParams<{ projectId: string }>();
-  const { data: project, isLoading, isError } = useProject(projectId ? Number(projectId) : undefined);
+  const memberView = useCanSeeMemberContent();
+  const { data: project, isLoading, isError, error } = useProject(projectId ? Number(projectId) : undefined);
   const { data: siblings } = useProjects({ phase, pageSize: 12 });
   const pillarLabels = usePillarLabels();
   const openDonation = useDonationUiStore((s) => s.open);
@@ -57,6 +62,18 @@ export function ProjectDetailPage({ phase }: { phase: ProjectPhase }) {
         <Skeleton className="h-8 w-40" />
         <Skeleton className="mt-6 h-10 w-full" />
         <Skeleton className="mt-4 h-64 w-full" />
+      </div>
+    );
+  }
+
+  // Ongoing project opened by a visitor (or a member behind on their fee): members only
+  const membersOnly =
+    isError && isAxiosError(error) && error.response?.status === 403 && error.response.data?.detail === "MEMBERS_ONLY";
+  if (membersOnly || (phase === "ONGOING" && !memberView && !project)) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
+        {backLink}
+        <MembersOnlyNotice />
       </div>
     );
   }
@@ -176,9 +193,43 @@ export function ProjectDetailPage({ phase }: { phase: ProjectPhase }) {
           </Link>
         </div>
 
+        {project.authorName && (
+          <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 dark:text-slate-300">
+            <span className="inline-flex items-center gap-2">
+              {project.authorAvatarUrl ? (
+                <Avatar name={project.authorName} url={project.authorAvatarUrl} size="sm" />
+              ) : (
+                <UserRound className="h-4 w-4 text-slate-400" aria-hidden />
+              )}
+              {t("projects.published_by", { name: project.authorName })}
+            </span>
+            {/* Members and admins only: visitors never receive the address */}
+            {project.authorEmail && (
+              <a
+                href={`mailto:${project.authorEmail}?subject=${encodeURIComponent(project.title)}`}
+                className="inline-flex items-center gap-1.5 font-medium text-emerald-700 hover:underline dark:text-emerald-400"
+              >
+                <Mail className="h-4 w-4" aria-hidden />
+                {project.authorEmail}
+              </a>
+            )}
+            {project.authorPhone && (
+              <a
+                href={`tel:${project.authorPhone.replace(/[^\d+]/g, "")}`}
+                className="inline-flex items-center gap-1.5 font-medium text-emerald-700 hover:underline dark:text-emerald-400"
+              >
+                <Phone className="h-4 w-4" aria-hidden />
+                {project.authorPhone}
+              </a>
+            )}
+          </div>
+        )}
+
         <div className="mt-6">
           <ShareButtons title={project.title} />
         </div>
+
+        <ProjectComments projectId={project.id} />
       </article>
 
       {related.length > 0 && (

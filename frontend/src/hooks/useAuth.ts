@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { useAuthStore } from "../store/authStore";
 import { mapCurrentUser, type CurrentUserDto } from "../types/user";
@@ -24,6 +24,54 @@ export function useLogin() {
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
       });
+    },
+  });
+}
+
+export interface RegisterParams {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+  branchId: number;
+}
+
+/** Visitor sign-up as a member: the account is created pending approval and signed in right away. */
+export function useRegister() {
+  const login = useAuthStore((s) => s.login);
+
+  return useMutation({
+    mutationFn: async (params: RegisterParams) => {
+      const { data } = await api.post<LoginResponseDto>("/auth/register", {
+        first_name: params.firstName,
+        last_name: params.lastName,
+        email: params.email,
+        phone: params.phone,
+        password: params.password,
+        branch_id: params.branchId,
+      });
+      return data;
+    },
+    onSuccess: (data) => {
+      login({
+        user: mapCurrentUser(data.user),
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+      });
+    },
+  });
+}
+
+/** Fresh profile from the server (e.g. a membership approved since sign-in), kept in sync with the store. */
+export function useCurrentUser() {
+  return useQuery({
+    queryKey: ["auth", "me"],
+    queryFn: async () => {
+      const { data } = await api.get<CurrentUserDto>("/auth/me");
+      const user = mapCurrentUser(data);
+      useAuthStore.setState({ user });
+      return user;
     },
   });
 }

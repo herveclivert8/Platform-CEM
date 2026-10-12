@@ -14,11 +14,11 @@ from sqlalchemy.orm import selectinload
 from starlette.concurrency import run_in_threadpool
 from typing import Optional
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_admin
 from app.core.email import email_service
 from app.core.security import hash_password
 from app.models import User, Branch, Publication, Post
-from app.models.user import UserRole
+from app.models.user import ADMIN_ROLES, UserRole
 from app.core.permissions import verify_super_admin_only
 from app.services.audit import record_audit
 
@@ -94,7 +94,7 @@ def _admin_read(u: User) -> AdminRead:
 
 @router.get("/admins", response_model=AdminListResponse)
 async def list_admins(
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -105,8 +105,9 @@ async def list_admins(
     """
     await verify_super_admin_only(user)
 
-    query = select(User).options(selectinload(User.branch)).order_by(User.id)
-    total = await db.scalar(select(func.count(User.id)))
+    is_admin = User.role.in_(ADMIN_ROLES)
+    query = select(User).options(selectinload(User.branch)).where(is_admin).order_by(User.id)
+    total = await db.scalar(select(func.count(User.id)).where(is_admin))
 
     offset = (page - 1) * page_size
     query = query.offset(offset).limit(page_size)
@@ -126,7 +127,7 @@ async def list_admins(
 @router.post("/admins", response_model=AdminCreated, status_code=status.HTTP_201_CREATED)
 async def create_admin(
     data: AdminCreate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -192,7 +193,7 @@ async def create_admin(
 @router.delete("/admins/{admin_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_admin(
     admin_id: int,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -229,7 +230,7 @@ async def delete_admin(
 
 @router.get("/statistics", response_model=GlobalStatistics)
 async def get_global_statistics(
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """

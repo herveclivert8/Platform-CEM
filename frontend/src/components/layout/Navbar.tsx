@@ -1,21 +1,34 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Menu, X, ShieldCheck, HeartHandshake } from "lucide-react";
+import { Menu, X, LogIn, LogOut, UserRound } from "lucide-react";
+import { Wordmark } from "./Wordmark";
 import { Button } from "../ui/Button";
+import { buttonClasses } from "../ui/buttonStyles";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageDropdown } from "./LanguageDropdown";
 import { useDonationUiStore } from "../../store/donationUiStore";
 import { useAuthStore } from "../../store/authStore";
+import { useLogout } from "../../hooks/useAuth";
+import { canSeeMemberContent, homePathFor } from "../../types/user";
 
 export function Navbar() {
   const { t } = useTranslation();
   const openDonation = useDonationUiStore((s) => s.open);
-  // The admin link is only shown to a logged-in admin; others reach the login page at /login directly.
-  const isAdmin = useAuthStore((s) => s.isAuthenticated);
   const [scrolled, setScrolled] = useState(false);
   const [showCta, setShowCta] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
+  const logout = useLogout();
+  // Signed in (member or admin): "Sign out" and "My area" replace "Sign in" and "Join"
+  const signedInRole = useAuthStore((s) => (s.isAuthenticated ? s.user?.role : undefined));
+  // "Projets en cours" is reserved for members with their fee paid, and admins
+  const memberView = useAuthStore((s) => (s.isAuthenticated ? canSeeMemberContent(s.user) : false));
+  const signOut = () => {
+    setMobileOpen(false);
+    logout();
+    navigate("/", { replace: true });
+  };
 
   useEffect(() => {
     // The navbar CTA duplicates the page's own hero CTA (or, on the branch hub
@@ -35,7 +48,7 @@ export function Navbar() {
     { label: t("nav.home"), to: "/" },
     { label: t("nav.branches"), to: "/antennes" },
     { label: t("nav.achievements"), to: "/realisations" },
-    { label: t("nav.ongoing"), to: "/projets-en-cours" },
+    ...(memberView ? [{ label: t("nav.ongoing"), to: "/projets-en-cours" }] : []),
   ];
 
   return (
@@ -47,13 +60,8 @@ export function Navbar() {
       }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link to="/" className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
-            <HeartHandshake className="h-5 w-5" aria-hidden />
-          </span>
-          <span className="font-bold tracking-tight text-slate-900 dark:text-white">
-            Club Excellence Madagascar
-          </span>
+        <Link to="/" aria-label="Club Excellence Madagascar — accueil">
+          <Wordmark />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">
@@ -89,14 +97,41 @@ export function Navbar() {
             </Button>
           )}
 
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 lg:inline-flex dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-            >
-              <ShieldCheck className="h-4 w-4" aria-hidden />
-              {t("nav.admin")}
-            </Link>
+          {signedInRole ? (
+            <>
+              <button
+                type="button"
+                onClick={signOut}
+                className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 sm:inline-flex dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                <LogOut className="h-4 w-4" aria-hidden />
+                {t("auth.sign_out")}
+              </button>
+              <Link
+                to={homePathFor(signedInRole)}
+                className={buttonClasses({ variant: "secondary", size: "sm", className: "hidden sm:inline-flex" })}
+              >
+                <UserRound className="h-4 w-4" aria-hidden />
+                {t("nav.my_area")}
+              </Link>
+            </>
+          ) : (
+            <>
+              {/* One sign-in for everyone: admins land in the back-office, members in their area */}
+              <Link
+                to="/login"
+                className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 sm:inline-flex dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                <LogIn className="h-4 w-4" aria-hidden />
+                {t("nav.login")}
+              </Link>
+              <Link
+                to="/inscription"
+                className={buttonClasses({ variant: "secondary", size: "sm", className: "hidden sm:inline-flex" })}
+              >
+                {t("nav.register")}
+              </Link>
+            </>
           )}
 
           <button
@@ -136,16 +171,46 @@ export function Navbar() {
                 </a>
               );
             })}
-            {isAdmin && (
-              <Link
-                to="/admin"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-1.5 rounded-lg px-3.5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
-              >
-                <ShieldCheck className="h-4 w-4" aria-hidden />
-                {t("nav.admin")}
-              </Link>
-            )}
+            <div className="mt-2 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+              {signedInRole ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    className={buttonClasses({ variant: "ghost", size: "sm", className: "border border-slate-200 dark:border-slate-700" })}
+                  >
+                    <LogOut className="h-4 w-4" aria-hidden />
+                    {t("auth.sign_out")}
+                  </button>
+                  <Link
+                    to={homePathFor(signedInRole)}
+                    onClick={() => setMobileOpen(false)}
+                    className={buttonClasses({ variant: "secondary", size: "sm" })}
+                  >
+                    <UserRound className="h-4 w-4" aria-hidden />
+                    {t("nav.my_area")}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className={buttonClasses({ variant: "ghost", size: "sm", className: "border border-slate-200 dark:border-slate-700" })}
+                  >
+                    <LogIn className="h-4 w-4" aria-hidden />
+                    {t("nav.login")}
+                  </Link>
+                  <Link
+                    to="/inscription"
+                    onClick={() => setMobileOpen(false)}
+                    className={buttonClasses({ variant: "secondary", size: "sm" })}
+                  >
+                    {t("nav.register")}
+                  </Link>
+                </>
+              )}
+            </div>
           </nav>
           <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
             <div className="flex items-center gap-1">

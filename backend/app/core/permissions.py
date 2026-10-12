@@ -10,7 +10,7 @@ from functools import wraps
 
 from fastapi import Depends, HTTPException, status
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_admin
 from app.models.user import User, UserRole
 
 
@@ -69,7 +69,7 @@ async def verify_super_admin_only(user: User) -> None:
 def require_super_admin(func):
     """Décorateur pour exiger super admin"""
     @wraps(func)
-    async def wrapper(*args, user: User = Depends(get_current_user), **kwargs):
+    async def wrapper(*args, user: User = Depends(get_current_admin), **kwargs):
         await verify_super_admin_only(user)
         return await func(*args, user=user, **kwargs)
     return wrapper
@@ -78,7 +78,7 @@ def require_super_admin(func):
 def require_admin(func):
     """Décorateur pour exiger un rôle admin (branche ou super)"""
     @wraps(func)
-    async def wrapper(*args, user: User = Depends(get_current_user), **kwargs):
+    async def wrapper(*args, user: User = Depends(get_current_admin), **kwargs):
         if user.role not in (UserRole.BRANCH_ADMIN, UserRole.SUPER_ADMIN):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

@@ -1,10 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { HeartHandshake, Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
+import { Wordmark } from "./Wordmark";
 import { ALL_PILLARS } from "../../types/post";
 import { usePillarLabels } from "../../hooks/usePillarLabels";
 import { Link } from "react-router-dom";
 import { SocialLinks } from "./SocialLinks";
 import { NewsletterSignup } from "./NewsletterSignup";
+import { FEATURES } from "../../config/features";
 import { useHomePage } from "../../hooks/useHomePage";
 
 const DEFAULT_CONTACT_EMAIL = "contact@cem-madagascar.org";
@@ -20,16 +22,9 @@ export function Footer() {
   return (
     <footer className="border-t border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-950">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
+        <div className={`grid grid-cols-1 gap-10 md:grid-cols-2 ${FEATURES.newsletter ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
           <div>
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 text-white">
-                <HeartHandshake className="h-5 w-5" aria-hidden />
-              </span>
-              <span className="font-bold tracking-tight text-slate-900 dark:text-white">
-                Club Excellence Madagascar
-              </span>
-            </div>
+            <Wordmark />
             <p className="mt-4 max-w-xs text-sm text-slate-500 dark:text-slate-400">
               {t("footer.association")}
             </p>
@@ -73,12 +68,14 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{t("newsletter.title")}</h3>
-            <div className="mt-4">
-              <NewsletterSignup />
+          {FEATURES.newsletter && (
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{t("newsletter.title")}</h3>
+              <div className="mt-4">
+                <NewsletterSignup />
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-slate-100 pt-6 text-xs text-slate-400 sm:flex-row dark:border-slate-800">

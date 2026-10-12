@@ -16,6 +16,9 @@ const queryClient = new QueryClient({
   },
 });
 
+// Public site style ("Éditorial", see index.css); the back-office removes it (AdminLayout)
+document.documentElement.classList.add("site-theme");
+
 // Content (posts, projects, home page) is fetched per language: refetch it after a language switch
 i18n.on("languageChanged", () => queryClient.invalidateQueries());
 

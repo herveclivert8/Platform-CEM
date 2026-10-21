@@ -32,7 +32,7 @@ export function NetworkSection() {
   ];
 
   return (
-    <section id="reseau" className="bg-slate-50 py-20 dark:bg-slate-950">
+    <section id="reseau" className="cem-photo-section dark py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10 text-center">
           <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">{t("network.title")}</h2>

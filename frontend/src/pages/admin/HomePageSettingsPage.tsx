@@ -12,6 +12,7 @@ import { useHomePage, useUpdateHomePage } from "../../hooks/useHomePage";
 import { usePillarLabels } from "../../hooks/usePillarLabels";
 import { useBranches } from "../../hooks/useBranches";
 import { networkSummary } from "../../components/home/networkSummary";
+import { ASSOCIATION } from "../../config/association";
 import { ALL_PILLARS } from "../../types/post";
 import type { HomePage } from "../../types/settings";
 import { UnsavedChangesGuard } from "../../components/admin/UnsavedChangesGuard";
@@ -21,6 +22,8 @@ import { apiErrorMessage } from "../../lib/api";
 
 const EMPTY: HomePage = {
   heroImageUrl: "",
+  logoUrl: "",
+  logoMarkUrl: "",
   heroBadge: "",
   heroTitle: "",
   heroSubtitle: "",
@@ -36,6 +39,11 @@ const HERO_FIELDS = [
   { key: "heroBadge", labelKey: "admin.home_page.badge", defaultKey: "hero.badge", maxLength: 255, rows: 1 },
   { key: "heroTitle", labelKey: "admin.home_page.heading", defaultKey: "hero.title", maxLength: 200, rows: 2 },
   { key: "heroSubtitle", labelKey: "admin.home_page.tagline", defaultKey: "hero.subtitle", maxLength: 500, rows: 3 },
+] as const;
+
+const LOGO_FIELDS = [
+  { key: "logoUrl", labelKey: "admin.home_page.logo_full", hintKey: "admin.home_page.logo_full_hint", fallback: ASSOCIATION.logoFull },
+  { key: "logoMarkUrl", labelKey: "admin.home_page.logo_mark", hintKey: "admin.home_page.logo_mark_hint", fallback: ASSOCIATION.logo },
 ] as const;
 
 /** Translations run in the background after saving: re-read the English version a few times. */
@@ -138,6 +146,28 @@ export function HomePageSettingsPage() {
                 <Languages className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
                 {t("admin.home_page.french_only")}
               </p>
+
+              <section className="space-y-5">
+                <SectionTitle>{t("admin.home_page.section_logo")}</SectionTitle>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t("admin.home_page.logo_hint")}</p>
+                {LOGO_FIELDS.map((field) => (
+                  <div key={field.key}>
+                    <p className="mb-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">{t(field.labelKey)}</p>
+                    <div className="mb-2 flex items-center gap-3">
+                      <span className="flex h-16 items-center rounded-lg border border-slate-200 bg-white px-3 dark:border-slate-700">
+                        <img src={form[field.key] || field.fallback} alt="" className="h-12 w-auto max-w-56 object-contain" />
+                      </span>
+                      {!form[field.key] && <Badge tone="slate">{t("admin.home_page.logo_default")}</Badge>}
+                    </div>
+                    <ImageDropzone
+                      images={form[field.key] ? [form[field.key]!] : []}
+                      // A single image: a new upload replaces the current one; removing it restores the default logo
+                      onChange={(images) => set(field.key, images[images.length - 1] ?? "")}
+                    />
+                    <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">{t(field.hintKey)}</p>
+                  </div>
+                ))}
+              </section>
 
               <section className="space-y-5">
                 <SectionTitle>{t("admin.home_page.section_cover")}</SectionTitle>

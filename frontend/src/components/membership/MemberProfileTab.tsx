@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { Camera, Loader2, Trash2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Camera, Download, Loader2, Trash2 } from "lucide-react";
 import { Avatar } from "../ui/Avatar";
 import { useTranslation } from "react-i18next";
 import { Button } from "../ui/Button";
@@ -8,7 +9,7 @@ import { Field } from "../donation/donationUi";
 import { fieldClass } from "../donation/donationConstants";
 import { Panel } from "./memberUi";
 import { useChangePassword } from "../../hooks/useAuth";
-import { useSetMyAvatar, useUpdateMyProfile } from "../../hooks/useMembership";
+import { useDeleteMyAccount, useExportMyData, useSetMyAvatar, useUpdateMyProfile } from "../../hooks/useMembership";
 import { api, apiErrorMessage } from "../../lib/api";
 import type { CurrentUser } from "../../types/user";
 
@@ -53,7 +54,6 @@ function AvatarEditor({ user }: { user: CurrentUser }) {
           <Button
             type="button"
             variant="primary"
-            className="rounded-full"
             icon={busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
             disabled={busy}
             onClick={() => inputRef.current?.click()}
@@ -61,7 +61,7 @@ function AvatarEditor({ user }: { user: CurrentUser }) {
             {t(user.avatarUrl ? "member.profile.photo_change" : "member.profile.photo_add")}
           </Button>
           {user.avatarUrl && (
-            <Button type="button" variant="ghost" className="rounded-full" icon={<Trash2 className="h-4 w-4" />} disabled={busy} onClick={() => setAvatar.mutate(null)}>
+            <Button type="button" variant="ghost" icon={<Trash2 className="h-4 w-4" />} disabled={busy} onClick={() => setAvatar.mutate(null)}>
               {t("member.profile.photo_remove")}
             </Button>
           )}
@@ -135,7 +135,7 @@ export function MemberProfileTab({ user, phone }: { user: CurrentUser; phone: st
             <p className="px-0.5 py-2.5 font-semibold text-slate-900 dark:text-white">{user.email}</p>
           </Field>
           <div className="flex flex-wrap items-center gap-4 sm:col-span-2">
-            <Button type="submit" variant="primary" className="rounded-full" disabled={updateProfile.isPending}>
+            <Button type="submit" variant="primary" disabled={updateProfile.isPending}>
               {t("member.profile.save")}
             </Button>
             <Feedback
@@ -158,13 +158,95 @@ export function MemberProfileTab({ user, phone }: { user: CurrentUser; phone: st
             <PasswordInput id="pf-confirm" required minLength={8} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={fieldClass} />
           </Field>
           <div className="flex flex-wrap items-center gap-4 sm:col-span-3">
-            <Button type="submit" variant="secondary" className="rounded-full" disabled={changePassword.isPending}>
+            <Button type="submit" variant="secondary" disabled={changePassword.isPending}>
               {t("member.profile.change_password")}
             </Button>
             <Feedback ok={passwordSaved ? t("member.profile.password_saved") : null} error={passwordError} />
           </div>
         </form>
       </Panel>
+
+      <MyDataPanel />
     </div>
+  );
+}
+
+/** Personal data (privacy policy): download it, or delete the account. */
+function MyDataPanel() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const exportData = useExportMyData();
+  const deleteAccount = useDeleteMyAccount();
+  const [confirming, setConfirming] = useState(false);
+  const [password, setPassword] = useState("");
+  const [understood, setUnderstood] = useState(false);
+
+  const submitDeletion = (e: React.FormEvent) => {
+    e.preventDefault();
+    deleteAccount.mutate(password, { onSuccess: () => navigate("/", { replace: true }) });
+  };
+
+  return (
+    <Panel title={t("member.privacy.title")}>
+      <p className="text-sm text-slate-600 dark:text-slate-300">
+        {t("member.privacy.intro")}{" "}
+        <Link to="/confidentialite" className="font-semibold underline underline-offset-2">
+          {t("member.privacy.policy_link")}
+        </Link>
+      </p>
+      <div className="mt-5 flex flex-wrap items-center gap-4">
+        <Button
+          type="button"
+          variant="secondary"
+          icon={exportData.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          disabled={exportData.isPending}
+          onClick={() => exportData.mutate()}
+        >
+          {t("member.privacy.export")}
+        </Button>
+        <Feedback error={exportData.isError ? apiErrorMessage(exportData.error, t("member.privacy.export_error")) : null} />
+      </div>
+
+      <div className="mt-8 border-t border-slate-200 pt-6 dark:border-white/10">
+        <h3 className="font-semibold text-red-700 dark:text-red-300">{t("member.privacy.delete_title")}</h3>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{t("member.privacy.delete_text")}</p>
+        {!confirming ? (
+          <Button type="button" variant="ghost" className="mt-4 text-red-700 dark:text-red-300" icon={<Trash2 className="h-4 w-4" />} onClick={() => setConfirming(true)}>
+            {t("member.privacy.delete")}
+          </Button>
+        ) : (
+          <form onSubmit={submitDeletion} className="mt-4 grid max-w-md gap-4">
+            <Field label={t("member.profile.current_password")} htmlFor="pf-delete-password">
+              <PasswordInput
+                id="pf-delete-password"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={fieldClass}
+              />
+            </Field>
+            <label className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-200">
+              <input type="checkbox" required checked={understood} onChange={(e) => setUnderstood(e.target.checked)} className="mt-0.5 h-4 w-4" />
+              {t("member.privacy.delete_confirm")}
+            </label>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="submit"
+                disabled={deleteAccount.isPending || !understood}
+                className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleteAccount.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {t("member.privacy.delete_final")}
+              </button>
+              <Button type="button" variant="ghost" onClick={() => { setConfirming(false); setPassword(""); setUnderstood(false); deleteAccount.reset(); }}>
+                {t("common.cancel")}
+              </Button>
+            </div>
+            <Feedback error={deleteAccount.isError ? apiErrorMessage(deleteAccount.error, t("member.privacy.delete_error")) : null} />
+          </form>
+        )}
+      </div>
+    </Panel>
   );
 }

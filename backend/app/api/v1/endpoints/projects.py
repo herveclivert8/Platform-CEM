@@ -34,6 +34,7 @@ from app.schemas.project import (
     _check_dates,
 )
 from app.services.audit import record_audit
+from app.services.project_documents import attach_documents
 from app.services.translation import delete_translations, localize_schemas, schedule_translation
 from app.services.notification_service import get_branch_notification_recipients, send_batch_notification
 from app.services.social import delete_social_history, safe_share_resource
@@ -61,6 +62,7 @@ PHASE_LABELS = {"ONGOING": "le projet en cours", "COMPLETED": "la réalisation"}
 def _query():
     return select(Project).options(
         selectinload(Project.images),
+        selectinload(Project.documents),
         selectinload(Project.branch),
         selectinload(Project.author),
     )
@@ -148,8 +150,10 @@ def _paginate(total: int, page: int, page_size: int) -> dict:
 
 
 def _for_viewer(item: ProjectSchema, viewer: User | None) -> ProjectSchema:
-    """Email et téléphone de l'auteur : montrés seulement aux membres à jour de cotisation et aux admins."""
-    return item if viewer else item.model_copy(update={"author_email": None, "author_phone": None, "author_avatar_url": None})
+    """Coordonnées de l'auteur et documents joints : montrés seulement aux membres à jour de cotisation et aux admins."""
+    if viewer:
+        return item
+    return item.model_copy(update={"author_email": None, "author_phone": None, "author_avatar_url": None, "documents": []})
 
 
 @router.get("", response_model=ProjectListResponse)
@@ -289,7 +293,7 @@ async def create_project(
         raise HTTPException(status_code=404, detail="Branch not found")
 
     project = Project(
-        **data.model_dump(exclude={"images", "pillar", "phase"}),
+        **data.model_dump(exclude={"images", "pillar", "phase", "document_ids"}),
         pillar=data.pillar.value,
         phase=data.phase.value,
         author_id=user.id,
@@ -299,6 +303,9 @@ async def create_project(
         images=[ProjectImage(url=url, position=i) for i, url in enumerate(data.images)],
     )
     db.add(project)
+    await db.flush()
+    await db.refresh(project, ["documents"])
+    await attach_documents(db, project, data.document_ids, user)
     await db.commit()
 
     project = await _get_project_or_404(db, project.id)
@@ -327,7 +334,7 @@ async def update_project(
     await verify_branch_access(user, project.branch_id)
 
     # Le formulaire renvoie tous les champs : on compare les valeurs réellement modifiées
-    update_data = data.dict(exclude_unset=True, exclude={"images"})
+    update_data = data.dict(exclude_unset=True, exclude={"images", "document_ids"})
     changed: set[str] = set()
     for key, value in update_data.items():
         new = value.value if hasattr(value, "value") else value
@@ -347,6 +354,10 @@ async def update_project(
         project.images.clear()
         for i, url in enumerate(data.images):
             project.images.append(ProjectImage(url=url, position=i))
+    if data.document_ids is not None:
+        if [d.id for d in project.documents] != data.document_ids:
+            changed.add("documents")
+        await attach_documents(db, project, data.document_ids, user)
 
     is_super = user.role == UserRole.SUPER_ADMIN
     # Afficher / masquer ne change pas le contenu : pas de notification

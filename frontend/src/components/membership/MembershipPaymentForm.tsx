@@ -59,8 +59,10 @@ export function MembershipPaymentForm({ kind, fees, onDone }: MembershipPaymentF
     setError(null);
     try {
       if (activeMethod === "CARD") {
-        if (validateCard({ number, expiry, cvc })) {
-          setError(t("membership.card_invalid"));
+        // Say which field is wrong (an expiry like "11 / 12" means November 2012, already past)
+        const invalidField = validateCard({ number, expiry, cvc });
+        if (invalidField) {
+          setError(t(`membership.card_invalid_${invalidField}`));
           return;
         }
         const token = tokenizeCard({ number, expiry, cvc });

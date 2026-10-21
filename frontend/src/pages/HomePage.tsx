@@ -5,6 +5,7 @@ import { NetworkSection } from "../components/home/NetworkSection";
 import { HomeProjectsSection } from "../components/home/HomeProjectsSection";
 import { PartnersCarousel } from "../components/home/PartnersCarousel";
 import { JoinSection } from "../components/home/JoinSection";
+import { HomeBackdrop } from "../components/home/HomeBackdrop";
 import { Skeleton } from "../components/ui/Skeleton";
 import { usePageMeta } from "../hooks/usePageMeta";
 
@@ -18,6 +19,9 @@ export function HomePage() {
   usePageMeta("");
   return (
     <>
+      {/* Cover photo fixed behind the page; the content scrolls over it */}
+      <HomeBackdrop />
+      <div className="relative z-10">
       <Hero />
       <BentoGrid />
       <Suspense
@@ -33,6 +37,7 @@ export function HomePage() {
       <NetworkSection />
       <JoinSection />
       <PartnersCarousel />
+      </div>
     </>
   );
 }

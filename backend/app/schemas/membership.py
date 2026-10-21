@@ -168,6 +168,13 @@ class MemberProjectCreate(BaseModel):
     location: Optional[str] = Field(None, max_length=255)
     # Photo facultative, envoyée au préalable par le membre (POST /upload/image)
     image: Optional[str] = Field(None, max_length=512)
+    # Documents facultatifs, envoyés au préalable (POST /project-documents)
+    document_ids: list[int] = Field(default_factory=list, max_length=3)
+
+
+class AccountDeletion(BaseModel):
+    """Suppression de son compte : mot de passe exigé (une session restée ouverte ne suffit pas)."""
+    password: str = Field(..., min_length=1, max_length=200)
 
 
 class MemberProfileUpdate(BaseModel):

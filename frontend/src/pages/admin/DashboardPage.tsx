@@ -8,6 +8,8 @@ import { useSuperAdminStatistics } from "../../hooks/useSuperAdminStats";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { QueryError } from "../../components/ui/QueryError";
+import { BadgeCard } from "../../components/badge/BadgeQrCode";
+import { useMyBadge } from "../../hooks/useBadge";
 
 function getGreeting(t: TFunction): string {
   const hour = new Date().getHours();
@@ -44,6 +46,8 @@ export function DashboardPage() {
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
 
   const { data: summary, isLoading, isError, error, refetch } = useDashboardSummary();
+  // QR code badge, shown at sign-in (special gold badge for the Super Admin)
+  const { data: badgeToken } = useMyBadge(!!user);
   const { data: globalStats, isLoading: globalLoading, isError: globalError, error: globalErr, refetch: refetchGlobal } = useSuperAdminStatistics();
 
   const donationTotals = summary?.donations_confirmed_totals ?? [];
@@ -89,6 +93,15 @@ export function DashboardPage() {
           loading={isLoading}
         />
       </div>
+
+      {user && badgeToken && (
+        <Card hoverable={false} className="mt-8 p-6">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            {t("badge.title")}
+          </h2>
+          <BadgeCard token={badgeToken} holder={user} />
+        </Card>
+      )}
 
       {isSuperAdmin && (
         <div className="mt-8">

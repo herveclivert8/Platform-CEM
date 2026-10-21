@@ -1,18 +1,20 @@
 import clsx from "clsx";
+import { ASSOCIATION } from "../../config/association";
+import { useSiteLogo } from "../../hooks/useSiteLogo";
 
-/** "CEM." wordmark of the public site (Éditorial style), until the association's official logo. */
+/** Official CEM logo: laurel wreath and the association's name (wreath alone without the name). Navy, white in dark mode. */
 export function Wordmark({ withName = true, className }: { withName?: boolean; className?: string }) {
+  const { logo, logoFull } = useSiteLogo();
   return (
-    <span className={clsx("flex items-center gap-3", className)}>
-      <span className="font-display text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-        CEM<span className="text-emerald-600 dark:text-emerald-400">.</span>
-      </span>
-      {withName && (
-        <span className="hidden border-l border-slate-300 pl-3 text-xs font-semibold uppercase leading-tight tracking-[0.12em] text-slate-500 sm:block dark:border-slate-700 dark:text-slate-400">
-          Club Excellence
-          <br />
-          Madagascar
-        </span>
+    <span className={clsx("flex items-center", className)}>
+      {withName ? (
+        <img
+          src={logoFull}
+          alt={ASSOCIATION.name}
+          className="h-11 w-auto max-w-48 shrink-0 object-contain dark:brightness-0 dark:invert"
+        />
+      ) : (
+        <img src={logo} alt="" width={44} height={44} className="h-11 w-11 shrink-0 object-contain dark:brightness-0 dark:invert" />
       )}
     </span>
   );

@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Plus, Trash2, User, ShieldCheck } from "lucide-react";
+import { Plus, QrCode, Trash2, User, ShieldCheck } from "lucide-react";
+import { BadgeDialog } from "../../components/badge/BadgeQrCode";
+import type { UserRole } from "../../types/user";
 import { Card, IconBadge } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { CreateAccountDrawer } from "../../components/admin/CreateAccountDrawer";
-import { useAdminAccounts, useDeleteAccount } from "../../hooks/useAdminAccounts";
+import { useAdminAccounts, useDeleteAccount, type AdminAccount } from "../../hooks/useAdminAccounts";
 import { useAuthStore } from "../../store/authStore";
 import { useTranslation } from "react-i18next";
 import { useErrorToast } from "../../hooks/useErrorToast";
@@ -20,6 +22,7 @@ export function AccountsPage() {
   const showSuccess = useSuccessToast();
   const currentUser = useAuthStore((s) => s.user);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [badgeOf, setBadgeOf] = useState<AdminAccount | null>(null);
 
   return (
     <div>
@@ -67,6 +70,15 @@ export function AccountsPage() {
                 </div>
                 <p className="text-xs text-slate-400 dark:text-slate-500">{account.email}</p>
               </div>
+              <button
+                type="button"
+                onClick={() => setBadgeOf(account)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                aria-label={t("badge.show")}
+                title={t("badge.show")}
+              >
+                <QrCode className="h-4 w-4" />
+              </button>
               {account.id !== currentUser?.id && (
                 <button
                   type="button"
@@ -89,6 +101,13 @@ export function AccountsPage() {
       )}
 
       <CreateAccountDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      {badgeOf && (
+        <BadgeDialog
+          token={badgeOf.badgeToken}
+          holder={{ ...badgeOf, role: badgeOf.role as UserRole }}
+          onClose={() => setBadgeOf(null)}
+        />
+      )}
     </div>
   );
 }

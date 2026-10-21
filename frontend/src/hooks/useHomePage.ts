@@ -24,6 +24,8 @@ export function useUpdateHomePage() {
     mutationFn: async (input: HomePage) => {
       const { data } = await api.put<HomePageDto>("/settings/home-page", {
         hero_image_url: input.heroImageUrl || null,
+        logo_url: input.logoUrl || null,
+        logo_mark_url: input.logoMarkUrl || null,
         hero_badge: input.heroBadge || null,
         hero_title: input.heroTitle || null,
         hero_subtitle: input.heroSubtitle || null,

@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
+import { useAuthStore } from "../store/authStore";
 import { mapPaginated, type Paginated, type PaginatedDto } from "../types/post";
 import { mapProject, type Project, type ProjectDto } from "../types/project";
 import type { Currency, MobileOperator } from "../types/donation";
@@ -110,6 +111,8 @@ export interface MemberProjectInput {
   location: string;
   /** Optional photo, already uploaded (POST /upload/image) */
   image: string | null;
+  /** Optional documents, already uploaded (POST /project-documents) */
+  document_ids: number[];
 }
 
 export function useCreateMemberProject() {
@@ -157,6 +160,34 @@ export function useUpdateMyProfile() {
     mutationFn: (input: { firstName: string; lastName: string; phone: string }) =>
       api.patch("/members/me/profile", { first_name: input.firstName, last_name: input.lastName, phone: input.phone }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["auth", "me"] }),
+  });
+}
+
+/** Download all of the member's personal data (right of access and portability), as a JSON file. */
+export function useExportMyData() {
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.get<Blob>("/members/me/export", { responseType: "blob" });
+      const url = URL.createObjectURL(data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "mes-donnees-cem.json";
+      link.click();
+      URL.revokeObjectURL(url);
+    },
+  });
+}
+
+/** Delete one's account (right to erasure): immediate; the member is then signed out. */
+export function useDeleteMyAccount() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (password: string) => api.post("/members/me/delete", { password }),
+    onSuccess: () => {
+      // The server already closed every session: forget them locally, without calling /auth/logout
+      useAuthStore.getState().logout();
+      queryClient.clear();
+    },
   });
 }
 

@@ -47,6 +47,8 @@ TEXTS = {
         "ongoing": "Projets en cours",
         "ongoing_desc": "Les actions actuellement menées par nos antennes, à soutenir dès aujourd'hui.",
         "transparency": "Transparence",
+        "about": "Qui sommes-nous",
+        "about_desc": "Le Club Excellence Madagascar, association apolitique et non confessionnelle au service du développement de Madagascar.",
         "transparency_desc": "Chiffres clés, bilans annuels et utilisation des dons du CEM.",
         "news": "Actualités",
         "branch": "Antenne de {name}",
@@ -61,6 +63,8 @@ TEXTS = {
         "ongoing": "Ongoing projects",
         "ongoing_desc": "Actions our branches are carrying out right now — support them today.",
         "transparency": "Transparency",
+        "about": "About us",
+        "about_desc": "Club Excellence Madagascar, a non-political, non-denominational association working for the development of Madagascar.",
         "transparency_desc": "Key figures, annual reports and how CEM uses donations.",
         "news": "News",
         "branch": "{name} branch",
@@ -103,6 +107,7 @@ async def _resolve(db: AsyncSession, path: str, lang: str) -> dict:
         ("realisations",): ("achievements", "achievements_desc"),
         ("projets-en-cours",): ("ongoing", "ongoing_desc"),
         ("transparence",): ("transparency", "transparency_desc"),
+        ("qui-sommes-nous",): ("about", "about_desc"),
     }
     if tuple(parts) in static:
         title_key, desc_key = static[tuple(parts)]
@@ -210,7 +215,7 @@ async def sitemap(db: AsyncSession = Depends(get_db)):
     base = settings.FRONTEND_URL.rstrip("/")
     urls: list[tuple[str, datetime | None]] = [
         # « Projets en cours » est réservé aux membres : pas dans le plan du site
-        (p, None) for p in ("/", "/antennes", "/realisations", "/transparence")
+        (p, None) for p in ("/", "/qui-sommes-nous", "/antennes", "/realisations", "/transparence")
     ]
     branches = (await db.execute(
         select(Branch).where(Branch.status == BranchStatus.ACTIVE)

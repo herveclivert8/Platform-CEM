@@ -65,8 +65,14 @@ async def run_suspension_sweeps() -> None:
     """Tâche de fond lancée au démarrage : vérifie les échéances toutes les heures."""
     while True:
         try:
+            # Import local : app.services.privacy dépend de ce module
+            from app.services.privacy import anonymize_expired_accounts, purge_old_audit_logs
+
             async with AsyncSessionLocal() as db:
                 await suspend_overdue_members(db)
+                # Durées de conservation de la politique de confidentialité
+                await anonymize_expired_accounts(db)
+                await purge_old_audit_logs(db)
         except Exception:  # base momentanément indisponible : nouvel essai à la prochaine heure
             logger.exception("Vérification des cotisations impossible")
         await asyncio.sleep(SWEEP_INTERVAL_SECONDS)

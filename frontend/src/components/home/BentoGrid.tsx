@@ -12,7 +12,7 @@ export function BentoGrid() {
   const openDonation = useDonationUiStore((s) => s.open);
 
   return (
-    <section id="piliers" className="bg-slate-50 py-20 dark:bg-slate-950">
+    <section id="piliers" className="cem-photo-section dark py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card className="p-6">

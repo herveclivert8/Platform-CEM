@@ -46,6 +46,7 @@ export function Navbar() {
 
   const navLinks: { label: string; href?: string; to?: string }[] = [
     { label: t("nav.home"), to: "/" },
+    { label: t("nav.about"), to: "/qui-sommes-nous" },
     { label: t("nav.branches"), to: "/antennes" },
     { label: t("nav.achievements"), to: "/realisations" },
     ...(memberView ? [{ label: t("nav.ongoing"), to: "/projets-en-cours" }] : []),

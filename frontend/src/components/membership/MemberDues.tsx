@@ -97,7 +97,7 @@ export function MemberDues({ membership, fees }: { membership: MembershipSummary
               <p className="max-w-xl text-slate-600 dark:text-slate-300">
                 {membership.hasAccess ? t("member.dues_text_paid") : t("member.dues_text_unpaid")}
               </p>
-              <Button variant="primary" className="rounded-full" onClick={() => setPaying(true)}>
+              <Button variant="primary" onClick={() => setPaying(true)}>
                 {t("member.pay_dues")}
               </Button>
             </div>

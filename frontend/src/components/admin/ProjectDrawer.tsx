@@ -4,6 +4,8 @@ import { AlertTriangle, Check, Info, X } from "lucide-react";
 import { Drawer } from "./Drawer";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageDropzone } from "./ImageDropzone";
+import { DocumentUploader } from "../projects/DocumentUploader";
+import type { ProjectDocument } from "../../types/project";
 import { RejectDialog } from "./RejectDialog";
 import { ProjectStatusBadge } from "./ProjectStatusBadge";
 import { Button } from "../ui/Button";
@@ -90,6 +92,7 @@ function ProjectForm({
   const [startDate, setStartDate] = useState(project?.startDate ?? "");
   const [endDate, setEndDate] = useState(project?.endDate ?? "");
   const [images, setImages] = useState<string[]>(project?.images ?? []);
+  const [documents, setDocuments] = useState<ProjectDocument[]>(project?.documents ?? []);
   const [rejectOpen, setRejectOpen] = useState(false);
 
   const createProject = useCreateProject();
@@ -121,6 +124,7 @@ function ProjectForm({
       start_date: startDate || null,
       end_date: endDate || null,
       images,
+      document_ids: documents.map((d) => d.id),
     };
     try {
       const saved = project
@@ -351,6 +355,10 @@ function ProjectForm({
 
       <Field label={t("admin.projects.field_photos")}>
         <ImageDropzone images={images} onChange={setImages} />
+      </Field>
+
+      <Field label={t("documents.label")} hint={t("documents.hint")}>
+        <DocumentUploader documents={documents} onChange={setDocuments} />
       </Field>
 
       {mutation.isError && <p className="text-sm text-red-600 dark:text-red-400">{apiErrorMessage(mutation.error, t("admin.projects.save_error"))}</p>}

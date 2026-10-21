@@ -70,6 +70,9 @@ class HomePageRead(BaseModel):
     Un champ à null = contenu par défaut du site.
     """
     hero_image_url: Optional[str] = None
+    # Logo complet et emblème carré ; null = logo livré avec le site
+    logo_url: Optional[str] = None
+    logo_mark_url: Optional[str] = None
     hero_badge: Optional[str] = None
     hero_title: Optional[str] = None
     hero_subtitle: Optional[str] = None
@@ -85,6 +88,8 @@ class HomePageRead(BaseModel):
 class HomePageUpdate(BaseModel):
     """Saisie en français uniquement. Un champ vidé revient au contenu par défaut du site."""
     hero_image_url: Optional[str] = Field(None, max_length=512)
+    logo_url: Optional[str] = Field(None, max_length=512)
+    logo_mark_url: Optional[str] = Field(None, max_length=512)
     hero_badge: Optional[str] = Field(None, max_length=255)
     hero_title: Optional[str] = Field(None, max_length=200)
     hero_subtitle: Optional[str] = Field(None, max_length=500)

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Drawer } from "./Drawer";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
+import { BadgeCard } from "../badge/BadgeQrCode";
 import { useBranches } from "../../hooks/useBranches";
 import { useCreateAccount } from "../../hooks/useAdminAccounts";
 import { useTranslation } from "react-i18next";
@@ -45,6 +46,18 @@ export function CreateAccountDrawer({ open, onClose }: { open: boolean; onClose:
             <p className="text-xs text-slate-400 dark:text-slate-500">
               {t("admin.accounts.welcome_not_sent")}
             </p>
+          )}
+          {createAccount.data && (
+            <BadgeCard
+              className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
+              token={createAccount.data.badge_token}
+              holder={{
+                firstName,
+                lastName,
+                role: "BRANCH_ADMIN",
+                branchName: branchesData?.items.find((b) => b.id === createAccount.data.branch_id)?.cityName ?? null,
+              }}
+            />
           )}
           <Button variant="secondary" onClick={handleClose}>
             {t("admin.accounts.done")}

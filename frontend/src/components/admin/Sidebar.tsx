@@ -25,6 +25,7 @@ import { ScopeSelector } from "./ScopeSelector";
 import { useTranslation } from "react-i18next";
 import { useAdminProjects } from "../../hooks/useAdminProjects";
 import { FEATURES } from "../../config/features";
+import { useSiteLogo } from "../../hooks/useSiteLogo";
 
 const NAV_ITEMS = [
   { to: "/admin", labelKey: "admin.nav.dashboard", icon: LayoutDashboard, end: true },
@@ -52,6 +53,7 @@ const SUPER_ADMIN_ITEMS = [
 
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation();
+  const { logo: siteLogo } = useSiteLogo();
 
   // Mobile drawer: Escape closes it, and the page behind does not scroll while it is open
   useEffect(() => {
@@ -100,9 +102,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         )}
       >
       <div className="flex h-16 shrink-0 items-center gap-2.5 border-b border-slate-200 px-5 dark:border-slate-800">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white">
-          <HeartHandshake className="h-4.5 w-4.5" aria-hidden />
-        </span>
+        <img src={siteLogo} alt="" width={32} height={32} className="h-8 w-8 object-contain dark:brightness-0 dark:invert" />
         <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">CEM Admin</span>
         <button
           type="button"

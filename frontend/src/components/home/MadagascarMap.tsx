@@ -52,7 +52,7 @@ export function MadagascarMap() {
   const subtitle = home?.mapSubtitle || networkSummary(data?.items ?? [], t, i18n.language);
 
   return (
-    <section id="antennes" className="bg-white py-20 dark:bg-slate-900">
+    <section id="antennes" className="cem-photo-section dark py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10 text-center">
           <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
@@ -68,7 +68,7 @@ export function MadagascarMap() {
             {t("map.empty")}
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-slate-200/80 shadow-sm dark:border-slate-800">
+          <div className="cem-card overflow-hidden rounded-2xl border border-slate-200/80 shadow-sm dark:border-slate-800">
             <MapContainer
               center={FALLBACK_CENTER}
               zoom={2}

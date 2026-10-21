@@ -45,7 +45,7 @@ export function MemberProjectsTab({ projects, hasAccess, startProposing }: { pro
       ) : proposing ? (
         <MemberProjectForm onDone={() => setProposing(false)} />
       ) : (
-        <Button variant="primary" className="rounded-full" icon={<FolderPlus className="h-4 w-4" />} onClick={() => setProposing(true)}>
+        <Button variant="primary" icon={<FolderPlus className="h-4 w-4" />} onClick={() => setProposing(true)}>
           {t("member.project.new")}
         </Button>
       )}

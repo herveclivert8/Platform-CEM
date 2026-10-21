@@ -60,6 +60,10 @@ export type PaymentInfoInput = { [K in keyof PaymentInfo]: string };
  */
 export interface HomePage {
   heroImageUrl: string | null;
+  /** Full logo (header, footer); null = logo shipped with the site */
+  logoUrl: string | null;
+  /** Square emblem (browser tab, admin menu, member card, badges); null = shipped emblem */
+  logoMarkUrl: string | null;
   heroBadge: string | null;
   heroTitle: string | null;
   heroSubtitle: string | null;
@@ -75,6 +79,8 @@ export interface HomePage {
 
 export interface HomePageDto {
   hero_image_url: string | null;
+  logo_url: string | null;
+  logo_mark_url: string | null;
   hero_badge: string | null;
   hero_title: string | null;
   hero_subtitle: string | null;
@@ -90,6 +96,8 @@ export interface HomePageDto {
 export function mapHomePage(dto: HomePageDto): HomePage {
   return {
     heroImageUrl: dto.hero_image_url,
+    logoUrl: dto.logo_url,
+    logoMarkUrl: dto.logo_mark_url,
     heroBadge: dto.hero_badge,
     heroTitle: dto.hero_title,
     heroSubtitle: dto.hero_subtitle,

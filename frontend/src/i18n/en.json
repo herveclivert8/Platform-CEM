@@ -9,7 +9,8 @@
     "login": "Sign in",
     "register": "Join",
     "member_area": "Member area",
-    "my_area": "My area"
+    "my_area": "My area",
+    "about": "About us"
   },
   "hero": {
     "badge": "Facilitator of Sustainable Development & Education",
@@ -239,7 +240,8 @@
     "pillars_title": "Our Values",
     "social_soon": "{{network}}: coming soon",
     "contact_title": "Contact",
-    "transparency": "Transparency"
+    "transparency": "Transparency",
+    "privacy": "Privacy"
   },
   "not_found": {
     "title": "Page not found",
@@ -335,7 +337,9 @@
     "sign_out_to_register_text": "To register a new member, sign out first.",
     "sign_out_to_switch": "Sign out and switch account",
     "phone": "Phone",
-    "phone_hint": "Shown to other members on the projects you publish."
+    "phone_hint": "Shown to other members on the projects you publish.",
+    "privacy_notice": "By creating an account, you agree that your data is used to manage your membership, as described in our",
+    "privacy_link": "privacy policy"
   },
   "admin": {
     "nav": {
@@ -756,7 +760,14 @@
       "map_subtitle_hint": "Left empty, it is computed automatically from the active branches (suggestion shown in grey).",
       "section_transparency": "Transparency page",
       "show_donations": "Publish confirmed donation totals",
-      "show_donations_hint": "Shows the total of confirmed donations on the Transparency page, by year and currency (no information about donors)."
+      "show_donations_hint": "Shows the total of confirmed donations on the Transparency page, by year and currency (no information about donors).",
+      "section_logo": "Association logo",
+      "logo_hint": "For a new logo. Use PNG images with a transparent background: in dark mode the logo is shown in white. Removing the image restores the original logo.",
+      "logo_default": "Original logo",
+      "logo_full": "Full logo",
+      "logo_full_hint": "Emblem and name of the association, landscape. Shown in the header and footer.",
+      "logo_mark": "Emblem (square)",
+      "logo_mark_hint": "Square, at least 256 × 256 px. Browser tab icon, admin menu, member cards and badges."
     },
     "projects": {
       "title": "Achievements & projects",
@@ -1106,7 +1117,9 @@
       "title": "Member card",
       "inactive": "Inactive card",
       "branch": "{{branch}} branch",
-      "since": "Member since {{date}}"
+      "since": "Member since {{date}}",
+      "number": "No. {{number}}",
+      "valid_until": "Valid until"
     },
     "due": {
       "ok": "Up to date",
@@ -1116,7 +1129,9 @@
       "pay_ahead": "Pay in advance",
       "suspended": "Your account is deactivated for an unpaid fee. Pay this month's fee to have it reactivated.",
       "pending": "Your first month starts when your membership is approved.",
-      "none": "No fee in progress."
+      "none": "No fee in progress.",
+      "title": "Next due date",
+      "progress": "{{left}} days left out of {{total}}"
     },
     "contact_branch": "Contact my branch",
     "see_all": "See all",
@@ -1148,6 +1163,42 @@
       "photo_remove": "Remove",
       "photo_hint": "JPEG, PNG or WebP, 5 MB maximum. Shown to members on your card, projects and comments.",
       "photo_error": "The photo could not be saved."
+    },
+    "hello_comma": "Hello, {{name}}",
+    "chip": {
+      "ok": "Member up to date",
+      "due": "Fee due",
+      "pending": "Membership pending",
+      "blocked": "Inactive account"
+    },
+    "figures": {
+      "months_one": "month of fees",
+      "months_other": "months of fees",
+      "projects_one": "published project",
+      "projects_other": "published projects",
+      "messages_one": "message in discussions",
+      "messages_other": "messages in discussions"
+    },
+    "history": {
+      "title": "My journey",
+      "fee_paid": "Membership fee paid",
+      "dues_paid": "Fee paid (from {{period}})",
+      "project_published": "Project “{{title}}” published",
+      "validated": "Approved by the branch",
+      "joined": "Joined CEM"
+    },
+    "privacy": {
+      "title": "My personal data",
+      "intro": "You can download all the data CEM keeps about you, or delete your account.",
+      "policy_link": "Privacy policy",
+      "export": "Download my data",
+      "export_error": "Your data could not be downloaded.",
+      "delete_title": "Delete my account",
+      "delete_text": "Your name, email, phone and photo are erased immediately and permanently, and you are signed out. Your fees remain in the association's accounts without any personal data; your published projects and messages remain signed \"Membre supprimé\" (deleted member).",
+      "delete": "Delete my account",
+      "delete_confirm": "I understand that deletion is permanent and ends my membership.",
+      "delete_final": "Delete permanently",
+      "delete_error": "The account could not be deleted."
     }
   },
   "membership": {
@@ -1169,14 +1220,17 @@
       "REJECTED": "Rejected"
     },
     "card_invalid": "Check your card number, expiry date and security code.",
-    "test_card_hint": "Simulation mode: use the test card 4242 4242 4242 4242, any future date and any CVC.",
+    "test_card_hint": "Simulation mode: use the test card 4242 4242 4242 4242, a future date (for example 12 / 30) and any CVC (for example 123).",
     "mm_send_to": "Send {{amount}} to:",
     "mm_phone": "Number that sent the money",
     "mm_reference": "Transaction reference",
     "mm_reference_hint": "You will find it in your operator's confirmation SMS.",
     "cash_text": "Hand {{amount}} to your branch. The administrator will confirm your payment once the money is received.",
     "declare_mm": "I have sent the money",
-    "declare_cash": "I will pay in cash"
+    "declare_cash": "I will pay in cash",
+    "card_invalid_number": "The card number is not valid.",
+    "card_invalid_expiry": "The expiry date is not valid or has already passed. Format MM / YY: for example 12 / 30 for December 2030.",
+    "card_invalid_cvc": "The security code (CVC) must have 3 digits (4 for American Express)."
   },
   "discussion": {
     "title": "Discussion",
@@ -1195,5 +1249,178 @@
     "title_accent": "here",
     "text": "Join the branch of your choice to follow ongoing projects, propose your own and connect with the network.",
     "cta": "Join CEM"
+  },
+  "about": {
+    "title": "About us",
+    "headline_before": "Bringing out ",
+    "headline_accent": "Malagasy excellence",
+    "headline_after": " to serve development.",
+    "intro": "Club Excellence Madagascar (CEM) is a non-political, non-denominational, non-profit association working for the development of Madagascar. Education is one of its priorities.",
+    "intro_2": "Its volunteer members, in Madagascar and in the diaspora, put their skills to work on concrete projects: supporting pupils and teachers, highlighting talent and promoting equal opportunities across the country.",
+    "values_title": "Our values",
+    "values": {
+      "excellence": {
+        "title": "Excellence",
+        "text": "Promoting a spirit of excellence and rigour, and revealing talent wherever it is."
+      },
+      "equality": {
+        "title": "Equal opportunities",
+        "text": "Giving every young person, whatever their region, the same chances to succeed."
+      },
+      "independence": {
+        "title": "Independence",
+        "text": "A non-political, non-denominational association: no action is diverted for political or commercial purposes."
+      },
+      "transparency": {
+        "title": "Transparency",
+        "text": "Reporting clearly on our actions and on how donations are used."
+      }
+    },
+    "pillars_title": "Our fields of action",
+    "pillars_text": "Each branch chooses its actions according to its community's needs, around four fields.",
+    "pillars": {
+      "EDUCATION": "Competitions, school supplies and textbooks, support for pupils and teachers.",
+      "SOCIAL": "Local solidarity and help for families.",
+      "SPORT": "Sports activities and youth mentoring.",
+      "ENTERPRISE": "Training, mentoring and support for project leaders."
+    },
+    "see_achievements": "See our achievements",
+    "network_eyebrow": "A network",
+    "network_title": "Branches in Madagascar and in the diaspora",
+    "network_text": "CEM relies on a network of branches: each one carries out its own actions close to the ground, in connection with the whole network.",
+    "network_cta": "Discover the branches",
+    "partner_eyebrow": "Institutional partnership",
+    "partner_title": "Alongside the Ministry of National Education",
+    "partner_text": "CEM is bound to Madagascar's Ministry of National Education by partnership agreement no. 2022-003 MEN of 21 March 2022, which aims to:",
+    "partner_goals": {
+      "skills": "strengthen the skills of national education staff;",
+      "resources": "make teaching resources more accessible to pupils;",
+      "excellence": "promote a spirit of excellence among pupils and the population."
+    },
+    "partner_example": "CEM notably collected school textbooks in France and sent them to Madagascar, where the Ministry distributed them to 10,000 pupils. This partnership also made it possible to organise the first General Mathematics Competition in Madagascar, in 2022.",
+    "partner_example_link": "See our achievements",
+    "legal_title": "The association",
+    "legal_status": "Status",
+    "legal_status_value": "Non-profit association (French law of 1901)",
+    "legal_seat": "Head office"
+  },
+  "documents": {
+    "label": "Documents",
+    "hint": "Up to 3 documents (PDF, Word, Excel or PowerPoint, 10 MB maximum each), visible only to members with their fee paid and admins. Do not attach personal data without the consent of the people concerned.",
+    "title_placeholder": "Document title (optional), e.g. Draft budget",
+    "add": "Add a document",
+    "remove": "Remove “{{title}}”",
+    "too_large": "This document is larger than 10 MB.",
+    "upload_error": "The document could not be uploaded.",
+    "section_title": "Project documents",
+    "download": "Download",
+    "download_error": "The document could not be downloaded."
+  },
+  "badge": {
+    "title": "My badge",
+    "hint": "Show this QR code: scanning it displays your information, always up to date.",
+    "download": "Download",
+    "show": "Badge QR code",
+    "of": "Badge of {{name}}",
+    "qr_alt": "Badge QR code of {{name}}",
+    "close": "Close",
+    "verify": {
+      "title": "Badge verification",
+      "valid": "Valid badge",
+      "invalid": "Invalid badge",
+      "invalid_text": "This membership is not or no longer active.",
+      "unknown": "Unknown badge",
+      "unknown_text": "This QR code does not match any CEM badge.",
+      "checked_at": "Checked on {{date}}",
+      "back_home": "Back to home"
+    }
+  },
+  "privacy": {
+    "title": "Privacy policy",
+    "updated": "Last updated: October 19, 2026",
+    "intro": "Club Excellence Madagascar (CEM) takes the protection of your personal data seriously. This page explains what data the site collects, why, who can see it, how long it is kept and how to exercise your rights, in accordance with the General Data Protection Regulation (GDPR) and Malagasy law no. 2014-038 on the protection of personal data.",
+    "sections": [
+      {
+        "title": "Data controller",
+        "paragraphs": [
+          "Club Excellence Madagascar, a French non-profit association (loi 1901), headquartered at {{address}} (RNA: {{rna}}, SIREN: {{siren}}). For any question about your data: {{email}}."
+        ]
+      },
+      {
+        "title": "Data collected",
+        "items": [
+          "Member account: last name, first name, email address, phone, branch, profile photo (optional) and password (stored encrypted, never readable).",
+          "Membership and fees: amounts, dates, payment method, sender number and Mobile Money transaction reference. Card numbers are never stored by the site: they are handled directly by the payment provider.",
+          "Contributions: proposed projects and messages posted in discussions.",
+          "Donations: amount and, if you provide them, name, email and phone (receipt and thanks).",
+          "Project applications: name, email and project description.",
+          "Newsletter: email address, once you have confirmed your subscription.",
+          "Technical data: IP address and browser, recorded in the security log on sign-in and on administrators' actions."
+        ]
+      },
+      {
+        "title": "Purposes and legal bases",
+        "items": [
+          "Managing your membership, fees, member badge and participation in projects and discussions: performance of your membership agreement.",
+          "Keeping the association's accounts and issuing donation receipts: legal obligation.",
+          "Protecting the site and accounts (security log, fraud prevention): the association's legitimate interest.",
+          "Sending the newsletter: your consent, which you can withdraw at any time via the unsubscribe link in every issue."
+        ],
+        "paragraphs": [
+          "Your data is never sold or used for advertising."
+        ]
+      },
+      {
+        "title": "Who can see your data",
+        "items": [
+          "Your branch administrators and the association's Super Admin, to manage memberships and payments.",
+          "Other members whose fees are paid see your name, photo and contributions in projects and discussions.",
+          "Member badge: anyone who scans your QR code sees your name, email and branch, as long as your membership is valid. You choose whom you show it to.",
+          "Our technical providers, only to run the site: hosting (Render, servers in Frankfurt, European Union), email delivery, card payment, and automatic English translation of published content (Anthropic, United States)."
+        ]
+      },
+      {
+        "title": "Retention periods",
+        "items": [
+          "Member account: for as long as you are a member.",
+          "Former member (fee not renewed): 3 years after your last fee period ends, then the account is automatically anonymized.",
+          "Sign-up never approved, or declined: 1 year after sign-up, then automatic anonymization.",
+          "Fees and donations: 10 years, for accounting obligations. Once your account is deleted, they are kept without your identity.",
+          "Security log: 1 year.",
+          "Newsletter: until you unsubscribe."
+        ]
+      },
+      {
+        "title": "Your rights",
+        "paragraphs": [
+          "You have the right to access, rectify, erase, restrict, object to and port your data. From your member area (Profile tab), you can at any time:"
+        ],
+        "items": [
+          "correct your name, phone and photo;",
+          "download all of your data (JSON file);",
+          "delete your account: your identity is erased immediately and permanently. Your fees remain in the association's accounts without any personal data, and your published projects and messages remain signed \"Membre supprimé\" (deleted member)."
+        ]
+      },
+      {
+        "title": "Complaints",
+        "paragraphs": [
+          "If you believe your rights are not respected, write to us at {{email}}, or file a complaint with the CNIL (www.cnil.fr) in France, or with the Commission Malagasy de l'Informatique et des Libertés (CMIL) in Madagascar."
+        ]
+      },
+      {
+        "title": "Cookies and local storage",
+        "paragraphs": [
+          "The site uses no advertising cookies and no audience measurement. It only keeps in your browser what it needs to work: your sign-in session, your language and your display theme. These require no consent and disappear when you sign out or clear the site's data.",
+          "To display pages, the site loads fonts from Google Fonts and map tiles from OpenStreetMap: your IP address is then sent to these services."
+        ]
+      },
+      {
+        "title": "Security",
+        "paragraphs": [
+          "Encrypted connections (HTTPS), encrypted passwords, data access restricted to the relevant administrators, a log of sensitive actions and regular backups protect your data."
+        ]
+      }
+    ],
+    "contact": "A question about your personal data? Write to us:"
   }
 }

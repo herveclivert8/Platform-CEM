@@ -24,6 +24,12 @@ server {
     set $backend "http://${BACKEND_ADDRESS}";
 
     server_tokens off;
+    # Politique de sécurité du contenu : seuls les scripts du site s'exécutent (pas de script injecté,
+    # pas de script tiers). Origines externes autorisées : polices Google, adresses OpenStreetMap
+    # (autocomplétion des villes), images https (carte, photos). Un vrai prestataire de paiement par
+    # carte (ex. Stripe) devra être ajouté à script-src, connect-src et frame-src.
+    set $csp "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://nominatim.openstreetmap.org; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+    add_header Content-Security-Policy $csp always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-Frame-Options "DENY" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
@@ -50,6 +56,8 @@ server {
         expires 30d;
         add_header Cache-Control "public";
         add_header X-Content-Type-Options "nosniff" always;
+        # Images envoyées par les utilisateurs : ouvertes seules, elles ne peuvent rien exécuter
+        add_header Content-Security-Policy "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox" always;
     }
 
     # Référencement : générés à partir du contenu publié
@@ -83,5 +91,6 @@ server {
         add_header X-Content-Type-Options "nosniff" always;
         add_header X-Frame-Options "DENY" always;
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Content-Security-Policy $csp always;
     }
 }

@@ -18,6 +18,7 @@ import html
 from datetime import date, datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -28,6 +29,7 @@ from app.api.v1.endpoints.donations import OPERATOR_NUMBER_FIELDS, SETTINGS_ID
 from app.api.v1.endpoints.projects import _get_project_or_404, _query as project_query, notify_member_proposal
 from app.core.permissions import verify_branch_access, verify_super_admin_only
 from app.core.rate_limit import rate_limit
+from app.core.security import verify_password
 from app.models import Branch, Donation, MembershipPayment, Project, ProjectComment, ProjectImage, UploadedFile, User
 from app.models.membership import (
     MEMBERSHIP_FEES,
@@ -39,6 +41,7 @@ from app.models.project import ProjectPhase, ProjectReviewStatus
 from app.models.settings import AssociationSettings
 from app.models.user import MembershipStatus as MembershipStatusModel, UserRole
 from app.schemas.membership import (
+    AccountDeletion,
     AdminCashPayment,
     CardMembershipPayment,
     CashMembershipPayment,
@@ -63,6 +66,8 @@ from app.services.audit import record_audit
 from app.services.notification_service import get_branch_notification_recipients, send_batch_notification
 from app.services import membership as membership_dates
 from app.services.payments import get_card_provider
+from app.services.privacy import anonymize_user, export_user_data
+from app.services.project_documents import attach_documents
 
 router = APIRouter(prefix="/members", tags=["members"])
 
@@ -360,6 +365,39 @@ async def update_my_profile(
     await db.commit()
 
 
+@router.get("/me/export")
+async def export_my_data(user: User = Depends(get_current_member), db: AsyncSession = Depends(get_db)):
+    """Télécharger toutes ses données personnelles (droit d'accès et à la portabilité), en JSON."""
+    data = await export_user_data(db, user)
+    return JSONResponse(
+        data,
+        headers={
+            "Content-Disposition": 'attachment; filename="mes-donnees-cem.json"',
+            "Cache-Control": "private, no-store",
+        },
+    )
+
+
+@router.post(
+    "/me/delete",
+    status_code=204,
+    dependencies=[Depends(rate_limit("account_delete", limit=5, window=15 * 60))],
+)
+async def delete_my_account(
+    data: AccountDeletion,
+    user: User = Depends(get_current_member),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Supprimer son compte (droit à l'effacement), mot de passe à l'appui. Immédiat et définitif :
+    l'identité est effacée, les sessions fermées (voir app/services/privacy.py).
+    """
+    if not user.hashed_password or not verify_password(data.password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Mot de passe incorrect.")
+    await anonymize_user(db, user, reason="demande du membre")
+    await db.commit()
+
+
 @router.put("/me/avatar", status_code=204)
 async def set_my_avatar(
     data: AvatarUpdate,
@@ -457,6 +495,9 @@ async def create_my_project(
         images=images,
     )
     db.add(project)
+    await db.flush()
+    await db.refresh(project, ["documents"])
+    await attach_documents(db, project, data.document_ids, user)
     await db.commit()
 
     project = await _get_project_or_404(db, project.id)
@@ -504,7 +545,8 @@ async def list_members(
     scope = resolve_branch_scope(user, branch_id)
     # Statuts à jour même si la vérification horaire n'est pas encore passée depuis l'échéance
     await membership_dates.suspend_overdue_members(db)
-    filters = [User.role == UserRole.MEMBER]
+    # Comptes supprimés (anonymisés) : plus des membres, seulement le support des cotisations passées
+    filters = [User.role == UserRole.MEMBER, User.anonymized_at.is_(None)]
     if scope is not None:
         filters.append(User.branch_id == scope)
     if membership_status:

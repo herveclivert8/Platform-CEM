@@ -46,9 +46,23 @@ def _check_dates(phase, start_date, end_date) -> None:
         raise ValueError("La date de fin doit être postérieure à la date de début")
 
 
+MAX_PROJECT_DOCUMENTS = 3
+
+
+class ProjectDocumentInfo(BaseModel):
+    """Document joint (le contenu se télécharge à part : GET /project-documents/{id})."""
+    id: int
+    title: str
+    file_name: str
+    content_type: str
+    size: int
+
+
 class ProjectCreate(ProjectBase):
     branch_id: int
     images: list[str] = Field(default_factory=list)
+    # Documents envoyés au préalable (POST /project-documents), dans l'ordre d'affichage
+    document_ids: list[int] = Field(default_factory=list, max_length=MAX_PROJECT_DOCUMENTS)
 
     @model_validator(mode="after")
     def validate_dates(self):
@@ -72,6 +86,7 @@ class ProjectUpdate(BaseModel):
     goal_unit: Optional[str] = Field(None, max_length=100)
     is_visible: Optional[bool] = None
     images: Optional[list[str]] = None
+    document_ids: Optional[list[int]] = Field(None, max_length=MAX_PROJECT_DOCUMENTS)
 
 
 class ProjectReject(BaseModel):
@@ -92,6 +107,8 @@ class Project(ProjectBase):
     rejection_reason: Optional[str] = None
     reviewed_at: Optional[datetime] = None
     images: list[str] = Field(default_factory=list)
+    # Réservé aux membres et aux admins (vide pour les visiteurs)
+    documents: list[ProjectDocumentInfo] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 
@@ -128,6 +145,10 @@ class Project(ProjectBase):
             rejection_reason=project.rejection_reason,
             reviewed_at=project.reviewed_at,
             images=[img.url for img in project.images],
+            documents=[
+                ProjectDocumentInfo(id=d.id, title=d.title, file_name=d.file_name, content_type=d.content_type, size=d.size)
+                for d in project.documents
+            ],
             created_at=project.created_at,
             updated_at=project.updated_at,
         )

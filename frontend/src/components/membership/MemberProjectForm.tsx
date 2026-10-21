@@ -4,6 +4,8 @@ import { AlertCircle, Send } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Field } from "../donation/donationUi";
 import { ImageDropzone } from "../admin/ImageDropzone";
+import { DocumentUploader } from "../projects/DocumentUploader";
+import type { ProjectDocument } from "../../types/project";
 import { fieldClass } from "../donation/donationConstants";
 import { useCreateMemberProject } from "../../hooks/useMembership";
 import { usePillarLabels } from "../../hooks/usePillarLabels";
@@ -23,11 +25,12 @@ export function MemberProjectForm({ onDone }: { onDone: () => void }) {
   const [location, setLocation] = useState("");
   // A single optional photo: the last one picked replaces the previous
   const [images, setImages] = useState<string[]>([]);
+  const [documents, setDocuments] = useState<ProjectDocument[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await create.mutateAsync({ title, summary, description, pillar, beneficiaries, location, image: images[0] ?? null });
+      await create.mutateAsync({ title, summary, description, pillar, beneficiaries, location, image: images[0] ?? null, document_ids: documents.map((d) => d.id) });
       onDone();
     } catch {
       // error surfaced below via create.isError
@@ -65,6 +68,10 @@ export function MemberProjectForm({ onDone }: { onDone: () => void }) {
 
       <Field label={t("member.project.photo")} optional hint={t("member.project.photo_hint")}>
         <ImageDropzone images={images} onChange={(next) => setImages(next.slice(-1))} />
+      </Field>
+
+      <Field label={t("documents.label")} optional hint={t("documents.hint")}>
+        <DocumentUploader documents={documents} onChange={setDocuments} />
       </Field>
 
       {create.isError && (

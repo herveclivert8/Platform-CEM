@@ -24,3 +24,7 @@ backend/.ruff_cache/
 
 # Ancien dépôt imbriqué (non suivi)
 Platform-CEM/
+
+# Archives de sauvegarde (python -m app.backup) : données personnelles des membres
+backups/
+cem-backup-*.tar.gz

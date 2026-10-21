@@ -11,6 +11,8 @@ export interface AdminAccount {
   branchName: string | null;
   /** Temporary password not replaced yet */
   mustChangePassword: boolean;
+  /** QR code badge token */
+  badgeToken: string;
   createdAt: string;
 }
 
@@ -23,6 +25,7 @@ interface AdminAccountDto {
   branch_id: number | null;
   branch_name: string | null;
   must_change_password: boolean;
+  badge_token: string;
   created_at: string;
 }
 
@@ -41,6 +44,7 @@ function mapAccount(dto: AdminAccountDto): AdminAccount {
     branchId: dto.branch_id,
     branchName: dto.branch_name,
     mustChangePassword: dto.must_change_password,
+    badgeToken: dto.badge_token,
     createdAt: dto.created_at,
   };
 }
@@ -74,7 +78,7 @@ export function useCreateAccount() {
         last_name: input.lastName,
         branch_id: input.branchId,
       });
-      return data as { temporary_password: string; welcome_email_sent: boolean };
+      return data as { temporary_password: string; welcome_email_sent: boolean; badge_token: string; branch_id: number };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-accounts"] });

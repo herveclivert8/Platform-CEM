@@ -12,7 +12,7 @@ export function OtherBranchesCarousel({ currentBranchId }: { currentBranchId: nu
   if (others.length === 0) return null;
 
   return (
-    <section className="border-t border-slate-200/80 bg-white py-16 dark:border-slate-800 dark:bg-slate-900">
+    <section className="border-t border-slate-200/80 py-16 dark:border-white/10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
           {t("hub.other_branches")}

@@ -154,6 +154,8 @@ async def get_home_page(
     text = lambda field: translated.get(field) or sources.get(field)  # noqa: E731
     return HomePageRead(
         hero_image_url=settings.hero_image_url,
+        logo_url=settings.logo_url,
+        logo_mark_url=settings.logo_mark_url,
         **{field: text(field) for field in HOME_TEXT_FIELDS},
         values=[text(f"values.{i}") for i in range(len(settings.home_values))] if settings.home_values else None,
         contact_email=settings.contact_email,

@@ -51,6 +51,12 @@ class AssociationSettings(Base):
     # Page « Transparence » : publier les totaux des dons confirmés (désactivé par défaut)
     show_donation_totals: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false(), nullable=False)
 
+    # Logo de l'association (images envoyées par le Super Admin). NULL = logo livré avec le site.
+    # logo_url : logo complet (en-tête, pied de page) ; logo_mark_url : emblème carré (icône de
+    # l'onglet, menu de l'admin, cartes de membre et badges).
+    logo_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    logo_mark_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

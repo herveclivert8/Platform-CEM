@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useBranch } from "../hooks/useBranches";
 import type { Branch } from "../types/branch";
+import { PhotoBackdrop } from "../components/layout/PhotoBackdrop";
 import { HubHero } from "../components/hub/HubHero";
 import { KpiGrid } from "../components/hub/KpiGrid";
 import { HubTabs } from "../components/hub/HubTabs";
@@ -45,8 +46,13 @@ function BranchHub({ branch, isLoading, isError }: { branch?: Branch; isLoading:
   const acceptsDonations = branch.status === "active";
 
   return (
-    <div className={acceptsDonations ? "pb-20 lg:pb-0" : undefined}>
+    <>
+      {/* City photo fixed behind the page (banner, or else the photo of the branch cards) */}
+      <PhotoBackdrop src={branch.bannerUrl || branch.logoUrl} />
+      {/* At least the screen height, the veil filling what is left: no unveiled photo above the footer */}
+      <div className={`relative z-10 flex min-h-[calc(100vh-4rem)] flex-col ${acceptsDonations ? "pb-20 lg:pb-0" : ""}`}>
       <HubHero branch={branch} />
+      <div className="cem-photo-section dark flex-1">
       <KpiGrid branchId={branch.id} />
 
       <div
@@ -65,7 +71,9 @@ function BranchHub({ branch, isLoading, isError }: { branch?: Branch; isLoading:
       </div>
 
       <OtherBranchesCarousel currentBranchId={branch.id} />
+      </div>
+      </div>
       {acceptsDonations && <BottomActionBar branch={branch} />}
-    </div>
+    </>
   );
 }

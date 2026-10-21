@@ -8,13 +8,10 @@ export function HubHero({ branch }: { branch: Branch }) {
   const { t } = useTranslation();
 
   return (
-    <section className="relative bg-slate-900">
-      {branch.bannerUrl && (
-        <div className="absolute inset-0">
-          <img src={branch.bannerUrl} alt="" className="h-full w-full object-cover opacity-40" />
-        </div>
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/70 to-slate-900/40" />
+    <section className="relative">
+      {/* The city photo is fixed behind the page (BranchHubPage); this scrim keeps the name readable
+          and blends into the veil of the content below (75 %) */}
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-950/50 to-slate-950/25" />
 
       <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-20 sm:px-6 lg:px-8">
         {branch.status === "inactive" ? (

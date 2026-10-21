@@ -176,6 +176,13 @@ export function RegisterPage() {
           >
             {register.isPending ? t("auth.registering") : t("auth.register_continue")}
           </Button>
+          <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+            {t("auth.privacy_notice")}{" "}
+            <Link to="/confidentialite" target="_blank" className="font-medium text-emerald-600 underline underline-offset-2 dark:text-emerald-400">
+              {t("auth.privacy_link")}
+            </Link>
+            .
+          </p>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">

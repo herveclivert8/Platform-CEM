@@ -15,7 +15,7 @@ export function PartnersCarousel() {
   const items = [...PARTNER_CATEGORIES, ...PARTNER_CATEGORIES];
 
   return (
-    <section id="partenaires" className="bg-slate-50 py-20 dark:bg-slate-950">
+    <section id="partenaires" className="cem-photo-section dark py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
         <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
           {t("partners.title")}
@@ -24,8 +24,8 @@ export function PartnersCarousel() {
       </div>
 
       <div className="relative mt-10 overflow-hidden">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-slate-50 to-transparent dark:from-slate-950" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-slate-50 to-transparent dark:from-slate-950" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-slate-950/60 to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-slate-950/60 to-transparent" />
 
         <div className="flex w-max animate-[marquee_28s_linear_infinite] gap-4 px-4">
           {items.map((item, i) => (

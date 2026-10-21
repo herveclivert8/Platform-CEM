@@ -230,6 +230,31 @@ Les visiteurs n'accèdent qu'au site, qui relaie l'API par le réseau privé de 
 
 > Chaque `git push` sur la branche suivie redéploie le service concerné (`backend/**` ou `frontend/**`). Avec un disque, l'API a une seule instance : un redéploiement provoque une courte coupure.
 
+## Sauvegardes
+
+La base (membres, adhésions, paiements, contenus) et les images envoyées n'existent qu'en un seul exemplaire sur le serveur. Une sauvegarde n'est utile que si une copie est conservée **ailleurs** (autre hébergeur, disque d'un membre du bureau) et si sa restauration a été **essayée** au moins une fois.
+
+La commande [`app/backup.py`](backend/app/backup.py), dans le conteneur de l'API, crée une archive complète : base (`pg_dump`), images envoyées et un `manifest.json` (date, révision de la base). L'archive n'est lisible que par son propriétaire : elle contient toutes les données personnelles des membres et les empreintes des mots de passe.
+
+```bash
+python -m app.backup create --output backups --keep 14    # garde les 14 archives les plus récentes
+python -m app.backup restore backups/cem-backup-AAAAMMJJ-HHMMSS.tar.gz --yes
+```
+
+`restore` **remplace** la base et les images par celles de l'archive, en une seule transaction : en cas d'erreur, rien n'est modifié. Arrêtez l'API avant, puis redémarrez-la : elle applique les migrations si l'archive est plus ancienne que le code.
+
+**Avec Docker (`docker-compose.prod.yml`).** Montez un dossier de l'hôte pour les archives dans le service `backend` (`volumes: - ./backups:/app/backups`, dossier appartenant à l'utilisateur d'UID 1000), puis programmez une sauvegarde quotidienne sur l'hôte (`crontab -e`) :
+
+```bash
+0 3 * * * cd /chemin/vers/CEM && docker compose -f docker-compose.prod.yml exec -T backend python -m app.backup create --output /app/backups --keep 14
+```
+
+Copiez ensuite `./backups` hors du serveur, par exemple chaque nuit avec `rclone` (Google Drive, Backblaze, S3...) ou `rsync` vers une autre machine.
+
+**Sur Render.** Les bases payantes sont sauvegardées automatiquement (restauration à un instant donné, sur quelques jours) et les disques font l'objet d'instantanés quotidiens : vérifiez leur durée de conservation dans le tableau de bord (**cem-db → Recovery**, **cem-backend → Disks**). Ces copies restent chez Render et disparaissent avec le service : téléchargez régulièrement un export de la base (**cem-db → Recovery → Export**) et conservez-le ailleurs.
+
+**Restauration d'essai** (une fois par trimestre, et après chaque changement d'hébergement) : restaurez la dernière archive dans une base vide de test, puis vérifiez que le site démarre et qu'on peut s'y connecter.
+
 ## Dons
 
 Le bouton « Faire un don » (page d'accueil, pages d'antenne) propose deux moyens de paiement.

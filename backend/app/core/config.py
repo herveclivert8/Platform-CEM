@@ -61,6 +61,17 @@ class Settings(BaseSettings):
     # Monitoring (optionnel)
     SENTRY_DSN: str = ""
 
+    # Durées de conservation des comptes membres (politique de confidentialité), en jours. Au-delà, le
+    # compte est anonymisé automatiquement (app/services/privacy.py) ; 0 = jamais.
+    # - adhésion jamais validée (en attente ou refusée), comptée depuis l'inscription ;
+    # - ancien membre (désactivé faute de cotisation), compté depuis la fin de sa dernière cotisation.
+    RETENTION_UNVALIDATED_DAYS: int = 365
+    RETENTION_FORMER_MEMBER_DAYS: int = 3 * 365
+    # Journal d'audit (adresses IP, emails des comptes) : entrées supprimées au-delà de cette durée
+    RETENTION_AUDIT_DAYS: int = 365
+    # Journal d'audit (adresses IP, emails, navigateurs) : entrées supprimées au-delà de cette durée
+    RETENTION_AUDIT_DAYS: int = 365
+
     # Frontend (liens dans les emails : réinitialisation de mot de passe, etc.)
     FRONTEND_URL: str = "http://localhost:5173"
 
@@ -145,5 +156,9 @@ SECURITY_HEADERS = {
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "strict-origin-when-cross-origin",
 }
+# L'API ne sert que des données, des images et des pages d'aperçu sans script : rien à exécuter.
+# Pas sur la documentation interactive (/docs, /redoc), qui charge ses scripts depuis un CDN.
+API_CSP_HEADER = ("Content-Security-Policy", "default-src 'none'; img-src 'self'; frame-ancestors 'none'")
+API_CSP_EXCLUDED_PATHS = ("/docs", "/redoc")
 # Uniquement en production (HTTPS obligatoire)
 HSTS_HEADER = ("Strict-Transport-Security", "max-age=31536000; includeSubDomains")

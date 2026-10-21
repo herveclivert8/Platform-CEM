@@ -1,4 +1,5 @@
 import enum
+import secrets
 from datetime import date, datetime
 
 from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Integer, String, false, func
@@ -27,6 +28,11 @@ class MembershipStatus(str, enum.Enum):
 
 class OAuthProvider(str, enum.Enum):
     GOOGLE = "google"
+
+
+def new_badge_token() -> str:
+    """Jeton aléatoire du code QR (128 bits) : impossible à deviner, contrairement à l'id."""
+    return secrets.token_urlsafe(16)
 
 
 class User(Base):
@@ -73,7 +79,16 @@ class User(Base):
     # Dernier jour couvert par les cotisations confirmées (un mois par cotisation)
     paid_until: Mapped[date | None] = mapped_column(Date, nullable=True)
 
+    # Code QR du badge : il ne contient que ce jeton (lien /verifier/<jeton>). Les informations
+    # affichées au scan sont relues en base à chaque fois, donc toujours à jour.
+    badge_token: Mapped[str] = mapped_column(
+        String(32), unique=True, index=True, nullable=False, default=new_badge_token
+    )
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # Compte supprimé : identité effacée (app/services/privacy.py). La ligne reste pour les écritures
+    # comptables qui en dépendent (cotisations payées), sans plus aucune donnée personnelle.
+    anonymized_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     branch: Mapped["Branch | None"] = relationship(foreign_keys=[branch_id])
 

@@ -7,9 +7,10 @@ import { Link } from "react-router-dom";
 import { SocialLinks } from "./SocialLinks";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { FEATURES } from "../../config/features";
+import { ASSOCIATION } from "../../config/association";
 import { useHomePage } from "../../hooks/useHomePage";
 
-const DEFAULT_CONTACT_EMAIL = "contact@cem-madagascar.org";
+const DEFAULT_CONTACT_EMAIL = ASSOCIATION.contactEmail;
 
 export function Footer() {
   const { t } = useTranslation();
@@ -20,7 +21,7 @@ export function Footer() {
   const contactEmail = home?.contactEmail || DEFAULT_CONTACT_EMAIL;
 
   return (
-    <footer className="border-t border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-950">
+    <footer className="relative z-10 border-t border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-950">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className={`grid grid-cols-1 gap-10 md:grid-cols-2 ${FEATURES.newsletter ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
           <div>
@@ -60,7 +61,7 @@ export function Footer() {
               {home?.contactPhone && (
                 <li className="flex items-center gap-2">
                   <Phone className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
-                  <a href={`tel:${home.contactPhone.replace(/s+/g, "")}`} className="hover:text-emerald-600 dark:hover:text-emerald-400">
+                  <a href={`tel:${home.contactPhone.replace(/\s+/g, "")}`} className="hover:text-emerald-600 dark:hover:text-emerald-400">
                     {home.contactPhone}
                   </a>
                 </li>
@@ -79,12 +80,22 @@ export function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-slate-100 pt-6 text-xs text-slate-400 sm:flex-row dark:border-slate-800">
-          <p>
-            © {new Date().getFullYear()} Club Excellence Madagascar — {t("footer.rights")}
+          <p className="text-center sm:text-left">
+            © {new Date().getFullYear()} {ASSOCIATION.name} — {t("footer.rights")}
+            <br className="sm:hidden" />
+            <span className="sm:ml-3">RNA : {ASSOCIATION.rna} · SIREN : {ASSOCIATION.siren}</span>
           </p>
-          <Link to="/transparence" className="font-medium hover:text-emerald-600 dark:hover:text-emerald-400">
-            {t("footer.transparency")}
-          </Link>
+          <div className="flex gap-5">
+            <Link to="/qui-sommes-nous" className="font-medium hover:text-emerald-600 dark:hover:text-emerald-400">
+              {t("nav.about")}
+            </Link>
+            <Link to="/transparence" className="font-medium hover:text-emerald-600 dark:hover:text-emerald-400">
+              {t("footer.transparency")}
+            </Link>
+            <Link to="/confidentialite" className="font-medium hover:text-emerald-600 dark:hover:text-emerald-400">
+              {t("footer.privacy")}
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

@@ -30,6 +30,7 @@ import { HomePageSettingsPage } from "./pages/admin/HomePageSettingsPage";
 import { PaymentInfoPage } from "./pages/admin/PaymentInfoPage";
 import { MembersPage } from "./pages/admin/MembersPage";
 import { SocialPublishingPage } from "./pages/admin/SocialPublishingPage";
+import { PhotoPage } from "./components/layout/PhotoPage";
 
 const BranchesDirectoryPage = lazy(() =>
   import("./pages/BranchesDirectoryPage").then((m) => ({ default: m.BranchesDirectoryPage })),
@@ -49,14 +50,19 @@ const TransparencyPage = lazy(() =>
 const NewsletterStatusPage = lazy(() =>
   import("./pages/NewsletterStatusPage").then((m) => ({ default: m.NewsletterStatusPage })),
 );
+const AboutPage = lazy(() => import("./pages/AboutPage").then((m) => ({ default: m.AboutPage })));
 const ProjectsListPage = lazy(() =>
   import("./pages/ProjectsListPage").then((m) => ({ default: m.ProjectsListPage })),
 );
 const ProjectDetailPage = lazy(() =>
   import("./pages/ProjectDetailPage").then((m) => ({ default: m.ProjectDetailPage })),
 );
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage").then((m) => ({ default: m.PrivacyPage })));
+const BadgeVerificationPage = lazy(() =>
+  import("./pages/BadgeVerificationPage").then((m) => ({ default: m.BadgeVerificationPage })),
+);
 
-const lazyPage = (element: React.ReactNode) => <Suspense fallback={null}>{element}</Suspense>;
+const lazyPage =(element: React.ReactNode) => <Suspense fallback={null}>{element}</Suspense>;
 
 export const router = createBrowserRouter([
   {
@@ -68,7 +74,9 @@ export const router = createBrowserRouter([
         path: "antennes",
         element: (
           <Suspense fallback={null}>
-            <BranchesDirectoryPage />
+            <PhotoPage>
+              <BranchesDirectoryPage />
+            </PhotoPage>
           </Suspense>
         ),
       },
@@ -76,7 +84,9 @@ export const router = createBrowserRouter([
         path: "antennes/apercu/:branchId",
         element: (
           <Suspense fallback={null}>
-            <BranchesDirectoryPage />
+            <PhotoPage>
+              <BranchesDirectoryPage />
+            </PhotoPage>
           </Suspense>
         ),
       },
@@ -107,12 +117,16 @@ export const router = createBrowserRouter([
       // Keyed by phase: both lists share one component, so switching between them must reset its filters.
       { path: "cem-international", element: <Navigate to="/antennes" replace /> },
       { path: "transparence", element: lazyPage(<TransparencyPage />) },
+      { path: "qui-sommes-nous", element: lazyPage(<PhotoPage><AboutPage /></PhotoPage>) },
       { path: "newsletter/confirmation", element: lazyPage(<NewsletterStatusPage key="confirm" action="confirm" />) },
       { path: "newsletter/desinscription", element: lazyPage(<NewsletterStatusPage key="unsubscribe" action="unsubscribe" />) },
-      { path: "realisations", element: lazyPage(<ProjectsListPage key="COMPLETED" phase="COMPLETED" />) },
+      { path: "realisations", element: lazyPage(<PhotoPage><ProjectsListPage key="COMPLETED" phase="COMPLETED" /></PhotoPage>) },
       { path: "realisations/:projectId", element: lazyPage(<ProjectDetailPage phase="COMPLETED" />) },
-      { path: "projets-en-cours", element: lazyPage(<ProjectsListPage key="ONGOING" phase="ONGOING" />) },
+      { path: "projets-en-cours", element: lazyPage(<PhotoPage><ProjectsListPage key="ONGOING" phase="ONGOING" /></PhotoPage>) },
       { path: "projets-en-cours/:projectId", element: lazyPage(<ProjectDetailPage phase="ONGOING" />) },
+      { path: "confidentialite", element: lazyPage(<PhotoPage><PrivacyPage /></PhotoPage>) },
+      // Opened by scanning a badge QR code
+      { path: "verifier/:token", element: lazyPage(<BadgeVerificationPage />) },
       {
         path: "espace-membre",
         element: <RequireAuth area="member" />,

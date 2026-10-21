@@ -10,10 +10,11 @@ export function Card({ children, hoverable = true, className, ...props }: CardPr
   return (
     <div
       className={clsx(
-        "rounded-2xl border border-slate-200/80 bg-white shadow-sm",
+        // cem-card: borderless card with a soft shadow on the public site (index.css); unchanged in the back-office
+        "cem-card rounded-2xl border border-slate-200/80 bg-white shadow-sm",
         "dark:border-slate-800 dark:bg-slate-900",
         hoverable &&
-          "transition-all duration-300 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700",
+          "cem-card-hover transition-all duration-300 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700",
         className,
       )}
       {...props}

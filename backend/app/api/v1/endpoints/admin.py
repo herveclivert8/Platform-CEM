@@ -43,6 +43,8 @@ class AdminRead(BaseModel):
     branch_name: Optional[str] = None
     # Mot de passe temporaire pas encore remplacé
     must_change_password: bool = False
+    # Code QR du badge (affichable et imprimable par le Super Admin)
+    badge_token: str
     created_at: datetime
 
 
@@ -64,6 +66,8 @@ class AdminCreated(BaseModel):
     # Affiché une seule fois au Super Admin ; l'admin doit le remplacer à sa première connexion
     temporary_password: str
     welcome_email_sent: bool
+    # Code QR du badge du nouvel admin, généré à la création du compte
+    badge_token: str
 
 
 class GlobalStatistics(BaseModel):
@@ -84,6 +88,7 @@ def _admin_read(u: User) -> AdminRead:
         branch_id=u.branch_id,
         branch_name=u.branch.name if u.branch else None,
         must_change_password=u.must_change_password,
+        badge_token=u.badge_token,
         created_at=u.created_at,
     )
 
@@ -187,6 +192,7 @@ async def create_admin(
         "branch_id": new_user.branch_id,
         "temporary_password": temporary_password,
         "welcome_email_sent": email_sent,
+        "badge_token": new_user.badge_token,
     }
 
 

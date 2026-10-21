@@ -7,7 +7,7 @@ export function HomeProjectsSection() {
   const { t } = useTranslation();
   const memberView = useCanSeeMemberContent();
   return (
-    <section id="realisations" className="bg-white py-20 dark:bg-slate-900">
+    <section id="realisations" className="cem-photo-section dark py-24 lg:py-32">
       <div className="mx-auto max-w-7xl space-y-14 px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">{t("home_projects.title")}</h2>

@@ -6,6 +6,7 @@ from app.api.v1.endpoints import (
     publications,
     posts,
     projects,
+    project_documents,
     seo,
     transparency,
     newsletter,
@@ -18,6 +19,7 @@ from app.api.v1.endpoints import (
     notifications,
     dashboard,
     members,
+    badges,
     comments,
     social,
 )
@@ -38,12 +40,16 @@ api_router.include_router(posts.router)
 
 # Projets en cours / réalisations (avec validation Super Admin)
 api_router.include_router(projects.router)
+api_router.include_router(project_documents.router)
 
 # Discussions sous les projets (membres à jour de cotisation et admins)
 api_router.include_router(comments.router)
 
 # Adhésion des membres (frais d'inscription, cotisations, projets proposés)
 api_router.include_router(members.router)
+
+# Badges à code QR (membres validés, admins) et page publique de vérification
+api_router.include_router(badges.router)
 
 # Dons
 api_router.include_router(donations.router)

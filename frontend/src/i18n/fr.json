@@ -9,7 +9,8 @@
     "login": "Se connecter",
     "register": "S'inscrire",
     "member_area": "Espace membre",
-    "my_area": "Mon espace"
+    "my_area": "Mon espace",
+    "about": "Qui sommes-nous"
   },
   "hero": {
     "badge": "Facilitateur de Développement Durable & Éducation",
@@ -239,7 +240,8 @@
     "pillars_title": "Nos valeurs",
     "social_soon": "{{network}} : bientôt disponible",
     "contact_title": "Contact",
-    "transparency": "Transparence"
+    "transparency": "Transparence",
+    "privacy": "Confidentialité"
   },
   "not_found": {
     "title": "Page introuvable",
@@ -335,7 +337,9 @@
     "sign_out_to_register_text": "Pour inscrire un nouveau membre, déconnectez-vous d'abord.",
     "sign_out_to_switch": "Se déconnecter et changer de compte",
     "phone": "Téléphone",
-    "phone_hint": "Visible des autres membres sur les projets que vous publierez."
+    "phone_hint": "Visible des autres membres sur les projets que vous publierez.",
+    "privacy_notice": "En créant un compte, vous acceptez que vos données soient utilisées pour gérer votre adhésion, comme décrit dans notre",
+    "privacy_link": "politique de confidentialité"
   },
   "admin": {
     "nav": {
@@ -756,7 +760,14 @@
       "map_subtitle_hint": "Laissée vide, elle est calculée automatiquement à partir des antennes actives (proposition en grisé).",
       "section_transparency": "Page Transparence",
       "show_donations": "Publier les totaux des dons confirmés",
-      "show_donations_hint": "Affiche sur la page Transparence le montant total des dons confirmés, par année et par devise (aucune information sur les donateurs)."
+      "show_donations_hint": "Affiche sur la page Transparence le montant total des dons confirmés, par année et par devise (aucune information sur les donateurs).",
+      "section_logo": "Logo de l'association",
+      "logo_hint": "En cas de nouveau logo. Utilisez des images PNG à fond transparent : en mode sombre, le logo s'affiche en blanc. Supprimer l'image remet le logo d'origine.",
+      "logo_default": "Logo d'origine",
+      "logo_full": "Logo complet",
+      "logo_full_hint": "Emblème et nom de l'association, format paysage. Affiché dans l'en-tête et le pied de page.",
+      "logo_mark": "Emblème (carré)",
+      "logo_mark_hint": "Format carré, au moins 256 × 256 px. Icône de l'onglet du navigateur, menu de l'admin, cartes de membre et badges."
     },
     "projects": {
       "title": "Réalisations & projets",
@@ -1041,7 +1052,7 @@
   },
   "home_projects": {
     "title": "Sur le terrain",
-    "subtitle": "Les dernières réalisations du réseau et les projets à soutenir dès aujourd'hui.",
+    "subtitle": "Les dernières réalisations du réseau.",
     "latest_achievements": "Dernières réalisations",
     "ongoing": "Projets en cours"
   },
@@ -1106,7 +1117,9 @@
       "title": "Carte de membre",
       "inactive": "Carte inactive",
       "branch": "Antenne de {{branch}}",
-      "since": "Membre depuis {{date}}"
+      "since": "Membre depuis {{date}}",
+      "number": "N° {{number}}",
+      "valid_until": "Valable jusqu'au"
     },
     "due": {
       "ok": "À jour",
@@ -1116,7 +1129,9 @@
       "pay_ahead": "Payer à l'avance",
       "suspended": "Votre compte est désactivé faute de cotisation. Payez le mois en cours pour le faire réactiver.",
       "pending": "Votre première cotisation commencera à la validation de votre adhésion.",
-      "none": "Aucune cotisation en cours."
+      "none": "Aucune cotisation en cours.",
+      "title": "Prochaine échéance",
+      "progress": "{{left}} jours restants sur {{total}}"
     },
     "contact_branch": "Contacter mon antenne",
     "see_all": "Tout voir",
@@ -1148,6 +1163,42 @@
       "photo_remove": "Retirer",
       "photo_hint": "JPEG, PNG ou WebP, 5 Mo maximum. Visible des membres sur votre carte, vos projets et vos commentaires.",
       "photo_error": "La photo n'a pas pu être enregistrée."
+    },
+    "hello_comma": "Bonjour, {{name}}",
+    "chip": {
+      "ok": "Membre à jour",
+      "due": "Cotisation à payer",
+      "pending": "Adhésion en attente",
+      "blocked": "Compte inactif"
+    },
+    "figures": {
+      "months_one": "mois de cotisation",
+      "months_other": "mois de cotisation",
+      "projects_one": "projet publié",
+      "projects_other": "projets publiés",
+      "messages_one": "message dans les discussions",
+      "messages_other": "messages dans les discussions"
+    },
+    "history": {
+      "title": "Mon parcours",
+      "fee_paid": "Frais d'adhésion payés",
+      "dues_paid": "Cotisation payée (à partir du {{period}})",
+      "project_published": "Projet « {{title}} » publié",
+      "validated": "Validé par l'antenne",
+      "joined": "Inscription au CEM"
+    },
+    "privacy": {
+      "title": "Mes données personnelles",
+      "intro": "Vous pouvez télécharger toutes les données que le CEM conserve sur vous, ou supprimer votre compte.",
+      "policy_link": "Politique de confidentialité",
+      "export": "Télécharger mes données",
+      "export_error": "Vos données n'ont pas pu être téléchargées.",
+      "delete_title": "Supprimer mon compte",
+      "delete_text": "Votre nom, votre email, votre téléphone et votre photo sont effacés immédiatement et définitivement, et vous êtes déconnecté. Vos cotisations restent dans la comptabilité de l'association sans aucune donnée personnelle ; vos projets et messages publiés restent signés « Membre supprimé ».",
+      "delete": "Supprimer mon compte",
+      "delete_confirm": "Je comprends que la suppression est définitive et que mon adhésion prend fin.",
+      "delete_final": "Supprimer définitivement",
+      "delete_error": "Le compte n'a pas pu être supprimé."
     }
   },
   "membership": {
@@ -1169,14 +1220,17 @@
       "REJECTED": "Rejeté"
     },
     "card_invalid": "Vérifiez le numéro, la date d'expiration et le code de votre carte.",
-    "test_card_hint": "Mode simulation : utilisez la carte de test 4242 4242 4242 4242, une date future et un CVC quelconque.",
+    "test_card_hint": "Mode simulation : utilisez la carte de test 4242 4242 4242 4242, une date future (par exemple 12 / 30) et un CVC quelconque (par exemple 123).",
     "mm_send_to": "Envoyez {{amount}} au numéro :",
     "mm_phone": "Numéro qui a envoyé l'argent",
     "mm_reference": "Référence de la transaction",
     "mm_reference_hint": "Elle figure dans le SMS de confirmation de votre opérateur.",
     "cash_text": "Remettez {{amount}} à votre antenne. Votre paiement sera confirmé par l'administrateur à la réception de l'argent.",
     "declare_mm": "J'ai envoyé l'argent",
-    "declare_cash": "Je paierai en espèces"
+    "declare_cash": "Je paierai en espèces",
+    "card_invalid_number": "Le numéro de carte n'est pas valide.",
+    "card_invalid_expiry": "La date d'expiration n'est pas valide ou est déjà passée. Format MM / AA : par exemple 12 / 30 pour décembre 2030.",
+    "card_invalid_cvc": "Le code de sécurité (CVC) doit comporter 3 chiffres (4 pour American Express)."
   },
   "discussion": {
     "title": "Discussion",
@@ -1195,5 +1249,178 @@
     "title_accent": "ici",
     "text": "Inscrivez-vous dans l'antenne de votre choix pour suivre les projets en cours, proposer les vôtres et échanger avec le réseau.",
     "cta": "Rejoindre le CEM"
+  },
+  "about": {
+    "title": "Qui sommes-nous",
+    "headline_before": "Faire émerger l'",
+    "headline_accent": "excellence malagasy",
+    "headline_after": " au service du développement.",
+    "intro": "Le Club Excellence Madagascar (CEM) est une association apolitique, non confessionnelle et à but non lucratif qui œuvre en faveur du développement de Madagascar. L'éducation est l'une de ses priorités.",
+    "intro_2": "Ses membres bénévoles, à Madagascar comme dans la diaspora, mettent leurs compétences au service de projets concrets : soutenir les élèves et les enseignants, valoriser les talents et favoriser l'égalité des chances sur tout le territoire.",
+    "values_title": "Nos valeurs",
+    "values": {
+      "excellence": {
+        "title": "Excellence",
+        "text": "Promouvoir l'esprit d'excellence et la rigueur, et révéler les talents là où ils se trouvent."
+      },
+      "equality": {
+        "title": "Égalité des chances",
+        "text": "Donner à chaque jeune, quelle que soit sa région, les mêmes possibilités de réussir."
+      },
+      "independence": {
+        "title": "Indépendance",
+        "text": "Une association apolitique et non confessionnelle : aucune action n'est détournée à des fins politiques ou commerciales."
+      },
+      "transparency": {
+        "title": "Transparence",
+        "text": "Rendre compte de nos actions et de l'utilisation des dons, en toute clarté."
+      }
+    },
+    "pillars_title": "Nos domaines d'action",
+    "pillars_text": "Chaque antenne choisit ses actions selon les besoins de sa communauté, autour de quatre domaines.",
+    "pillars": {
+      "EDUCATION": "Concours, fournitures et livres scolaires, soutien aux élèves et aux enseignants.",
+      "SOCIAL": "Solidarité de proximité et aide aux familles.",
+      "SPORT": "Activités sportives et encadrement des jeunes.",
+      "ENTERPRISE": "Formation, mentorat et accompagnement de porteurs de projets."
+    },
+    "see_achievements": "Voir nos réalisations",
+    "network_eyebrow": "Un réseau",
+    "network_title": "Des antennes à Madagascar et dans la diaspora",
+    "network_text": "Le CEM s'appuie sur un réseau d'antennes : chacune mène ses propres actions au plus près du terrain, en lien avec l'ensemble du réseau.",
+    "network_cta": "Découvrir les antennes",
+    "partner_eyebrow": "Partenariat institutionnel",
+    "partner_title": "Aux côtés du Ministère de l'Éducation Nationale",
+    "partner_text": "Le CEM est lié au Ministère de l'Éducation Nationale de Madagascar par la convention de partenariat n° 2022-003 MEN du 21 mars 2022, qui vise à :",
+    "partner_goals": {
+      "skills": "renforcer les compétences du personnel de l'Éducation nationale ;",
+      "resources": "faciliter l'accès des élèves aux ressources pédagogiques ;",
+      "excellence": "promouvoir l'esprit d'excellence auprès des élèves et de la population."
+    },
+    "partner_example": "Le CEM a notamment collecté en France et envoyé à Madagascar des livres scolaires, distribués par le Ministère à 10 000 élèves. Ce partenariat a aussi permis d'organiser le premier Concours Général de Mathématiques à Madagascar, en 2022.",
+    "partner_example_link": "Voir nos réalisations",
+    "legal_title": "L'association",
+    "legal_status": "Statut",
+    "legal_status_value": "Association loi 1901",
+    "legal_seat": "Siège"
+  },
+  "documents": {
+    "label": "Documents",
+    "hint": "Jusqu'à 3 documents (PDF, Word, Excel ou PowerPoint, 10 Mo maximum chacun), visibles uniquement des membres à jour de cotisation et des admins. Ne joignez pas de données personnelles sans l'accord des personnes concernées.",
+    "title_placeholder": "Titre du document (facultatif), ex. Budget prévisionnel",
+    "add": "Ajouter un document",
+    "remove": "Retirer « {{title}} »",
+    "too_large": "Ce document dépasse 10 Mo.",
+    "upload_error": "Le document n'a pas pu être envoyé.",
+    "section_title": "Documents du projet",
+    "download": "Télécharger",
+    "download_error": "Le document n'a pas pu être téléchargé."
+  },
+  "badge": {
+    "title": "Mon badge",
+    "hint": "Présentez ce code QR : son scan affiche vos informations, toujours à jour.",
+    "download": "Télécharger",
+    "show": "Code QR du badge",
+    "of": "Badge de {{name}}",
+    "qr_alt": "Code QR du badge de {{name}}",
+    "close": "Fermer",
+    "verify": {
+      "title": "Vérification de badge",
+      "valid": "Badge valide",
+      "invalid": "Badge non valide",
+      "invalid_text": "Cette adhésion n'est pas ou plus active.",
+      "unknown": "Badge inconnu",
+      "unknown_text": "Ce code QR ne correspond à aucun badge du CEM.",
+      "checked_at": "Vérifié le {{date}}",
+      "back_home": "Retour à l'accueil"
+    }
+  },
+  "privacy": {
+    "title": "Politique de confidentialité",
+    "updated": "Dernière mise à jour : 19 octobre 2026",
+    "intro": "Le Club Excellence Madagascar (CEM) attache une grande importance à la protection de vos données personnelles. Cette page explique quelles données le site recueille, pourquoi, qui peut les voir, combien de temps elles sont conservées et comment exercer vos droits, conformément au Règlement général sur la protection des données (RGPD) et à la loi malgache n° 2014-038 sur la protection des données à caractère personnel.",
+    "sections": [
+      {
+        "title": "Responsable du traitement",
+        "paragraphs": [
+          "Club Excellence Madagascar, association loi 1901, dont le siège est situé {{address}} (RNA : {{rna}}, SIREN : {{siren}}). Pour toute question sur vos données : {{email}}."
+        ]
+      },
+      {
+        "title": "Données recueillies",
+        "items": [
+          "Compte de membre : nom, prénom, adresse email, téléphone, antenne, photo de profil (facultative) et mot de passe (enregistré chiffré, jamais lisible).",
+          "Adhésion et cotisations : montants, dates, moyen de paiement, numéro de l'expéditeur et référence de la transaction Mobile Money. Les numéros de carte bancaire ne sont jamais enregistrés par le site : ils sont traités directement par le prestataire de paiement.",
+          "Contributions : projets proposés et messages publiés dans les discussions.",
+          "Dons : montant et, si vous les indiquez, nom, email et téléphone (reçu et remerciements).",
+          "Dossiers de porteur de projet : nom, email et description du projet.",
+          "Lettre d'information : adresse email, après confirmation de votre inscription.",
+          "Données techniques : adresse IP et navigateur, enregistrés dans le journal de sécurité lors des connexions et des actions des administrateurs."
+        ]
+      },
+      {
+        "title": "Utilisation et bases légales",
+        "items": [
+          "Gérer votre adhésion, vos cotisations, votre badge de membre et votre participation aux projets et discussions : exécution de votre contrat d'adhésion.",
+          "Tenir la comptabilité de l'association et émettre les reçus de dons : obligation légale.",
+          "Protéger le site et les comptes (journal de sécurité, prévention des fraudes) : intérêt légitime de l'association.",
+          "Vous envoyer la lettre d'information : votre consentement, que vous pouvez retirer à tout moment par le lien de désinscription présent dans chaque envoi."
+        ],
+        "paragraphs": [
+          "Vos données ne sont jamais vendues ni utilisées à des fins publicitaires."
+        ]
+      },
+      {
+        "title": "Qui peut voir vos données",
+        "items": [
+          "Les administrateurs de votre antenne et le Super Admin de l'association, pour la gestion des adhésions et des paiements.",
+          "Les autres membres à jour de cotisation voient votre nom, votre photo et vos contributions dans les projets et les discussions.",
+          "Badge de membre : toute personne qui scanne votre code QR voit votre nom, votre prénom, votre email et votre antenne, tant que votre adhésion est valide. Vous choisissez à qui vous le présentez.",
+          "Nos prestataires techniques, uniquement pour faire fonctionner le site : hébergement (Render, serveurs situés à Francfort, dans l'Union européenne), envoi des emails, paiement par carte, et traduction automatique en anglais des contenus publiés (Anthropic, aux États-Unis)."
+        ]
+      },
+      {
+        "title": "Durées de conservation",
+        "items": [
+          "Compte de membre : pendant toute la durée de votre adhésion.",
+          "Ancien membre (cotisation non renouvelée) : 3 ans après la fin de votre dernière cotisation, puis le compte est anonymisé automatiquement.",
+          "Inscription jamais validée ou refusée : 1 an après l'inscription, puis anonymisation automatique.",
+          "Cotisations et dons : 10 ans, au titre des obligations comptables. Après la suppression de votre compte, ils sont conservés sans votre identité.",
+          "Journal de sécurité : 1 an.",
+          "Lettre d'information : jusqu'à votre désinscription."
+        ]
+      },
+      {
+        "title": "Vos droits",
+        "paragraphs": [
+          "Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité de vos données. Depuis votre espace membre (onglet Profil), vous pouvez à tout moment :"
+        ],
+        "items": [
+          "corriger votre nom, votre téléphone et votre photo ;",
+          "télécharger l'ensemble de vos données (fichier JSON) ;",
+          "supprimer votre compte : votre identité est effacée immédiatement et définitivement. Vos cotisations restent dans la comptabilité de l'association sans aucune donnée personnelle, et vos projets et messages publiés restent signés « Membre supprimé »."
+        ]
+      },
+      {
+        "title": "Réclamation",
+        "paragraphs": [
+          "Si vous estimez que vos droits ne sont pas respectés, vous pouvez nous écrire à {{email}}, ou adresser une réclamation à la CNIL (www.cnil.fr) en France, ou à la Commission Malagasy de l'Informatique et des Libertés (CMIL) à Madagascar."
+        ]
+      },
+      {
+        "title": "Cookies et stockage local",
+        "paragraphs": [
+          "Le site n'utilise aucun cookie publicitaire ni outil de mesure d'audience. Il conserve uniquement dans votre navigateur ce qui est nécessaire à son fonctionnement : votre session de connexion, votre langue et votre thème d'affichage. Ces éléments ne nécessitent pas votre consentement et disparaissent à la déconnexion ou si vous videz les données du site.",
+          "Pour l'affichage, le site charge des polices de caractères depuis Google Fonts et le fond de carte depuis OpenStreetMap : votre adresse IP est alors transmise à ces services."
+        ]
+      },
+      {
+        "title": "Sécurité",
+        "paragraphs": [
+          "Connexions chiffrées (HTTPS), mots de passe chiffrés, accès aux données réservé aux administrateurs concernés, journal des actions sensibles et sauvegardes régulières protègent vos données."
+        ]
+      }
+    ],
+    "contact": "Une question sur vos données personnelles ? Écrivez-nous :"
   }
 }

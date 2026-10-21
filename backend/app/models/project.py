@@ -9,8 +9,8 @@ non chaque projet sur la plateforme (is_visible).
 import enum
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Integer, String, Text, func, true
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Integer, LargeBinary, String, Text, func, true
+from sqlalchemy.orm import Mapped, deferred, mapped_column, relationship
 
 from app.db.base import Base
 from app.models.post import Pillar
@@ -81,6 +81,9 @@ class Project(Base):
     images: Mapped[list["ProjectImage"]] = relationship(
         back_populates="project", cascade="all, delete-orphan", order_by="ProjectImage.position"
     )
+    documents: Mapped[list["ProjectDocument"]] = relationship(
+        back_populates="project", cascade="all, delete-orphan", order_by="ProjectDocument.position"
+    )
 
 
 class ProjectImage(Base):
@@ -92,3 +95,30 @@ class ProjectImage(Base):
     position: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     project: Mapped["Project"] = relationship(back_populates="images")
+
+
+class ProjectDocument(Base):
+    """
+    Document joint à un projet (PDF, Word, Excel, PowerPoint), réservé aux membres à jour de cotisation
+    et aux admins. Stocké en base (et non dans le dossier public des photos) : jamais accessible par un
+    lien direct, il est servi par l'API après vérification des droits, et survit aux redéploiements.
+    Envoyé avant la création du projet : project_id reste vide jusqu'au rattachement.
+    """
+
+    __tablename__ = "project_documents"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int | None] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    uploaded_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    title: Mapped[str] = mapped_column(String(150), nullable=False)
+    file_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    content_type: Mapped[str] = mapped_column(String(150), nullable=False)
+    size: Mapped[int] = mapped_column(Integer, nullable=False)
+    position: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    # Chargé seulement au téléchargement (pas dans les listes de projets)
+    content: Mapped[bytes] = deferred(mapped_column(LargeBinary, nullable=False))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    project: Mapped["Project | None"] = relationship(back_populates="documents")

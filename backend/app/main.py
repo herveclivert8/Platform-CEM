@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_router
-from app.core.config import HSTS_HEADER, SECURITY_HEADERS, settings
+from app.core.config import API_CSP_EXCLUDED_PATHS, API_CSP_HEADER, HSTS_HEADER, SECURITY_HEADERS, settings
 from app.core.cache import init_redis, close_redis
 from app.core.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
@@ -86,6 +86,8 @@ async def security_headers(request: Request, call_next):
     response = await call_next(request)
     for name, value in SECURITY_HEADERS.items():
         response.headers.setdefault(name, value)
+    if not request.url.path.startswith(API_CSP_EXCLUDED_PATHS):
+        response.headers.setdefault(*API_CSP_HEADER)
     if settings.ENVIRONMENT == "production":
         response.headers.setdefault(*HSTS_HEADER)
     return response

@@ -16,6 +16,7 @@ import { ProjectCard } from "../components/projects/ProjectCard";
 import { ImageLightbox } from "../components/projects/ImageLightbox";
 import { ShareButtons } from "../components/projects/ShareButtons";
 import { ProjectComments } from "../components/projects/ProjectComments";
+import { ProjectDocuments } from "../components/projects/ProjectDocuments";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { Skeleton } from "../components/ui/Skeleton";
@@ -158,9 +159,11 @@ export function ProjectDetailPage({ phase }: { phase: ProjectPhase }) {
 
         {/* Same tag set as posts (see PostContent): styled explicitly, no typography plugin. */}
         <div
-          className="mt-8 text-base leading-relaxed text-slate-700 dark:text-slate-300 [&>div]:mb-4 [&>p]:mb-4 [&_a]:text-emerald-600 [&_a]:underline dark:[&_a]:text-emerald-400 [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mt-1"
+          className="mt-8 text-base leading-relaxed text-slate-700 dark:text-slate-300 [&>div]:mb-4 [&>p]:mb-4 [&_a]:text-emerald-600 [&_a]:underline dark:[&_a]:text-emerald-400 [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mt-1 [&_h3]:mb-3 [&_h3]:mt-8 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-slate-900 dark:[&_h3]:text-white"
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(project.description) }}
         />
+
+        <ProjectDocuments documents={project.documents} />
 
         {project.images.length > 1 && (
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">

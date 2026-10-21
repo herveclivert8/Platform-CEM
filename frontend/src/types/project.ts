@@ -34,9 +34,36 @@ export interface Project {
   rejectionReason: string | null;
   reviewedAt: string | null;
   images: string[];
+  /** Attached files: members with their fee paid and admins only (empty for visitors) */
+  documents: ProjectDocument[];
   createdAt: string;
   updatedAt: string;
 }
+
+export interface ProjectDocument {
+  id: number;
+  title: string;
+  fileName: string;
+  contentType: string;
+  size: number;
+}
+
+export interface ProjectDocumentDto {
+  id: number;
+  title: string;
+  file_name: string;
+  content_type: string;
+  size: number;
+}
+
+export function mapProjectDocument(dto: ProjectDocumentDto): ProjectDocument {
+  return { id: dto.id, title: dto.title, fileName: dto.file_name, contentType: dto.content_type, size: dto.size };
+}
+
+/** Same limits as the API */
+export const MAX_PROJECT_DOCUMENTS = 3;
+export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
+export const DOCUMENT_ACCEPT = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx";
 
 export interface ProjectDto {
   id: number;
@@ -65,6 +92,7 @@ export interface ProjectDto {
   rejection_reason: string | null;
   reviewed_at: string | null;
   images: string[];
+  documents?: ProjectDocumentDto[];
   created_at: string;
   updated_at: string;
 }
@@ -97,6 +125,7 @@ export function mapProject(dto: ProjectDto): Project {
     rejectionReason: dto.rejection_reason,
     reviewedAt: dto.reviewed_at,
     images: dto.images,
+    documents: (dto.documents ?? []).map(mapProjectDocument),
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
   };
@@ -126,6 +155,7 @@ export interface ProjectInput {
   goal_unit: string | null;
   is_visible: boolean;
   images: string[];
+  document_ids: number[];
 }
 
 /** Public URL segment for each phase. */

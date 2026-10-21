@@ -4,7 +4,7 @@ export type ButtonVariant = "primary" | "secondary" | "ghost" | "outline";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const variantClasses: Record<ButtonVariant, string> = {
-  // Colors from CSS variables: orange in the back-office, acid green on the public site (index.css)
+  // Colors from CSS variables: orange in the back-office, champagne gold on the public site (index.css)
   primary:
     "bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-semibold shadow-sm hover:bg-[var(--btn-primary-hover)] hover:shadow-lg",
   secondary:
@@ -17,8 +17,8 @@ const variantClasses: Record<ButtonVariant, string> = {
 
 const sizeClasses: Record<ButtonSize, string> = {
   sm: "px-3 py-1.5 text-sm rounded-lg gap-1.5",
-  md: "px-4 py-2.5 text-sm rounded-xl gap-2",
-  lg: "px-6 py-3.5 text-base rounded-xl gap-2.5",
+  md: "px-5 py-2.5 text-sm rounded-xl gap-2",
+  lg: "px-7 py-3.5 text-base rounded-xl gap-2.5",
 };
 
 /**
@@ -32,7 +32,7 @@ export function buttonClasses({
 }: { variant?: ButtonVariant; size?: ButtonSize; className?: string } = {}) {
   return clsx(
     "inline-flex items-center justify-center whitespace-nowrap",
-    "transition-all duration-200 ease-in-out hover:-translate-y-0.5 active:translate-y-0",
+    "transition-all duration-300 ease-out hover:-translate-y-px active:translate-y-0",
     "disabled:opacity-50 disabled:pointer-events-none disabled:translate-y-0",
     variantClasses[variant],
     sizeClasses[size],

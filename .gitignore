@@ -28,3 +28,9 @@ Platform-CEM/
 # Archives de sauvegarde (python -m app.backup) : données personnelles des membres
 backups/
 cem-backup-*.tar.gz
+
+# Sauvegardes de la base (docker-compose.prod.yml : ./backups)
+backups/
+
+# Raccourci local pour docker compose (COMPOSE_FILE / COMPOSE_ENV_FILES)
+/.env

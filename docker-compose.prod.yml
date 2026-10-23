@@ -1,0 +1,160 @@
+# ========================================
+# CEM Platform - Docker Compose de production (VPS)
+#
+#   cp .env.production.example .env.production   # puis remplir les secrets
+#   chmod 600 .env.production
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+#   docker compose -f docker-compose.prod.yml --env-file .env.production exec backend \
+#       python -m app.create_admin admin@exemple.org --first-name Prénom --last-name Nom
+#
+# Flux réseau :
+#   Internet -> nginx de l'hôte (HTTPS, deploy/nginx/cem.community.conf)
+#            -> frontend:80 (127.0.0.1:HTTP_PORT) -> /api, /uploads -> backend:8000 -> db / redis
+#
+#   réseau "web"  : frontend, backend        (seul le frontend publie un port, sur 127.0.0.1)
+#   réseau "data" : backend, db, redis       (interne : ni Internet, ni port publié)
+# ========================================
+
+name: cem
+
+x-common: &common
+  restart: ${RESTART_POLICY:-always}
+  security_opt:
+    # Désactivable uniquement pour Docker installé via snap (bug AppArmor : "exec ...: operation not permitted")
+    - no-new-privileges:${NO_NEW_PRIVILEGES:-true}
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  # PostgreSQL : joignable uniquement par le backend
+  db:
+    <<: *common
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cem}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans .env.production}
+      POSTGRES_DB: ${POSTGRES_DB:-cem}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+      TZ: UTC
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  # API FastAPI (applique les migrations Alembic au démarrage) : joignable uniquement par le frontend
+  backend:
+    <<: *common
+    build:
+      context: ./backend
+    image: cem-backend:${IMAGE_TAG:-latest}
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cem}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-cem}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY manquant dans .env.production}
+      FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL manquant dans .env.production}
+      # X-Forwarded-For n'est cru que s'il vient du réseau "web" (nginx du frontend)
+      FORWARDED_ALLOW_IPS: ${WEB_SUBNET:-172.30.250.0/24}
+      # Sans Redis, la limite de requêtes est en mémoire : un seul processus pour qu'elle soit exacte
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
+      USE_REDIS: ${USE_REDIS:-false}
+      REDIS_URL: redis://redis:6379/0
+      CARD_PAYMENT_PROVIDER: ${CARD_PAYMENT_PROVIDER:-disabled}
+      SOCIAL_PUBLISHING: ${SOCIAL_PUBLISHING:-disabled}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@cem.mg}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    volumes:
+      - backend_uploads:/app/uploads
+      - ./backups:/app/backups
+    networks:
+      - web
+      - data
+    # Système de fichiers en lecture seule : seuls uploads/, backups/ et /tmp sont inscriptibles
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Site React servi par nginx, relaie /api et /uploads au backend : seul port publié
+  frontend:
+    <<: *common
+    build:
+      context: ./frontend
+    image: cem-frontend:${IMAGE_TAG:-latest}
+    environment:
+      BACKEND_ADDRESS: backend:8000
+      # nginx de l'hôte : ses connexions arrivent depuis la passerelle du réseau "web"
+      TRUSTED_PROXIES: ${WEB_SUBNET:-172.30.250.0/24}
+    ports:
+      - "127.0.0.1:${HTTP_PORT:-8080}:80"
+    networks:
+      - web
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # Redis (optionnel) : --profile with-redis + USE_REDIS=true (permet WEB_CONCURRENCY > 1)
+  redis:
+    <<: *common
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    profiles:
+      - with-redis
+
+volumes:
+  postgres_data:
+  backend_uploads:
+  redis_data:
+
+networks:
+  # Sous-réseau fixe : liste des proxys de confiance (backend et nginx du frontend).
+  # À changer dans .env.production (WEB_SUBNET) s'il entre en conflit avec un réseau du VPS.
+  web:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${WEB_SUBNET:-172.30.250.0/24}
+  data:
+    driver: bridge
+    internal: true

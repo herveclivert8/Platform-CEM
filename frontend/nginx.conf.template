@@ -50,6 +50,16 @@ server {
         proxy_read_timeout 60s;
     }
 
+    # Documents PDF (MAX_DOCUMENT_SIZE = 20 Mo côté API) : seule route acceptant plus de 6 Mo
+    location = /api/v1/upload/document {
+        client_max_body_size 21m;
+        proxy_pass $backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
     location /uploads/ {
         proxy_pass $backend;
         proxy_set_header Host $host;

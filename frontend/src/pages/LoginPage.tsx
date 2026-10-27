@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { usePageMeta } from "../hooks/usePageMeta";
 import { useAuthStore } from "../store/authStore";
 import { homePathFor } from "../types/user";
+import { apiErrorMessage } from "../lib/api";
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -88,9 +89,11 @@ export function LoginPage() {
 
         {login.isError && (
           <p className="text-sm text-red-600 dark:text-red-400">
-            {isAxiosError(login.error) && login.error.response?.status === 429
-              ? t("auth.too_many_logins")
-              : t("auth.bad_credentials")}
+            {isAxiosError(login.error) && login.error.response?.status === 401
+              ? t("auth.bad_credentials")
+              : isAxiosError(login.error) && login.error.response?.status === 429
+                ? t("auth.too_many_logins")
+                : apiErrorMessage(login.error, t("auth.login_error"))}
           </p>
         )}
 

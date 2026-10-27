@@ -59,7 +59,7 @@ function PublicationForm({
   const create = useCreatePublication();
   const update = useUpdatePublication(publication?.id);
   const mutation = publication ? update : create;
-  const canSave = !!branchId && !!title.trim() && !!description.trim() && !!fileUrl;
+  const canSave = !!branchId && !!title.trim() && !!description.trim();
 
   const save = async () => {
     const input = {
@@ -67,7 +67,7 @@ function PublicationForm({
       description: description.trim(),
       file_url: fileUrl || null,
       thumbnail_url: thumbnailUrl || null,
-      format: "pdf" as const,
+      format: fileUrl ? ("pdf" as const) : ("rapport" as const),
     };
     try {
       if (publication) await update.mutateAsync(input);
@@ -137,9 +137,7 @@ function PublicationForm({
       <div className="border-t border-slate-200 pt-5 dark:border-slate-800">
         <Button variant="secondary" className="w-full justify-center" disabled={!canSave || mutation.isPending} onClick={save}>
           {mutation.isPending ? "…" : t(publication ? "admin.reports.save" : "admin.reports.publish")}
-        </Button>
-        {!fileUrl && <p className="mt-2 text-center text-xs text-slate-400 dark:text-slate-500">{t("admin.reports.file_required")}</p>}
-      </div>
+        </Button>      </div>
     </div>
   );
 }

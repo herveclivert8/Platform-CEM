@@ -39,7 +39,7 @@ DESCRIPTION_MAX = 200
 TEXTS = {
     "fr": {
         "home": "Faire émerger l'excellence et le développement durable à Madagascar.",
-        "home_desc": "Un réseau international engagé pour l'éducation, l'aide sociale, l'entrepreneuriat et l'insertion par le sport.",
+        "home_desc": "Un réseau international engagé pour l'éducation, l'entrepreneuriat, la recherche, la solidarité et le développement durable.",
         "branches": "Nos antennes",
         "branches_desc": "Les antennes du CEM à Madagascar et à l'international.",
         "achievements": "Nos réalisations",
@@ -55,7 +55,7 @@ TEXTS = {
     },
     "en": {
         "home": "Fostering excellence and sustainable development in Madagascar.",
-        "home_desc": "An international network committed to education, social aid, entrepreneurship and social inclusion through sport.",
+        "home_desc": "An international network committed to education, entrepreneurship, research, solidarity and sustainable development.",
         "branches": "Our branches",
         "branches_desc": "CEM branches in Madagascar and around the world.",
         "achievements": "Our achievements",

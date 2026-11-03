@@ -1,6 +1,7 @@
 import { dateLocale } from "../lib/locale";
 
-export type PaymentMethod = "CARD" | "MOBILE_MONEY" | "BANK_TRANSFER";
+/** CASH and IN_KIND (material, no amount) are recorded by an admin only */
+export type PaymentMethod = "CARD" | "MOBILE_MONEY" | "BANK_TRANSFER" | "CASH" | "IN_KIND";
 export type DonationStatus = "PENDING" | "CONFIRMED" | "REJECTED";
 export type MobileOperator = "MVOLA" | "ORANGE_MONEY" | "AIRTEL_MONEY";
 export type Currency = "MGA" | "EUR" | "USD";
@@ -60,6 +61,8 @@ export interface Donation {
   paymentMethod: PaymentMethod;
   mobileOperator: MobileOperator | null;
   transactionReference: string | null;
+  /** Material received (IN_KIND donations) */
+  inKindDescription: string | null;
   status: DonationStatus;
   rejectionReason: string | null;
   statusUpdatedAt: string | null;
@@ -79,6 +82,7 @@ export interface DonationDto {
   payment_method: PaymentMethod;
   mobile_operator: MobileOperator | null;
   transaction_reference: string | null;
+  in_kind_description?: string | null;
   status: DonationStatus;
   rejection_reason: string | null;
   status_updated_at: string | null;
@@ -99,6 +103,7 @@ export function mapDonation(dto: DonationDto): Donation {
     paymentMethod: dto.payment_method,
     mobileOperator: dto.mobile_operator,
     transactionReference: dto.transaction_reference,
+    inKindDescription: dto.in_kind_description ?? null,
     status: dto.status,
     rejectionReason: dto.rejection_reason,
     statusUpdatedAt: dto.status_updated_at,
@@ -177,13 +182,14 @@ export interface MobileMoneyDeclarationInput {
   website?: string;
 }
 
-export interface ManualDonationInput {
+/** A donation received, recorded by an admin: Mobile Money not declared, cash, or material. */
+export type ManualDonationInput = {
   branchId?: number;
-  operator: MobileOperator;
-  senderPhone: string;
-  transactionReference: string;
-  amount: number;
   donorEmail?: string;
   donorName?: string;
-}
+} & (
+  | { kind: "MOBILE_MONEY"; operator: MobileOperator; senderPhone: string; transactionReference: string; amount: number }
+  | { kind: "CASH"; amount: number; currency: Currency }
+  | { kind: "IN_KIND"; description: string }
+);
 

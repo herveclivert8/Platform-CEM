@@ -77,7 +77,7 @@ async def list_branch_posts(
     db: AsyncSession = Depends(get_db),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    pillar: str | None = Query(None),
+    pillar: Pillar | None = Query(None),
     lang: str | None = Query(None, description="« en » : contenus traduits automatiquement"),
 ):
     """Lister les posts publiés d'une antenne. Accessible: Public."""
@@ -88,7 +88,7 @@ async def list_branch_posts(
 
     filters = [Post.branch_id == branch_id, Post.status == PostStatusModel.PUBLISHED]
     if pillar:
-        filters.append(Post.pillar == pillar)
+        filters.append(Post.pillar == pillar.value)
 
     total = await db.scalar(select(func.count(Post.id)).where(*filters))
 

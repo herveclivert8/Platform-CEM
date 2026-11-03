@@ -1,23 +1,23 @@
 import { useTranslation } from "react-i18next";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { Wordmark } from "./Wordmark";
-import { ALL_PILLARS } from "../../types/post";
-import { usePillarLabels } from "../../hooks/usePillarLabels";
 import { Link } from "react-router-dom";
 import { SocialLinks } from "./SocialLinks";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { FEATURES } from "../../config/features";
 import { ASSOCIATION } from "../../config/association";
 import { useHomePage } from "../../hooks/useHomePage";
+import { defaultFooterValues } from "./footerValues";
 
 const DEFAULT_CONTACT_EMAIL = ASSOCIATION.contactEmail;
 
 export function Footer() {
   const { t } = useTranslation();
-  const pillarLabels = usePillarLabels();
-  // « Nos valeurs » and contact are set by the super admin (defaults: the four pillars, HQ address)
+  // « Nos valeurs » and contact are set by the super admin (defaults: CEM's values, HQ address)
   const { data: home } = useHomePage();
-  const values = home?.values ?? ALL_PILLARS.map((p) => pillarLabels[p]);
+  const values = home?.values
+    ? home.values.map((title, i) => ({ title, text: home.valueDescriptions?.[i] ?? "" }))
+    : defaultFooterValues(t);
   const contactEmail = home?.contactEmail || DEFAULT_CONTACT_EMAIL;
 
   return (
@@ -39,8 +39,24 @@ export function Footer() {
               {t("footer.pillars_title")}
             </h3>
             <ul className="mt-4 space-y-2.5 text-sm text-slate-500 dark:text-slate-400">
-              {values.map((value, i) => (
-                <li key={i}>{value}</li>
+              {values.map(({ title, text }, i) => (
+                <li key={i}>
+                  {text ? (
+                    // Comment shown on hover, and on focus for keyboard and touch users
+                    <span className="group relative inline-block">
+                      <span tabIndex={0} aria-describedby={`footer-value-${i}`}
+                        className="cursor-help outline-none hover:text-emerald-600 focus-visible:text-emerald-600 dark:hover:text-emerald-400 dark:focus-visible:text-emerald-400">
+                        {title}
+                      </span>
+                      <span id={`footer-value-${i}`} role="tooltip"
+                        className="pointer-events-none invisible absolute bottom-full left-0 z-20 mb-2 w-64 rounded-lg bg-slate-900 px-3 py-2 text-xs leading-relaxed text-white opacity-0 shadow-lg transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 dark:bg-slate-700">
+                        {text}
+                      </span>
+                    </span>
+                  ) : (
+                    title
+                  )}
+                </li>
               ))}
             </ul>
           </div>

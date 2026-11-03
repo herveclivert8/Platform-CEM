@@ -30,6 +30,9 @@ class PaymentMethod(str, enum.Enum):
     CARD = "CARD"
     MOBILE_MONEY = "MOBILE_MONEY"
     BANK_TRANSFER = "BANK_TRANSFER"  # Ancien mode, plus proposé
+    # Enregistrés par un admin uniquement (dons remis en main propre)
+    CASH = "CASH"  # Espèces
+    IN_KIND = "IN_KIND"  # Don matériel : pas de montant (amount = 0), voir in_kind_description
 
 
 class MobileOperator(str, enum.Enum):
@@ -50,7 +53,12 @@ CURRENCY_BY_METHOD = {
     PaymentMethod.CARD: "EUR",
     PaymentMethod.MOBILE_MONEY: "MGA",
     PaymentMethod.BANK_TRANSFER: "EUR",
+    PaymentMethod.CASH: "MGA",
+    PaymentMethod.IN_KIND: "MGA",
 }
+
+# Dons comptés dans les totaux en argent (tableau de bord, page Transparence) : pas le matériel
+MONETARY_METHODS = tuple(m for m in PaymentMethod if m != PaymentMethod.IN_KIND)
 
 
 class Donation(Base):
@@ -76,6 +84,8 @@ class Donation(Base):
         nullable=False,
     )
     mobile_operator: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # Don matériel : ce qui a été reçu (« 50 cahiers, 20 stylos »)
+    in_kind_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Mobile Money : référence reçue par SMS (unique par opérateur) ; carte : id du paiement chez le prestataire
     transaction_reference: Mapped[str | None] = mapped_column(String(64), nullable=True)
 

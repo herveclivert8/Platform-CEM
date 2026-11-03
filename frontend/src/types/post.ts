@@ -1,7 +1,8 @@
-export type Pillar = "EDUCATION" | "SOCIAL" | "SPORT" | "ENTERPRISE";
+/** The five fields of action of « Qui sommes-nous » */
+export type Pillar = "EDUCATION" | "ENTERPRISE" | "RESEARCH" | "SOLIDARITY" | "SUSTAINABILITY";
 export type PostStatus = "DRAFT" | "PUBLISHED";
 
-export const ALL_PILLARS: Pillar[] = ["EDUCATION", "SOCIAL", "SPORT", "ENTERPRISE"];
+export const ALL_PILLARS: Pillar[] = ["EDUCATION", "ENTERPRISE", "RESEARCH", "SOLIDARITY", "SUSTAINABILITY"];
 
 export interface Post {
   id: number;

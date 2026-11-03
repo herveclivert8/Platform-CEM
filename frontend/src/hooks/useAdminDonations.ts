@@ -70,13 +70,20 @@ export function useReopenDonation() {
 export function useRecordManualDonation() {
   return useDonationAction((input: ManualDonationInput) =>
     api.post<DonationDto>("/donations/manual", {
+      kind: input.kind,
       branch_id: input.branchId ?? null,
-      operator: input.operator,
-      sender_phone: input.senderPhone,
-      transaction_reference: input.transactionReference,
-      amount: input.amount,
       donor_email: input.donorEmail || null,
       donor_name: input.donorName || null,
+      ...(input.kind === "MOBILE_MONEY"
+        ? {
+            operator: input.operator,
+            sender_phone: input.senderPhone,
+            transaction_reference: input.transactionReference,
+            amount: input.amount,
+          }
+        : input.kind === "CASH"
+          ? { amount: input.amount, currency: input.currency }
+          : { description: input.description }),
     }),
   );
 }

@@ -41,6 +41,16 @@ class AssociationSettings(Base):
     # Pied de page : « Nos valeurs » (liste ordonnée, en français) et coordonnées de contact.
     # NULL = contenu par défaut du site (les 4 piliers, l'adresse et l'e-mail du siège).
     home_values: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    # Commentaire de chaque valeur (même ordre, "" = aucun), affiché au survol dans le pied de page
+    home_value_descriptions: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+
+    # « Ils nous font confiance » : [{"group": "agreement" | "tacit" | "developing", "name": ..., "url": ...}]
+    # en français, dans l'ordre d'affichage. NULL = partenaires par défaut du site.
+    institutional_partners: Mapped[list[dict] | None] = mapped_column(JSON, nullable=True)
+
+    # Mots gardés tels quels par la traduction automatique, dans tous les contenus du site
+    # (noms propres, sigles, lieux...). NULL = aucun.
+    untranslated_terms: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     contact_address: Mapped[str | None] = mapped_column(String(512), nullable=True)
     contact_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     contact_phone: Mapped[str | None] = mapped_column(String(50), nullable=True)

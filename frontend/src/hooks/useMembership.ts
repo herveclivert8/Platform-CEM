@@ -132,6 +132,18 @@ export function useCreateMemberProject() {
   });
 }
 
+/** Flag one of my ongoing projects as achieved: the branch admin is notified and publishes it. */
+export function useMarkProjectCompleted() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ projectId, note }: { projectId: number; note: string }) => {
+      const { data } = await api.post<ProjectDto>(`/members/me/projects/${projectId}/completed`, { note: note.trim() || null });
+      return mapProject(data);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-projects"] }),
+  });
+}
+
 export function useMyDiscussions(enabled: boolean) {
   return useQuery<MyDiscussion[]>({
     queryKey: ["my-discussions"],

@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import ConfigDict, BaseModel, EmailStr, Field, field_validator, model_validator
 
@@ -10,6 +10,8 @@ class PaymentMethod(str, Enum):
     CARD = "CARD"
     MOBILE_MONEY = "MOBILE_MONEY"
     BANK_TRANSFER = "BANK_TRANSFER"  # Ancien mode, lecture seule
+    CASH = "CASH"  # Espèces, enregistrées par un admin
+    IN_KIND = "IN_KIND"  # Don matériel, enregistré par un admin
 
 
 class DonationStatus(str, Enum):
@@ -74,10 +76,44 @@ class MobileMoneyDeclaration(_MobileMoneyPayment):
     website: Optional[str] = Field(None, max_length=255)
 
 
-class ManualDonationCreate(_MobileMoneyPayment):
-    """Paiement Mobile Money reçu sans déclaration, enregistré par un admin."""
+class ManualDonationCreate(BaseModel):
+    """
+    Don reçu, enregistré par un admin (confirmé d'office) :
+    - MOBILE_MONEY : paiement reçu sans déclaration du donateur (opérateur, numéro, référence, montant en ariary) ;
+    - CASH : espèces remises en main propre (montant et devise) ;
+    - IN_KIND : don matériel (description de ce qui a été reçu, sans montant).
+    """
+    kind: Literal["MOBILE_MONEY", "CASH", "IN_KIND"] = "MOBILE_MONEY"
     branch_id: Optional[int] = None
     donor_email: Optional[EmailStr] = None
+    donor_name: Optional[str] = Field(None, max_length=255)
+    # Mobile Money
+    operator: Optional[MobileOperator] = None
+    sender_phone: Optional[str] = None
+    transaction_reference: Optional[str] = None
+    # Mobile Money (ariary) et espèces
+    amount: Optional[float] = Field(None, gt=0, le=1_000_000_000)
+    currency: Optional["CardCurrency"] = None
+    # Don matériel
+    description: Optional[str] = Field(None, max_length=2000)
+
+    @model_validator(mode="after")
+    def check_kind_fields(self) -> "ManualDonationCreate":
+        if self.kind == "MOBILE_MONEY":
+            if not (self.operator and self.sender_phone and self.transaction_reference and self.amount):
+                raise ValueError("Opérateur, numéro, référence et montant sont requis")
+            if self.amount < 100:
+                raise ValueError("Montant minimum : 100 Ar")
+            self.sender_phone = normalize_mg_phone(self.sender_phone)
+            self.transaction_reference = normalize_transaction_reference(self.transaction_reference)
+        elif self.kind == "CASH":
+            if not self.amount:
+                raise ValueError("Le montant reçu est requis")
+        else:
+            self.description = (self.description or "").strip()
+            if not self.description:
+                raise ValueError("Décrivez le matériel reçu")
+        return self
 
 
 class CardCurrency(str, Enum):
@@ -156,6 +192,7 @@ class Donation(BaseModel):
     payment_method: PaymentMethod
     mobile_operator: Optional[MobileOperator] = None
     transaction_reference: Optional[str] = None
+    in_kind_description: Optional[str] = None
     status: DonationStatus
     rejection_reason: Optional[str] = None
     status_updated_at: Optional[datetime] = None

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, BookOpen, Briefcase, HeartHandshake, Landmark, Scale, ShieldCheck, Sparkles, Trophy } from "lucide-react";
+import { ArrowRight, BookOpen, Briefcase, ChevronDown, FlaskConical, HandHeart, Handshake, HeartHandshake, Leaf, Lightbulb, Mountain, Sparkles } from "lucide-react";
 import { buttonClasses } from "../components/ui/buttonStyles";
 import { usePageMeta } from "../hooks/usePageMeta";
 import { useDonationUiStore } from "../store/donationUiStore";
@@ -9,30 +9,47 @@ import { useAuthStore } from "../store/authStore";
 import { ASSOCIATION } from "../config/association";
 import { MEMBERSHIP_TYPES, MEMBERSHIP_TYPES_SECTION } from "../config/membershipTypes";
 import { useAboutText } from "../hooks/useAboutPage";
+import { useHomePage } from "../hooks/useHomePage";
+import { defaultFooterValues } from "../components/layout/footerValues";
+import { usePartnerGroups } from "../components/home/partners";
 
-const VALUES = [
-  { key: "excellence", icon: Sparkles },
-  { key: "equality", icon: Scale },
-  { key: "independence", icon: ShieldCheck },
-  { key: "transparency", icon: Landmark },
+// Icon of each value, by position (the values are those of the footer, set in « Page d'accueil »)
+const VALUE_ICONS = [HeartHandshake, Mountain, Sparkles, Lightbulb, Handshake];
+
+const DOMAINS = [
+  { key: "education", icon: BookOpen },
+  { key: "enterprise", icon: Briefcase },
+  { key: "research", icon: FlaskConical },
+  { key: "solidarity", icon: HandHeart },
+  { key: "sustainability", icon: Leaf },
 ] as const;
 
-const PILLARS = [
-  { key: "EDUCATION", icon: BookOpen },
-  { key: "SOCIAL", icon: HeartHandshake },
-  { key: "SPORT", icon: Trophy },
-  { key: "ENTERPRISE", icon: Briefcase },
-] as const;
+/** Details of a field of action: one point per line, « Title : text » (the title part is optional). */
+function domainPoints(details: string) {
+  return details
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const colon = line.indexOf(":");
+      return colon > 0 ? { label: line.slice(0, colon).trim(), text: line.slice(colon + 1).trim() } : { label: "", text: line };
+    });
+}
 
 /** « Qui sommes-nous » : mission, values, fields of action, network, institutional partnership, membership types, legal identity. */
 export function AboutPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // Texts the Super Admin can edit (back-office « Qui sommes-nous »); the others stay translations
   const text = useAboutText();
   usePageMeta(t("about.title"), text("about.intro"));
   const openDonation = useDonationUiStore((s) => s.open);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { hash } = useLocation();
+  const { data: home } = useHomePage();
+  const partnerGroups = usePartnerGroups();
+  const values = home?.values
+    ? home.values.map((title, i) => ({ title, text: home.valueDescriptions?.[i] ?? "" }))
+    : defaultFooterValues(t);
 
   // Links such as /qui-sommes-nous#types-adhesion (from the membership choice page)
   useEffect(() => {
@@ -62,14 +79,18 @@ export function AboutPage() {
       <section className="border-y border-slate-200 dark:border-white/10">
         <div className="mx-auto max-w-7xl px-4 py-20 lg:py-28 sm:px-6 lg:px-8">
           <h2 className={sectionTitle}>{text("about.values_title")}</h2>
-          <div className="mt-10 grid gap-px overflow-hidden border border-slate-200 bg-slate-200 sm:grid-cols-2 lg:grid-cols-4 dark:border-slate-800 dark:bg-slate-800">
-            {VALUES.map(({ key, icon: Icon }) => (
-              <div key={key} className="bg-white p-7 dark:bg-slate-900">
-                <Icon className="h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden />
-                <h3 className="mt-5 text-xl font-extrabold text-slate-900 dark:text-white">{text(`about.values.${key}.title`)}</h3>
-                <p className="mt-2 leading-relaxed text-slate-600 dark:text-slate-300">{text(`about.values.${key}.text`)}</p>
-              </div>
-            ))}
+          <div className="mt-10 grid gap-px overflow-hidden border border-slate-200 bg-slate-200 sm:grid-cols-2 lg:grid-cols-5 dark:border-slate-800 dark:bg-slate-800">
+            {values.map(({ title, text: description }, i) => {
+              const Icon = VALUE_ICONS[i % VALUE_ICONS.length];
+              return (
+                // An odd last card spans the row on two columns, so no empty cell is left
+                <div key={i} className="bg-white p-7 sm:odd:last:col-span-2 lg:odd:last:col-span-1 dark:bg-slate-900">
+                  <Icon className="h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                  <h3 className="mt-5 text-xl font-extrabold text-slate-900 dark:text-white">{title}</h3>
+                  {description && <p className="mt-2 leading-relaxed text-slate-600 dark:text-slate-300">{description}</p>}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -83,13 +104,26 @@ export function AboutPage() {
           </Link>
         </div>
         <p className="mt-4 max-w-3xl text-lg text-slate-600 dark:text-slate-300">{text("about.pillars_text")}</p>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {PILLARS.map(({ key, icon: Icon }) => (
-            <div key={key} className="border border-slate-200 p-6 dark:border-slate-800">
-              <Icon className="h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden />
-              <h3 className="mt-4 text-lg font-extrabold text-slate-900 dark:text-white">{t(`pillars.${key}`)}</h3>
-              <p className="mt-2 text-slate-600 dark:text-slate-300">{text(`about.pillars.${key}`)}</p>
-            </div>
+        {/* Titles only; a click opens the details, to keep the page light */}
+        <div className="mt-10 divide-y divide-slate-200 border-y border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+          {DOMAINS.map(({ key, icon: Icon }) => (
+            <details key={key} className="group">
+              <summary className="flex cursor-pointer list-none items-center gap-4 py-5 hover:text-emerald-700 dark:hover:text-emerald-400 [&::-webkit-details-marker]:hidden">
+                <Icon className="h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                <h3 className="flex-1 text-lg font-extrabold text-slate-900 group-hover:text-inherit sm:text-xl dark:text-white">
+                  {text(`about.domains.${key}.title`)}
+                </h3>
+                <ChevronDown className="h-5 w-5 shrink-0 text-slate-400 transition-transform group-open:rotate-180" aria-hidden />
+              </summary>
+              <ul className="space-y-3 pb-6 pl-10 text-slate-600 dark:text-slate-300">
+                {domainPoints(text(`about.domains.${key}.details`)).map(({ label, text: point }, i) => (
+                  <li key={i} className="relative pl-4 leading-relaxed before:absolute before:left-0 before:top-[0.7em] before:h-1.5 before:w-1.5 before:rounded-full before:bg-emerald-500">
+                    {label && <strong className="font-semibold text-slate-900 dark:text-white">{label}{i18n.language.startsWith("fr") ? " : " : ": "}</strong>}
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </details>
           ))}
         </div>
       </section>
@@ -105,8 +139,29 @@ export function AboutPage() {
           </Link>
         </div>
         <div className="border border-slate-200 bg-white p-8 sm:p-10 dark:border-slate-800 dark:bg-slate-900">
-          <p className={eyebrow}>{t("about.partner_eyebrow")}</p>
-          <h2 className="mt-4 text-3xl font-extrabold leading-tight text-slate-900 dark:text-white">{text("about.partner_title")}</h2>
+          <h2 className="text-3xl font-extrabold leading-tight text-slate-900 dark:text-white">{t("about.partner_eyebrow")}</h2>
+          {/* Same list as « Ils nous font confiance » on the home page */}
+          <dl className="mt-6 space-y-5">
+            {partnerGroups.map(({ group, partners }) => (
+              <div key={group}>
+                <dt className={eyebrow}>{t(`partners.groups.${group}.title`)}</dt>
+                {partners.map((partner, i) => (
+                  <dd key={i} className="mt-1.5 font-semibold text-slate-900 dark:text-white">
+                    {partner.url ? (
+                      <a href={partner.url} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-700 hover:underline dark:hover:text-emerald-400">
+                        {partner.name}
+                      </a>
+                    ) : (
+                      partner.name
+                    )}
+                  </dd>
+                ))}
+              </div>
+            ))}
+          </dl>
+          <h3 className="mt-8 border-t border-slate-200 pt-8 text-xl font-extrabold leading-tight text-slate-900 dark:border-slate-800 dark:text-white">
+            {text("about.partner_title")}
+          </h3>
           <p className="mt-4 leading-relaxed text-slate-600 dark:text-slate-300">{text("about.partner_text")}</p>
           <ul className="mt-5 space-y-2 text-slate-700 dark:text-slate-300">
             {(["skills", "resources", "excellence"] as const).map((key) => (

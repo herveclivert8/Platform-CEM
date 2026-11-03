@@ -9,16 +9,17 @@ commande ne coûte rien quand tout est à jour. Le serveur fait le même rattrap
 """
 
 import asyncio
+import logging
 import sys
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.v1.endpoints.posts import TRANSLATED_FIELDS as POST_FIELDS
 from app.api.v1.endpoints.projects import TRANSLATED_FIELDS as PROJECT_FIELDS
 from app.api.v1.endpoints.publications import TRANSLATED_FIELDS as PUBLICATION_FIELDS
-from app.api.v1.endpoints.settings import SETTINGS_ID, _home_sources
+from app.api.v1.endpoints.settings import SETTINGS_ID, _home_sources, about_sources
 from app.core.config import settings as app_settings
 from app.db.session import AsyncSessionLocal
 from app.models import AssociationSettings, ContentTranslation, Post, Project, Publication
@@ -33,14 +34,14 @@ SYSTEM_PROMPT_TOKENS = 250
 CHARS_PER_TOKEN = 3.5
 
 
-async def collect_stale(db: AsyncSession) -> list[tuple[str, int, dict[str, str | None], list[str]]]:
-    """[(type, id, tous les champs, champs à traduire)] pour chaque contenu public pas à jour."""
+async def collect_resources(db: AsyncSession) -> list[tuple[str, int, dict[str, str | None]]]:
+    """[(type, id, tous les champs traduisibles)] pour chaque contenu public."""
     resources: list[tuple[str, int, dict[str, str | None]]] = []
 
     home = await db.get(AssociationSettings, SETTINGS_ID)
     if home is not None:
         resources.append(("home", SETTINGS_ID, _home_sources(home)))
-        resources.append(("about", SETTINGS_ID, dict(home.about_content or {})))
+        resources.append(("about", SETTINGS_ID, about_sources(home)))
 
     posts = await db.execute(select(Post).where(Post.status == PostStatus.PUBLISHED))
     resources += [("post", p.id, {f: getattr(p, f) for f in POST_FIELDS}) for p in posts.scalars()]
@@ -52,7 +53,12 @@ async def collect_stale(db: AsyncSession) -> list[tuple[str, int, dict[str, str 
 
     publications = await db.execute(select(Publication))
     resources += [("publication", p.id, {f: getattr(p, f) for f in PUBLICATION_FIELDS}) for p in publications.scalars()]
+    return resources
 
+
+async def collect_stale(db: AsyncSession) -> list[tuple[str, int, dict[str, str | None], list[str]]]:
+    """[(type, id, tous les champs, champs à traduire)] pour chaque contenu public pas à jour."""
+    resources = await collect_resources(db)
     rows = await db.execute(select(ContentTranslation).where(ContentTranslation.lang == TARGET_LANG))
     done = {(r.resource_type, r.resource_id, r.field): r.source_hash for r in rows.scalars()}
 
@@ -77,6 +83,35 @@ async def translate_stale() -> int:
     for resource_type, resource_id, fields, _ in stale:
         total += await translate_resource(resource_type, resource_id, fields)
     return total
+
+
+async def retranslate_terms(terms: set[str]) -> None:
+    """
+    Retraduire les textes contenant un mot ajouté ou retiré des « mots à ne pas traduire » : leur
+    traduction a été faite avec l'ancienne liste. Lancée en tâche de fond après l'enregistrement.
+    """
+    try:
+        folded = [term.casefold() for term in terms]
+        async with AsyncSessionLocal() as db:
+            resources = await collect_resources(db)
+            affected = [
+                (resource_type, resource_id, fields, [f for f, text in fields.items() if text and any(t in text.casefold() for t in folded)])
+                for resource_type, resource_id, fields in resources
+            ]
+            affected = [a for a in affected if a[3]]
+            for resource_type, resource_id, _, changed in affected:
+                await db.execute(
+                    delete(ContentTranslation).where(
+                        ContentTranslation.resource_type == resource_type,
+                        ContentTranslation.resource_id == resource_id,
+                        ContentTranslation.field.in_(changed),
+                    )
+                )
+            await db.commit()
+        for resource_type, resource_id, fields, _ in affected:
+            await translate_resource(resource_type, resource_id, fields)
+    except Exception:
+        logging.getLogger(__name__).exception("Retraduction après changement des mots à ne pas traduire impossible")
 
 
 def _estimate_cost(stale) -> tuple[int, int, float]:

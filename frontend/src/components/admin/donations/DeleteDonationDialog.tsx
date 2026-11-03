@@ -35,13 +35,18 @@ export function DeleteDonationDialog({ donation, pending, onConfirm, onCancel }:
 
   if (!donation) return null;
 
-  const amount = formatAmount(donation.amount, donation.currency);
+  const amount =
+    donation.paymentMethod === "IN_KIND" ? (donation.inKindDescription ?? "") : formatAmount(donation.amount, donation.currency);
   const method =
     donation.paymentMethod === "MOBILE_MONEY" && donation.mobileOperator
       ? OPERATOR_LABELS[donation.mobileOperator]
       : donation.paymentMethod === "CARD"
         ? t("admin.donations.method_card")
-        : t("admin.donations.method_transfer");
+        : donation.paymentMethod === "CASH"
+          ? t("admin.donations.method_cash")
+          : donation.paymentMethod === "IN_KIND"
+            ? t("admin.donations.method_in_kind")
+            : t("admin.donations.method_transfer");
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">

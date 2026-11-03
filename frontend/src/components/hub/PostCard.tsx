@@ -10,9 +10,10 @@ import { dateLocale } from "../../lib/locale";
 
 const PILLAR_TONE: Record<Post["pillar"], "emerald" | "orange"> = {
   EDUCATION: "emerald",
-  SOCIAL: "orange",
-  SPORT: "emerald",
   ENTERPRISE: "orange",
+  RESEARCH: "emerald",
+  SOLIDARITY: "orange",
+  SUSTAINABILITY: "emerald",
 };
 
 export function PostCard({ post }: { post: Post }) {

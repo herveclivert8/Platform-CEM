@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { CheckCircle2, CreditCard, Landmark, MailCheck, Plus, RotateCcw, Search, ShieldCheck, Smartphone, Trash2 } from "lucide-react";
+import { Banknote, CheckCircle2, CreditCard, Landmark, MailCheck, Package, Plus, RotateCcw, Search, ShieldCheck, Smartphone, Trash2 } from "lucide-react";
 import clsx from "clsx";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
@@ -47,6 +47,8 @@ const STATUS_BADGE: Record<DonationStatus, { label: string; tone: "orange" | "em
 function methodLabel(d: Donation, t: TFunction): string {
   if (d.paymentMethod === "CARD") return t("admin.donations.method_card");
   if (d.paymentMethod === "MOBILE_MONEY") return d.mobileOperator ? OPERATOR_LABELS[d.mobileOperator] : t("admin.donations.method_mobile");
+  if (d.paymentMethod === "CASH") return t("admin.donations.method_cash");
+  if (d.paymentMethod === "IN_KIND") return t("admin.donations.method_in_kind");
   return t("admin.donations.method_transfer");
 }
 
@@ -245,6 +247,10 @@ export function DonationsPage() {
                         <CreditCard className="h-4 w-4" />
                       ) : d.paymentMethod === "MOBILE_MONEY" ? (
                         <Smartphone className="h-4 w-4" />
+                      ) : d.paymentMethod === "CASH" ? (
+                        <Banknote className="h-4 w-4" />
+                      ) : d.paymentMethod === "IN_KIND" ? (
+                        <Package className="h-4 w-4" />
                       ) : (
                         <Landmark className="h-4 w-4" />
                       )}
@@ -299,8 +305,11 @@ export function DonationsPage() {
                       d.status === "REJECTED" && "text-slate-400 line-through",
                     )}
                   >
-                    {formatAmount(d.amount, d.currency)}
+                    {d.paymentMethod === "IN_KIND" ? t("admin.donations.method_in_kind") : formatAmount(d.amount, d.currency)}
                   </p>
+                  {d.paymentMethod === "IN_KIND" && d.inKindDescription && (
+                    <p className="max-w-xs text-xs text-slate-600 dark:text-slate-300">{d.inKindDescription}</p>
+                  )}
                   {corrected && (
                     <p className="text-[11px] text-slate-400">{t("admin.donations.declared_amount", { amount: formatAmount(d.declaredAmount!, d.currency) })}</p>
                   )}

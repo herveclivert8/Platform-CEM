@@ -254,12 +254,15 @@ class EmailService:
         payment_label: str,
         branch_name: Optional[str],
         donation_date: datetime,
+        in_kind: bool = False,
     ) -> bool:
-        """Remercier un donateur une fois son don confirmé (reçu du paiement)."""
+        """Remercier un donateur une fois son don confirmé (reçu du paiement, ou du matériel)."""
         context = dict(
             donor_name=donor_name,
             amount_label=amount_label,
             payment_label=payment_label,
+            # Don matériel : amount_label décrit le matériel reçu
+            amount_title="Matériel" if in_kind else "Montant",
             branch_name=branch_name,
             # Élision : "d'Antananarivo", "de Paris"
             branch_of=(("d'" if branch_name[0].lower() in "aeiouyhéè" else "de ") + branch_name) if branch_name else None,
@@ -318,7 +321,7 @@ Merci pour votre générosité : elle permet au Club Excellence Madagascar de po
 en faveur de l'éducation, de l'entrepreneuriat et de la solidarité.
 
 Récapitulatif
-- Montant : {{ amount_label }}
+- {{ amount_title }} : {{ amount_label }}
 - Moyen de paiement : {{ payment_label }}
 - Date : {{ donation_date }}
 
@@ -343,7 +346,7 @@ DONATION_THANK_YOU_HTML = """<!doctype html>
           Votre générosité permet au Club Excellence Madagascar de poursuivre ses actions en faveur de l'éducation,
           de l'entrepreneuriat et de la solidarité.</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;border:1px solid #e2e8f0;border-radius:12px;">
-            <tr><td style="padding:12px 16px;color:#64748b;font-size:13px;">Montant</td><td align="right" style="padding:12px 16px;font-weight:bold;">{{ amount_label }}</td></tr>
+            <tr><td style="padding:12px 16px;color:#64748b;font-size:13px;">{{ amount_title }}</td><td align="right" style="padding:12px 16px;font-weight:bold;">{{ amount_label }}</td></tr>
             <tr><td style="padding:12px 16px;color:#64748b;font-size:13px;border-top:1px solid #e2e8f0;">Moyen de paiement</td><td align="right" style="padding:12px 16px;border-top:1px solid #e2e8f0;">{{ payment_label }}</td></tr>
             <tr><td style="padding:12px 16px;color:#64748b;font-size:13px;border-top:1px solid #e2e8f0;">Date</td><td align="right" style="padding:12px 16px;border-top:1px solid #e2e8f0;">{{ donation_date }}</td></tr>
           </table>

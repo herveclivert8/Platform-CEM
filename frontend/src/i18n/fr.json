@@ -16,7 +16,7 @@
   "hero": {
     "badge": "Facilitateur de Développement Durable & Éducation",
     "title": "Faire émerger l'excellence et le développement durable à Madagascar.",
-    "subtitle": "Un réseau international engagé pour l'éducation, l'aide sociale, l'entrepreneuriat et l'insertion par le sport, à Madagascar et partout où nos membres agissent.",
+    "subtitle": "Un réseau international engagé pour l'éducation, l'entrepreneuriat, la recherche, la solidarité et le développement durable, à Madagascar et partout où nos membres agissent.",
     "cta_primary": "Faire un don",
     "cta_secondary": "Découvrir nos antennes",
     "cta_member": "Devenir membre"
@@ -48,10 +48,11 @@
     "branch_count_other": "{{count}} antennes"
   },
   "pillars": {
-    "EDUCATION": "Éducation & Livres",
-    "SOCIAL": "Aide Sociale",
-    "SPORT": "Éducation par le Sport",
-    "ENTERPRISE": "Entrepreneuriat & Partenariats"
+    "EDUCATION": "Éducation et formation",
+    "ENTERPRISE": "Création d’entreprise",
+    "RESEARCH": "Recherche scientifique et innovation",
+    "SOLIDARITY": "Solidarité et action humanitaire",
+    "SUSTAINABILITY": "Développement durable et transformation de la société"
   },
   "projects": {
     "completed_title": "Nos réalisations",
@@ -99,14 +100,29 @@
   },
   "partners": {
     "title": "Ils nous font confiance",
-    "subtitle": "Institutions, fondations et écoles partenaires du réseau CEM.",
-    "categories": {
-      "public_institutions": "Institutions publiques",
-      "schools": "Établissements scolaires",
-      "corporate_foundations": "Fondations d'entreprise",
-      "local_associations": "Associations locales",
-      "international_ngos": "ONG internationales",
-      "diaspora_network": "Réseau diaspora"
+    "subtitle": "Partenariat institutionnel",
+    "groups": {
+      "agreement": {
+        "title": "Partenariat conventionné",
+        "partners": {
+          "education": "Ministère de l’Éducation nationale",
+          "economy": "Ministère de l’Économie et des Finances, direction des Opérations",
+          "journalists": "Ordre des journalistes malagasy (OGM)"
+        }
+      },
+      "tacit": {
+        "title": "Partenariat tacite",
+        "partners": {
+          "central_bank": "Banky Foiben’i Madagasikara"
+        }
+      },
+      "developing": {
+        "title": "Partenariat en cours de développement",
+        "partners": {
+          "cedimes": "Réseau CEDIMES",
+          "egss": "Faculté EGSS Fianarantsoa"
+        }
+      }
     }
   },
   "hub": {
@@ -121,9 +137,10 @@
     "filter_all": "Tous",
     "kpi": {
       "posts_education": "Actualités Éducation",
-      "posts_social": "Actualités Aide Sociale",
-      "posts_sport": "Actualités Sport",
-      "posts_enterprise": "Actualités Entrepreneuriat"
+      "posts_enterprise": "Actualités Entreprise",
+      "posts_research": "Actualités Recherche",
+      "posts_solidarity": "Actualités Solidarité",
+      "posts_sustainability": "Actualités Développement durable"
     },
     "donation_sidebar_title": "Soutenir cette antenne",
     "other_branches": "Découvrir d'autres antennes",
@@ -242,7 +259,29 @@
     "social_soon": "{{network}} : bientôt disponible",
     "contact_title": "Contact",
     "transparency": "Transparence",
-    "privacy": "Confidentialité"
+    "privacy": "Confidentialité",
+    "values": {
+      "humanity": {
+        "title": "Humanité et solidarité",
+        "text": "Placer la dignité humaine, l’entraide et l’engagement au service des autres au cœur de nos actions."
+      },
+      "work": {
+        "title": "Travail et persévérance",
+        "text": "Cultiver la rigueur, l’effort et la persévérance pour transformer les ambitions en réalisations concrètes."
+      },
+      "excellence": {
+        "title": "Excellence au service du bien commun",
+        "text": "Rechercher l’excellence scientifique, professionnelle et humaine pour contribuer au développement de la société."
+      },
+      "entrepreneurship": {
+        "title": "Entrepreneuriat et innovation",
+        "text": "Encourager l’initiative, la créativité et la prise de responsabilité pour faire émerger des projets utiles et durables."
+      },
+      "cooperation": {
+        "title": "Coopération et partenariat",
+        "text": "Mobiliser les compétences, les réseaux et les expériences à l’échelle internationale pour réaliser des projets communs."
+      }
+    }
   },
   "not_found": {
     "title": "Page introuvable",
@@ -346,8 +385,8 @@
   "admin": {
     "nav": {
       "dashboard": "Tableau de bord",
-      "posts": "Mes Publications",
-      "projects": "Réalisations & projets",
+      "posts": "Actualités des antennes",
+      "projects": "Projets & réalisations",
       "projects_pending": "En attente de validation",
       "reports": "Bilans annuels",
       "submissions": "Dossiers Entrepreneurs",
@@ -491,8 +530,8 @@
       "save_error": "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.",
       "save_draft": "Enregistrer en brouillon",
       "publish": "Publier",
-      "title": "Mes Publications",
-      "subtitle": "Actualités, rapports de terrain et projets."
+      "title": "Actualités des antennes",
+      "subtitle": "Nouvelles publiées dans l'onglet « Actualités » de la page de chaque antenne : événements, nouvelles du terrain. Pour un projet ou une réalisation, utilisez « Projets & réalisations »."
     },
     "submissions": {
       "drawer_title": "Nouveau dossier",
@@ -729,7 +768,19 @@
       "pi_outcome_declined": "Refusé",
       "pi_outcome_insufficient_funds": "Fonds insuffisants",
       "pi_active": "Actif.",
-      "invalid_phone": "Numéro émetteur invalide (format : 034 12 345 67)."
+      "invalid_phone": "Numéro émetteur invalide (format : 034 12 345 67).",
+      "kind": "Type de don",
+      "kind_money": "Somme d'argent",
+      "kind_in_kind": "Don matériel",
+      "payment_method": "Moyen de paiement",
+      "method_cash": "Espèces",
+      "method_in_kind": "Don matériel",
+      "cash_amount": "Montant reçu",
+      "currency": "Devise",
+      "material": "Matériel reçu",
+      "material_placeholder": "Ex. : 50 cahiers, 20 stylos, 2 ordinateurs portables",
+      "manual_intro_cash": "Pour des espèces remises en main propre. Le don est enregistré comme <strong>confirmé</strong> et compté dans les totaux ; si un email est renseigné, le donateur reçoit un remerciement.",
+      "manual_intro_in_kind": "Pour du matériel reçu (livres, fournitures, équipement…). Le don est enregistré comme <strong>confirmé</strong>, sans montant : il n'entre pas dans les totaux en argent. Si un email est renseigné, le donateur reçoit un remerciement."
     },
     "home_page": {
       "title": "Page d'accueil & pied de page",
@@ -742,13 +793,29 @@
       "heading": "Titre",
       "tagline": "Sous-titre",
       "section_values": "Nos valeurs",
-      "values_hint": "Liste affichée dans le pied de page, dans cet ordre. Par défaut : les 4 piliers du CEM.",
+      "values_hint": "Liste affichée dans le pied de page, dans cet ordre. Le commentaire apparaît quand on passe le curseur sur la valeur.",
       "value_label": "Valeur {{n}}",
+      "value_description_placeholder": "Commentaire affiché au survol (facultatif)",
+      "value_description_label": "Commentaire de la valeur {{n}} (affiché au survol)",
       "move_up": "Monter",
       "move_down": "Descendre",
       "remove_value": "Retirer",
       "add_value": "Ajouter une valeur",
-      "default_values": "Revenir aux 4 piliers",
+      "default_values": "Revenir aux valeurs par défaut",
+      "section_partners": "Partenaires (« Ils nous font confiance »)",
+      "partners_hint": "Partenaires institutionnels affichés sur la page d'accueil, par type de partenariat, dans cet ordre. Le site web est facultatif.",
+      "partner_group": "Type de partenariat du partenaire {{n}}",
+      "partner_name": "Nom du partenaire {{n}}",
+      "partner_url": "Site web du partenaire {{n}}",
+      "partner_name_placeholder": "Nom du partenaire",
+      "partner_url_placeholder": "Site web (facultatif), ex. www.exemple.mg",
+      "add_partner": "Ajouter un partenaire",
+      "remove_partner": "Retirer ce partenaire",
+      "default_partners": "Revenir aux partenaires par défaut",
+      "partner_keep_name": "Nom propre : ne pas traduire en anglais",
+      "section_untranslated": "Mots à ne pas traduire",
+      "untranslated_hint": "Pour tout le site (accueil, « Qui sommes-nous », actualités, projets…) : la traduction anglaise garde ces mots tels quels. Un mot ou une expression par ligne : noms propres, sigles, noms de lieux. Les textes qui les contiennent sont retraduits après l'enregistrement.",
+      "untranslated_placeholder": "Banky Foiben’i Madagasikara\nFianarantsoa\nCEDIMES",
       "section_contact": "Contact",
       "contact_address": "Adresse",
       "contact_email": "E-mail",
@@ -780,9 +847,9 @@
       "logo_mark_hint": "Format carré, au moins 256 × 256 px. Icône de l'onglet du navigateur, menu de l'admin, cartes de membre et badges."
     },
     "projects": {
-      "title": "Réalisations & projets",
-      "subtitle_super": "Toutes les antennes. Les projets proposés par les membres sont validés par l'admin de leur antenne ; vous êtes informé de chaque publication et pouvez supprimer tout projet.",
-      "subtitle_branch": "Vos ajouts sont publiés directement. Les projets proposés par les membres de votre antenne attendent votre validation.",
+      "title": "Projets & réalisations",
+      "subtitle_super": "Projets affichés dans « Projets en cours », puis dans « Nos réalisations » une fois terminés. Toutes les antennes. Les projets proposés par les membres sont validés par l'admin de leur antenne ; vous êtes informé de chaque publication et pouvez supprimer tout projet.",
+      "subtitle_branch": "Projets affichés dans « Projets en cours », puis dans « Nos réalisations » une fois terminés. Vos ajouts sont publiés directement. Les projets proposés par les membres de votre antenne attendent votre validation.",
       "add": "Ajouter",
       "tab_pending": "En attente",
       "tab_approved": "Publiés",
@@ -850,7 +917,13 @@
       "hide": "Masquer sur la plateforme",
       "show": "Afficher sur la plateforme",
       "visible_label": "Afficher sur la plateforme",
-      "visible_hint": "Décoché, le projet n'est pas public : il reste seulement dans cette liste (admin de l'antenne et siège). Changer ce choix ne demande pas de nouvelle validation."
+      "visible_hint": "Décoché, le projet n'est pas public : il reste seulement dans cette liste (admin de l'antenne et siège). Changer ce choix ne demande pas de nouvelle validation.",
+      "tab_to_publish": "À publier",
+      "empty_to_publish": "Aucun projet signalé comme abouti par un membre.",
+      "completion_badge": "Abouti selon le membre",
+      "completion_title": "Projet signalé comme abouti par le membre",
+      "completion_text": "Publiez-le comme réalisation : il passera dans « Nos réalisations » et sur la page d'accueil (date de fin : aujourd'hui si elle n'est pas renseignée).",
+      "publish_achievement": "Publier comme réalisation"
     },
     "reports": {
       "title": "Bilans annuels",
@@ -927,7 +1000,8 @@
       "notes_saved": "Notes enregistrées",
       "submission_deleted": "Dossier supprimé",
       "export_done": "Export téléchargé",
-      "subscriber_deleted": "Abonné supprimé"
+      "subscriber_deleted": "Abonné supprimé",
+      "achievement_published": "Publié comme réalisation"
     },
     "members": {
       "title": "Membres",
@@ -1029,6 +1103,7 @@
       "french_only": "Saisissez les textes en français : la version anglaise est traduite automatiquement après l'enregistrement.",
       "section_intro": "Introduction",
       "section_values": "Nos valeurs",
+      "values_hint": "Les valeurs et leurs textes sont les mêmes que dans le pied de page : ils se modifient dans « Page d'accueil », section « Nos valeurs ».",
       "section_pillars": "Nos domaines d'action",
       "section_network": "Réseau d'antennes",
       "section_partner": "Partenariat institutionnel",
@@ -1041,9 +1116,8 @@
         "intro_2": "Présentation : 2e paragraphe",
         "section_title": "Titre de la section",
         "section_text": "Texte de la section",
-        "value_title": "« {{name}} » : titre",
-        "value_text": "« {{name}} » : texte",
-        "pillar": "{{name}}",
+        "domain_title": "« {{name}} » : titre",
+        "domain_details": "« {{name}} » : détails (un point par ligne, « Titre : texte »)",
         "partner_goal": "Objectif {{n}}",
         "partner_example": "Exemple (texte avant le lien vers les réalisations)",
         "type_text": "{{name}} : description complète",
@@ -1182,7 +1256,15 @@
       "submit": "Envoyer pour validation",
       "error": "Le projet n'a pas pu être envoyé.",
       "photo": "Photo",
-      "photo_hint": "Une photo rend votre projet plus visible (JPEG, PNG ou WebP, 5 Mo maximum)."
+      "photo_hint": "Une photo rend votre projet plus visible (JPEG, PNG ou WebP, 5 Mo maximum).",
+      "mark_completed": "Marquer comme réalisé",
+      "mark_completed_text": "Votre projet est abouti ? L'admin de votre antenne sera prévenu et le publiera dans « Nos réalisations » et sur la page d'accueil.",
+      "completion_note": "Ce qui a été réalisé",
+      "completion_note_placeholder": "Facultatif : ce qui a été réalisé (résultats, nombre de bénéficiaires, dates…)",
+      "mark_completed_confirm": "Signaler comme réalisé",
+      "mark_completed_error": "Le signalement n'a pas pu être envoyé.",
+      "completion_pending": "Réalisé : en attente de publication",
+      "achievement": "Réalisation publiée"
     },
     "suspended_text": "Votre cotisation n'a pas été payée à l'échéance du 30 : votre compte est désactivé. Payez la cotisation du mois en cours ; l'administrateur de votre antenne réactivera ensuite votre compte.",
     "suspended_paid_text": "Votre cotisation du mois est payée. L'administrateur de votre antenne va réactiver votre compte.",
@@ -1352,33 +1434,31 @@
     "headline_accent": "excellence malagasy",
     "headline_after": " au service du développement.",
     "intro": "Le Club Excellence Madagascar (CEM) est une association apolitique, non confessionnelle et à but non lucratif qui œuvre en faveur du développement de Madagascar. L'éducation est l'une de ses priorités.",
-    "intro_2": "Ses membres bénévoles, à Madagascar comme dans la diaspora, mettent leurs compétences au service de projets concrets : soutenir les élèves et les enseignants, valoriser les talents et favoriser l'égalité des chances sur tout le territoire.",
+    "intro_2": "Les membres du réseau sont des étudiants et des professionnels à Madagascar ou issus de la diaspora malagasy, ainsi que toute personne désireuse de contribuer au développement de Madagascar. Bénévoles, ils participent, selon leurs disponibilités, à la réalisation de projets concrets dans différents domaines : entrepreneuriat, vulgarisation des connaissances scientifiques et techniques, et amélioration de l’organisation et du fonctionnement de la société malagasy.",
     "values_title": "Nos valeurs",
-    "values": {
-      "excellence": {
-        "title": "Excellence",
-        "text": "Promouvoir l'esprit d'excellence et la rigueur, et révéler les talents là où ils se trouvent."
-      },
-      "equality": {
-        "title": "Égalité des chances",
-        "text": "Donner à chaque jeune, quelle que soit sa région, les mêmes possibilités de réussir."
-      },
-      "independence": {
-        "title": "Indépendance",
-        "text": "Une association apolitique et non confessionnelle : aucune action n'est détournée à des fins politiques ou commerciales."
-      },
-      "transparency": {
-        "title": "Transparence",
-        "text": "Rendre compte de nos actions et de l'utilisation des dons, en toute clarté."
-      }
-    },
     "pillars_title": "Nos domaines d'action",
-    "pillars_text": "Chaque antenne choisit ses actions selon les besoins de sa communauté, autour de quatre domaines.",
-    "pillars": {
-      "EDUCATION": "Concours, fournitures et livres scolaires, soutien aux élèves et aux enseignants.",
-      "SOCIAL": "Solidarité de proximité et aide aux familles.",
-      "SPORT": "Activités sportives et encadrement des jeunes.",
-      "ENTERPRISE": "Formation, mentorat et accompagnement de porteurs de projets."
+    "pillars_text": "Chaque antenne choisit ses actions selon les besoins de sa communauté, autour de cinq domaines. Cliquez sur un domaine pour en voir le détail.",
+    "domains": {
+      "education": {
+        "title": "Éducation et formation",
+        "details": "Formation et certification : organisation de formations certifiantes et d’activités de renforcement des compétences.\nPartage des connaissances : conférences, débats contradictoires et vulgarisation scientifique et technique.\nAccès à l’éducation : distribution de manuels scolaires et facilitation de l’accès aux ressources éducatives.\nSensibilisation aux enjeux du monde contemporain : actions de sensibilisation aux défis écologiques et sociétaux, promotion d’une réflexion critique sur les normes sociales et encouragement du dialogue, de la compréhension mutuelle et de la résolution pacifique des conflits."
+      },
+      "enterprise": {
+        "title": "Création d’entreprise",
+        "details": "Émergence de projets : pépinière de projets entrepreneuriaux, notamment pour les étudiants en fin de cycle Master.\nAccompagnement et mise en réseau : partage de compétences, mentorat et mise en relation des membres pour concrétiser des projets communs.\nFinancement et partenariats : facilitation des relations avec les investisseurs, les entreprises et les organismes d’appui.\nInnovation et impact social : organisation de concours et de prix récompensant les initiatives innovantes contribuant au développement économique, à la protection de l’environnement et à la réduction de la pauvreté."
+      },
+      "research": {
+        "title": "Recherche scientifique et innovation",
+        "details": "Soutien à la recherche : mise en relation des chercheurs, étudiants et professionnels pour favoriser l’émergence de projets scientifiques et techniques.\nValorisation des connaissances : diffusion des résultats de recherche et vulgarisation des avancées scientifiques et technologiques.\nCoopération scientifique : développement de partenariats entre universités, laboratoires, entreprises et acteurs de la société civile.\nInnovation au service du développement : encouragement des projets de recherche appliquée et des solutions innovantes répondant aux besoins de la société malagasy."
+      },
+      "solidarity": {
+        "title": "Solidarité et action humanitaire",
+        "details": "Soutien aux populations vulnérables : initiatives de solidarité en faveur des personnes et des communautés confrontées à des difficultés sociales ou économiques.\nMobilisation bénévole : mise en commun des bonnes volontés et des ressources pour répondre à des besoins concrets.\nProjets d’intérêt général : conception et réalisation d’actions contribuant à améliorer les conditions de vie et à favoriser l’inclusion sociale.\nPartenariats solidaires : coopération avec des associations, des institutions et des partenaires à Madagascar et à l’international pour renforcer la portée des actions humanitaires."
+      },
+      "sustainability": {
+        "title": "Développement durable et transformation de la société",
+        "details": "Protection de l’environnement : promotion des initiatives en faveur de la préservation des ressources naturelles et de la transition écologique.\nAmélioration des conditions de vie : soutien aux projets favorisant l’accès aux services essentiels et le développement des communautés.\nModernisation et transformation numérique : encouragement de l’innovation technologique et de la transformation numérique au service du développement.\nCitoyenneté et engagement collectif : sensibilisation aux enjeux sociétaux, promotion de la responsabilité citoyenne et encouragement de la participation à la vie collective."
+      }
     },
     "see_achievements": "Voir nos réalisations",
     "network_eyebrow": "Un réseau",

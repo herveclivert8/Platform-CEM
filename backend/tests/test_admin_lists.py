@@ -2,7 +2,7 @@
 
 import uuid
 
-POST = {"content": "<p>x</p>", "pillar": "SPORT", "status": "DRAFT", "images": []}
+POST = {"content": "<p>x</p>", "pillar": "SOLIDARITY", "status": "DRAFT", "images": []}
 
 
 async def test_posts_admin_scope_filters_and_search(client, tana_admin, super_admin, branch_ids):
@@ -12,7 +12,7 @@ async def test_posts_admin_scope_filters_and_search(client, tana_admin, super_ad
         response = await client.post(f"/branches/{tana}/posts", headers=tana_admin, json={**POST, "title": f"Match {tag} n°{i}"})
         assert response.status_code == 201
 
-    found = await client.get("/posts/admin", headers=tana_admin, params={"q": tag, "status": "DRAFT", "pillar": "SPORT"})
+    found = await client.get("/posts/admin", headers=tana_admin, params={"q": tag, "status": "DRAFT", "pillar": "SOLIDARITY"})
     assert found.json()["total"] == 3
 
     paged = await client.get("/posts/admin", headers=tana_admin, params={"q": tag, "page_size": 2, "page": 2})

@@ -18,8 +18,7 @@ interface Field {
   rows: number;
 }
 
-const VALUES = ["excellence", "equality", "independence", "transparency"] as const;
-const PILLARS = ["EDUCATION", "SOCIAL", "SPORT", "ENTERPRISE"] as const;
+const DOMAINS = ["education", "enterprise", "research", "solidarity", "sustainability"] as const;
 const GOALS = ["skills", "resources", "excellence"] as const;
 
 const inputClass =
@@ -39,7 +38,7 @@ export function AboutPageSettingsPage() {
   const [form, setForm] = useState<AboutContent>({});
   const { isDirty, markSaved } = useUnsavedChanges(form);
 
-  const sections = useMemo<{ title: string; fields: Field[] }[]>(() => {
+  const sections = useMemo<{ title: string; hint?: string; fields: Field[] }[]>(() => {
     const field = (key: string, label: Field["label"], rows = 3): Field => ({ key, label, rows });
     return [
       {
@@ -54,20 +53,19 @@ export function AboutPageSettingsPage() {
       },
       {
         title: "section_values",
-        fields: [
-          field("about.values_title", ["section_title"], 1),
-          ...VALUES.flatMap((v) => {
-            const name = frDefault(`about.values.${v}.title`);
-            return [field(`about.values.${v}.title`, ["value_title", { name }], 1), field(`about.values.${v}.text`, ["value_text", { name }], 2)];
-          }),
-        ],
+        // The values themselves are the footer's, edited on the home page settings
+        hint: "values_hint",
+        fields: [field("about.values_title", ["section_title"], 1)],
       },
       {
         title: "section_pillars",
         fields: [
           field("about.pillars_title", ["section_title"], 1),
           field("about.pillars_text", ["section_text"], 2),
-          ...PILLARS.map((p) => field(`about.pillars.${p}`, ["pillar", { name: frDefault(`pillars.${p}`) }], 2)),
+          ...DOMAINS.flatMap((d) => {
+            const name = frDefault(`about.domains.${d}.title`);
+            return [field(`about.domains.${d}.title`, ["domain_title", { name }], 1), field(`about.domains.${d}.details`, ["domain_details", { name }], 6)];
+          }),
         ],
       },
       {
@@ -170,6 +168,13 @@ export function AboutPageSettingsPage() {
                 <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700 dark:text-slate-200">
                   {t(`admin.about_page.${section.title}`)}
                 </h2>
+                {section.hint && (
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
+                    <Link to="/admin/home-page" className="hover:text-emerald-700 hover:underline dark:hover:text-emerald-400">
+                      {t(`admin.about_page.${section.hint}`)}
+                    </Link>
+                  </p>
+                )}
                 {section.fields.map(({ key, label, rows }) => {
                   const edited = (form[key] ?? "").trim() !== frDefault(key).trim();
                   return (

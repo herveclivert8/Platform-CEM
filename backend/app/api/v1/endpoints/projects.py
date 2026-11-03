@@ -9,7 +9,7 @@ RÈGLES:
 - Le Super Admin est informé (notifications) des activités des antennes, et peut supprimer tout projet.
 """
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
@@ -19,6 +19,7 @@ from sqlalchemy.orm import selectinload
 from app.api.deps import get_current_admin, get_db, get_optional_member_viewer
 from app.core.permissions import verify_branch_access
 from app.models import Branch, Project, ProjectImage, User
+from app.schemas.post import Pillar
 from app.models.project import ProjectReviewStatus as ReviewStatusModel
 from app.models.user import UserRole
 from app.schemas.project import (
@@ -27,6 +28,7 @@ from app.schemas.project import (
     ProjectCreate,
     ProjectListResponse,
     ProjectPhase,
+    ProjectPublishAchievement,
     ProjectReject,
     ProjectReviewStatus,
     ProjectStatusCounts,
@@ -162,7 +164,7 @@ async def list_projects(
     viewer: User | None = Depends(get_optional_member_viewer),
     phase: ProjectPhase | None = Query(None),
     branch_id: int | None = Query(None),
-    pillar: str | None = Query(None),
+    pillar: Pillar | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(12, ge=1, le=100),
     lang: str | None = Query(None, description="« en » : contenus traduits automatiquement"),
@@ -179,7 +181,7 @@ async def list_projects(
     if branch_id:
         filters.append(Project.branch_id == branch_id)
     if pillar:
-        filters.append(Project.pillar == pillar)
+        filters.append(Project.pillar == pillar.value)
 
     total = await db.scalar(select(func.count(Project.id)).where(*filters)) or 0
     order = Project.end_date.desc() if phase == ProjectPhase.COMPLETED else Project.created_at.desc()
@@ -205,6 +207,7 @@ async def list_projects_admin(
     review_status: ProjectReviewStatus | None = Query(None),
     phase: ProjectPhase | None = Query(None),
     branch_id: int | None = Query(None),
+    completion_requested: bool = Query(False, description="Seulement les projets signalés « aboutis », à publier"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
@@ -226,11 +229,18 @@ async def list_projects_admin(
     count_rows = await db.execute(
         select(Project.review_status, func.count(Project.id)).where(*scope).group_by(Project.review_status)
     )
-    counts = ProjectStatusCounts(**{(s.value if hasattr(s, "value") else s): n for s, n in count_rows.all()})
+    counts = ProjectStatusCounts(
+        **{(s.value if hasattr(s, "value") else s): n for s, n in count_rows.all()},
+        COMPLETION_REQUESTED=await db.scalar(
+            select(func.count(Project.id)).where(*scope, Project.completion_requested_at.is_not(None))
+        ) or 0,
+    )
 
     filters = list(scope)
     if review_status:
         filters.append(Project.review_status == review_status.value)
+    if completion_requested:
+        filters.append(Project.completion_requested_at.is_not(None))
 
     total = await db.scalar(select(func.count(Project.id)).where(*filters)) or 0
     result = await db.execute(
@@ -347,6 +357,9 @@ async def update_project(
         _check_dates(ProjectPhase(getattr(project.phase, "value", project.phase)), project.start_date, project.end_date)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+    if getattr(project.phase, "value", project.phase) == ProjectPhase.COMPLETED.value:
+        # Passé en réalisation depuis le formulaire : la demande du membre est traitée
+        project.completion_requested_at = None
 
     if data.images is not None and [img.url for img in project.images] != data.images:
         changed.add("images")
@@ -443,6 +456,63 @@ async def _review(
     result = await _reload(db, project_id)
     _schedule_project_translation(background_tasks, result)  # publié dès la validation : traduit aussitôt
     return result
+
+
+@router.post("/{project_id}/publish-achievement", response_model=ProjectSchema)
+async def publish_achievement(
+    project_id: int,
+    background_tasks: BackgroundTasks,
+    data: ProjectPublishAchievement | None = None,
+    user: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Publier un projet en cours comme réalisation (« Nos réalisations », page d'accueil), en général
+    après qu'un membre l'a signalé abouti. Accessible: Admin de la branche + Super Admin.
+    """
+    project = await _get_project_or_404(db, project_id)
+    await verify_branch_access(user, project.branch_id)
+    if project.review_status != ReviewStatusModel.APPROVED:
+        raise HTTPException(status_code=409, detail="Validez d'abord ce projet avant de le publier comme réalisation.")
+    if getattr(project.phase, "value", project.phase) == ProjectPhase.COMPLETED.value:
+        raise HTTPException(status_code=409, detail="Ce projet est déjà publié comme réalisation.")
+
+    end_date = (data.end_date if data else None) or project.end_date or date.today()
+    if project.start_date and end_date < project.start_date:
+        raise HTTPException(status_code=422, detail="La date de fin doit être postérieure à la date de début")
+    project.phase = ProjectPhase.COMPLETED.value
+    project.end_date = end_date
+    project.is_visible = True
+    project.completion_requested_at = None
+    record_audit(
+        db, action="update", resource_type="project", user=user, resource_id=project.id,
+        branch_id=project.branch_id, details={"title": project.title, "published_as": "achievement"},
+    )
+    await db.commit()
+
+    if user.role != UserRole.SUPER_ADMIN:
+        project = await _get_project_or_404(db, project.id)
+        await _inform_super_admins(db, project, user, "Réalisation publiée", "publié comme réalisation")
+
+    result = await _reload(db, project_id)
+    _schedule_project_translation(background_tasks, result)
+    return result
+
+
+async def notify_completion_request(db: AsyncSession, project: Project, member: User) -> None:
+    """Projet signalé « abouti » par son membre : l'admin de l'antenne (et le Super Admin) peut le publier."""
+    await send_batch_notification(
+        await get_branch_notification_recipients(db, project.branch_id),
+        title="Projet abouti signalé par un membre",
+        message=(
+            f"{member.full_name} ({project.branch.name}) indique que le projet « {project.title} » est abouti. "
+            "Vous pouvez le publier comme réalisation."
+        ),
+        notification_type="warning",
+        action_url=_admin_url(project.id),
+        icon="project",
+        db=db,
+    )
 
 
 @router.post("/{project_id}/approve", response_model=ProjectSchema)

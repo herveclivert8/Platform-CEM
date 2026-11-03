@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_admin, get_db
 from app.api.scope import resolve_branch_scope
 from app.models import Donation, Post, ProjectSubmission, User
-from app.models.donation import DonationStatus
+from app.models.donation import MONETARY_METHODS, DonationStatus
 from app.models.post import PostStatus
 from app.models.project_submission import SubmissionStatus
 
@@ -69,7 +69,7 @@ async def get_dashboard_summary(
     totals = (
         await db.execute(
             select(Donation.currency, func.sum(Donation.amount))
-            .where(*scoped(Donation), Donation.status == DonationStatus.CONFIRMED)
+            .where(*scoped(Donation), Donation.status == DonationStatus.CONFIRMED, Donation.payment_method.in_(MONETARY_METHODS))
             .group_by(Donation.currency)
             .order_by(Donation.currency)
         )

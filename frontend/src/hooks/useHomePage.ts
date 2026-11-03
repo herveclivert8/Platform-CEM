@@ -30,6 +30,12 @@ export function useUpdateHomePage() {
         hero_title: input.heroTitle || null,
         hero_subtitle: input.heroSubtitle || null,
         values: input.values?.map((v) => v.trim()).filter(Boolean).length ? input.values : null,
+        // Aligned with `values`: the API drops empty values together with their comment
+        value_descriptions: input.values ? input.values.map((_, i) => input.valueDescriptions?.[i] ?? "") : null,
+        partners: input.partners?.some((p) => p.name.trim())
+          ? input.partners.map(({ keepName, ...p }) => ({ ...p, url: p.url?.trim() || null, keep_name: keepName }))
+          : null,
+        untranslated_terms: input.untranslatedTerms?.some((term) => term.trim()) ? input.untranslatedTerms : null,
         contact_address: input.contactAddress || null,
         contact_email: input.contactEmail || null,
         contact_phone: input.contactPhone || null,

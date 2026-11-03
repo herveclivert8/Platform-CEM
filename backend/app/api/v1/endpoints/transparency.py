@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db
 from app.models import AssociationSettings, Branch, Donation, Project, Publication
 from app.models.branch import BranchStatus
-from app.models.donation import DonationStatus
+from app.models.donation import MONETARY_METHODS, DonationStatus
 from app.models.project import ProjectPhase, ProjectReviewStatus
 from app.services.translation import localize_schemas
 
@@ -94,7 +94,8 @@ async def get_transparency(
 
     settings = await db.get(AssociationSettings, 1)
     if settings and settings.show_donation_totals:
-        confirmed = Donation.status == DonationStatus.CONFIRMED
+        # Dons en argent confirmés : le matériel n'a pas de montant
+        confirmed = (Donation.status == DonationStatus.CONFIRMED) & Donation.payment_method.in_(MONETARY_METHODS)
         year = extract("year", Donation.created_at)
         by_year = await db.execute(
             select(year, Donation.currency, func.sum(Donation.amount), func.count(Donation.id))

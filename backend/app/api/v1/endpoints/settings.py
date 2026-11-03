@@ -13,6 +13,7 @@ from app.services.translation import localize, normalize_lang, schedule_translat
 from app.models.settings import AssociationSettings
 from app.models.user import User
 from app.schemas.settings import (
+    ABOUT_FIELDS,
     AboutPageRead,
     AboutPageUpdate,
     HomeHeroRead,
@@ -137,10 +138,18 @@ HOME_TEXT_FIELDS = {
 
 
 def _home_sources(settings: AssociationSettings) -> dict[str, str | None]:
-    """Textes français à traduire : les champs de texte, plus chaque valeur (« values.0 », ...)."""
+    """
+    Textes français à traduire : les champs de texte, plus chaque valeur (« values.0 », ...) et
+    son commentaire (« value_descriptions.0 », ...), et le nom de chaque partenaire (« partners.0 », ...).
+    """
     sources = {field: getattr(settings, column) for field, column in HOME_TEXT_FIELDS.items()}
     for i, value in enumerate(settings.home_values or []):
         sources[f"values.{i}"] = value
+    for i, text in enumerate(settings.home_value_descriptions or []):
+        sources[f"value_descriptions.{i}"] = text
+    for i, partner in enumerate(settings.institutional_partners or []):
+        if not partner.get("keep_name"):  # nom propre : jamais traduit
+            sources[f"partners.{i}"] = partner["name"]
     return sources
 
 
@@ -160,6 +169,15 @@ async def get_home_page(
         logo_mark_url=settings.logo_mark_url,
         **{field: text(field) for field in HOME_TEXT_FIELDS},
         values=[text(f"values.{i}") for i in range(len(settings.home_values))] if settings.home_values else None,
+        value_descriptions=(
+            [text(f"value_descriptions.{i}") or "" for i in range(len(settings.home_value_descriptions))]
+            if settings.home_value_descriptions else None
+        ),
+        untranslated_terms=settings.untranslated_terms,
+        partners=(
+            [{**partner, "name": text(f"partners.{i}") or partner["name"]} for i, partner in enumerate(settings.institutional_partners)]
+            if settings.institutional_partners else None
+        ),
         contact_email=settings.contact_email,
         contact_phone=settings.contact_phone,
         show_donation_totals=settings.show_donation_totals,
@@ -181,10 +199,16 @@ async def update_home_page(
     await verify_super_admin_only(user)
 
     settings = await _get_or_create_settings(db)
+    terms_before = set(settings.untranslated_terms or [])
     for field, value in data.model_dump(exclude_unset=True).items():
         if field == "show_donation_totals" and value is None:
             continue  # colonne non nulle : « null » ne signifie rien ici
-        column = HOME_TEXT_FIELDS.get(field) or {"values": "home_values"}.get(field, field)
+        column = HOME_TEXT_FIELDS.get(field) or {
+            "values": "home_values",
+            "value_descriptions": "home_value_descriptions",
+            "partners": "institutional_partners",
+            "untranslated_terms": "untranslated_terms",
+        }.get(field, field)
         if isinstance(value, str):
             value = value.strip() or None  # un champ vidé revient au contenu par défaut du site
         setattr(settings, column, value)
@@ -196,7 +220,18 @@ async def update_home_page(
     await db.commit()
     await db.refresh(settings)
     schedule_translation(background_tasks, "home", SETTINGS_ID, _home_sources(settings))
+    changed_terms = terms_before ^ set(settings.untranslated_terms or [])
+    if changed_terms:
+        # Ensuite, retraduire partout les textes qui contiennent un mot ajouté ou retiré
+        from app.translate_all import retranslate_terms
+
+        background_tasks.add_task(retranslate_terms, changed_terms)
     return await get_home_page(db, "fr")
+
+
+def about_sources(settings: AssociationSettings) -> dict[str, str]:
+    """Textes modifiés de « Qui sommes-nous », sans ceux qui ne sont plus modifiables (anciennes clés)."""
+    return {key: text for key, text in (settings.about_content or {}).items() if key in ABOUT_FIELDS}
 
 
 @router.get("/about-page", response_model=AboutPageRead)
@@ -206,7 +241,7 @@ async def get_about_page(
 ):
     """Textes personnalisés de « Qui sommes-nous ». Accessible: Public."""
     settings = await _get_or_create_settings(db)
-    sources = settings.about_content or {}
+    sources = about_sources(settings)
     translated = (await localize(db, "about", {SETTINGS_ID: sources}, lang or "")).get(SETTINGS_ID, {})
     return AboutPageRead(
         content={key: translated.get(key) or text for key, text in sources.items()},

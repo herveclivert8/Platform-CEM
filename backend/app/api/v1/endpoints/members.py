@@ -26,7 +26,12 @@ from sqlalchemy.orm import selectinload
 from app.api.deps import get_current_admin, get_current_user, get_db
 from app.api.scope import like_pattern, resolve_branch_scope
 from app.api.v1.endpoints.donations import OPERATOR_NUMBER_FIELDS, SETTINGS_ID
-from app.api.v1.endpoints.projects import _get_project_or_404, _query as project_query, notify_member_proposal
+from app.api.v1.endpoints.projects import (
+    _get_project_or_404,
+    _query as project_query,
+    notify_completion_request,
+    notify_member_proposal,
+)
 from app.core.permissions import verify_branch_access, verify_super_admin_only
 from app.core.rate_limit import rate_limit
 from app.core.security import verify_password
@@ -49,6 +54,7 @@ from app.schemas.membership import (
     MemberListResponse,
     AvatarUpdate,
     MemberProfileUpdate,
+    MemberProjectCompletion,
     MemberProjectCreate,
     MyDiscussion,
     MembershipFees,
@@ -511,6 +517,40 @@ async def create_my_project(
 
     project = await _get_project_or_404(db, project.id)
     await notify_member_proposal(db, project, user)
+    return ProjectSchema.from_orm_project(project)
+
+
+@router.post("/me/projects/{project_id}/completed", response_model=ProjectSchema)
+async def mark_my_project_completed(
+    project_id: int,
+    data: MemberProjectCompletion,
+    user: User = Depends(get_member_with_access),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Signaler qu'un de ses projets en cours est abouti. L'admin de l'antenne est notifié et le publie
+    comme réalisation ; d'ici là, le projet reste affiché en cours.
+    """
+    project = await _get_project_or_404(db, project_id)
+    if project.author_id != user.id:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if project.review_status != ProjectReviewStatus.APPROVED:
+        raise HTTPException(status_code=409, detail="Ce projet n'est pas encore validé par l'admin de l'antenne.")
+    if project.phase == ProjectPhase.COMPLETED:
+        raise HTTPException(status_code=409, detail="Ce projet est déjà publié comme réalisation.")
+    if project.completion_requested_at is not None:
+        raise HTTPException(status_code=409, detail="Vous avez déjà signalé ce projet comme abouti.")
+
+    project.completion_requested_at = datetime.now(timezone.utc)
+    project.completion_note = (data.note or "").strip() or None
+    record_audit(
+        db, action="update", resource_type="project", user=user, resource_id=project.id,
+        branch_id=project.branch_id, details={"title": project.title, "completion_requested": True},
+    )
+    await db.commit()
+
+    project = await _get_project_or_404(db, project.id)
+    await notify_completion_request(db, project, user)
     return ProjectSchema.from_orm_project(project)
 
 

@@ -9,12 +9,12 @@ import { Button } from "../../components/ui/Button";
 import { ImageDropzone } from "../../components/admin/ImageDropzone";
 import { DEFAULT_HERO_IMAGE } from "../../components/home/Hero";
 import { useHomePage, useUpdateHomePage } from "../../hooks/useHomePage";
-import { usePillarLabels } from "../../hooks/usePillarLabels";
 import { useBranches } from "../../hooks/useBranches";
 import { networkSummary } from "../../components/home/networkSummary";
 import { ASSOCIATION } from "../../config/association";
-import { ALL_PILLARS } from "../../types/post";
-import type { HomePage } from "../../types/settings";
+import { defaultFooterValues } from "../../components/layout/footerValues";
+import { PARTNER_GROUPS, defaultPartners } from "../../components/home/partners";
+import type { HomePage, Partner } from "../../types/settings";
 import { UnsavedChangesGuard } from "../../components/admin/UnsavedChangesGuard";
 import { useUnsavedChanges } from "../../hooks/useUnsavedChanges";
 import { useSuccessToast } from "../../hooks/useSuccessToast";
@@ -28,6 +28,9 @@ const EMPTY: HomePage = {
   heroTitle: "",
   heroSubtitle: "",
   values: null,
+  valueDescriptions: null,
+  partners: null,
+  untranslatedTerms: null,
   contactAddress: "",
   contactEmail: "",
   contactPhone: "",
@@ -59,7 +62,6 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 export function HomePageSettingsPage() {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
-  const pillarLabels = usePillarLabels();
   const { data, isLoading } = useHomePage("fr");
   const { data: english } = useHomePage("en");
   const updateHomePage = useUpdateHomePage();
@@ -67,7 +69,7 @@ export function HomePageSettingsPage() {
   const timers = useRef<number[]>([]);
 
   const frDefault = i18n.getFixedT("fr");
-  const defaultValues = ALL_PILLARS.map((p) => pillarLabels[p]);
+  const defaultValues = defaultFooterValues(frDefault);
   const { data: branches } = useBranches();
   const computedMapSubtitle = networkSummary(branches?.items ?? [], frDefault, "fr");
 
@@ -76,7 +78,7 @@ export function HomePageSettingsPage() {
 
   useEffect(() => {
     if (!data) return;
-    const loaded: HomePage = { ...EMPTY, ...Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v ?? (k === "values" ? null : "")])) };
+    const loaded: HomePage = { ...EMPTY, ...Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v ?? (["values", "valueDescriptions", "partners", "untranslatedTerms"].includes(k) ? null : "")])) };
     setForm(loaded);
     markSaved(loaded);
   }, [data, markSaved]);
@@ -88,12 +90,31 @@ export function HomePageSettingsPage() {
     setForm((f) => ({ ...f, [key]: value }));
   };
 
-  const values = form.values ?? defaultValues;
-  const setValues = (next: string[]) => set("values", next);
+  // Value titles and their comments (shown on hover in the footer) are edited as pairs
+  const values = form.values
+    ? form.values.map((title, i) => ({ title, text: form.valueDescriptions?.[i] ?? "" }))
+    : defaultValues;
+  const setValues = (next: { title: string; text: string }[]) => {
+    updateHomePage.reset();
+    setForm((f) => ({ ...f, values: next.map((v) => v.title), valueDescriptions: next.map((v) => v.text) }));
+  };
+  const updateValue = (index: number, patch: Partial<{ title: string; text: string }>) =>
+    setValues(values.map((v, j) => (j === index ? { ...v, ...patch } : v)));
   const moveValue = (index: number, delta: number) => {
     const next = [...values];
     [next[index], next[index + delta]] = [next[index + delta], next[index]];
     setValues(next);
+  };
+
+  // « Ils nous font confiance »: the site's defaults until the list is edited
+  const partners = form.partners ?? defaultPartners(frDefault);
+  const setPartners = (next: Partner[]) => set("partners", next);
+  const updatePartner = (index: number, patch: Partial<Partner>) =>
+    setPartners(partners.map((p, j) => (j === index ? { ...p, ...patch } : p)));
+  const movePartner = (index: number, delta: number) => {
+    const next = [...partners];
+    [next[index], next[index + delta]] = [next[index + delta], next[index]];
+    setPartners(next);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,7 +146,10 @@ export function HomePageSettingsPage() {
     ([...HERO_FIELDS.map((f) => f.key), "contactAddress", "mapSubtitle"] as const).some(
       (key) => data[key] && english[key] === data[key],
     ) ||
-    (!!data?.values && !!english?.values && data.values.some((v, i) => english.values?.[i] === v));
+    (!!data?.values && !!english?.values && data.values.some((v, i) => english.values?.[i] === v)) ||
+    (!!data?.valueDescriptions && !!english?.valueDescriptions &&
+      data.valueDescriptions.some((v, i) => v && english.valueDescriptions?.[i] === v)) ||
+    (!!data?.partners && !!english?.partners && data.partners.some((p, i) => english.partners?.[i]?.name === p.name));
 
   return (
     <div>
@@ -229,14 +253,25 @@ export function HomePageSettingsPage() {
                 <p className="text-xs text-slate-400 dark:text-slate-500">{t("admin.home_page.values_hint")}</p>
                 <ul className="space-y-2">
                   {values.map((value, i) => (
-                    <li key={i} className="flex items-center gap-1.5">
-                      <input
-                        value={value}
-                        maxLength={120}
-                        aria-label={t("admin.home_page.value_label", { n: i + 1 })}
-                        onChange={(e) => setValues(values.map((v, j) => (j === i ? e.target.value : v)))}
-                        className={inputClass}
-                      />
+                    <li key={i} className="flex items-start gap-1.5">
+                      <div className="flex-1 space-y-1.5">
+                        <input
+                          value={value.title}
+                          maxLength={120}
+                          aria-label={t("admin.home_page.value_label", { n: i + 1 })}
+                          onChange={(e) => updateValue(i, { title: e.target.value })}
+                          className={inputClass}
+                        />
+                        <textarea
+                          value={value.text}
+                          maxLength={300}
+                          rows={2}
+                          placeholder={t("admin.home_page.value_description_placeholder")}
+                          aria-label={t("admin.home_page.value_description_label", { n: i + 1 })}
+                          onChange={(e) => updateValue(i, { text: e.target.value })}
+                          className={clsx(inputClass, "resize-y text-xs")}
+                        />
+                      </div>
                       <button type="button" disabled={i === 0} onClick={() => moveValue(i, -1)} aria-label={t("admin.home_page.move_up")}
                         className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30 dark:hover:bg-slate-800">
                         <ArrowUp className="h-4 w-4" />
@@ -254,15 +289,101 @@ export function HomePageSettingsPage() {
                 </ul>
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" variant="ghost" size="sm" icon={<Plus className="h-4 w-4" />} disabled={values.length >= 12}
-                    className="border border-slate-200 dark:border-slate-700" onClick={() => setValues([...values, ""])}>
+                    className="border border-slate-200 dark:border-slate-700" onClick={() => setValues([...values, { title: "", text: "" }])}>
                     {t("admin.home_page.add_value")}
                   </Button>
                   {form.values !== null && (
-                    <Button type="button" variant="ghost" size="sm" onClick={() => set("values", null)}>
+                    <Button type="button" variant="ghost" size="sm"
+                      onClick={() => { updateHomePage.reset(); setForm((f) => ({ ...f, values: null, valueDescriptions: null })); }}>
                       {t("admin.home_page.default_values")}
                     </Button>
                   )}
                 </div>
+              </section>
+
+              <section className="space-y-3">
+                <SectionTitle>{t("admin.home_page.section_partners")}</SectionTitle>
+                <p className="text-xs text-slate-400 dark:text-slate-500">{t("admin.home_page.partners_hint")}</p>
+                <ul className="space-y-2">
+                  {partners.map((partner, i) => (
+                    <li key={i} className="flex items-start gap-1.5">
+                      <div className="grid flex-1 gap-1.5 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)]">
+                        <select
+                          value={partner.group}
+                          aria-label={t("admin.home_page.partner_group", { n: i + 1 })}
+                          onChange={(e) => updatePartner(i, { group: e.target.value as Partner["group"] })}
+                          className={inputClass}
+                        >
+                          {PARTNER_GROUPS.map((group) => (
+                            <option key={group} value={group}>{frDefault(`partners.groups.${group}.title`)}</option>
+                          ))}
+                        </select>
+                        <input
+                          value={partner.name}
+                          maxLength={200}
+                          placeholder={t("admin.home_page.partner_name_placeholder")}
+                          aria-label={t("admin.home_page.partner_name", { n: i + 1 })}
+                          onChange={(e) => updatePartner(i, { name: e.target.value })}
+                          className={inputClass}
+                        />
+                        <input
+                          value={partner.url ?? ""}
+                          maxLength={300}
+                          placeholder={t("admin.home_page.partner_url_placeholder")}
+                          aria-label={t("admin.home_page.partner_url", { n: i + 1 })}
+                          onChange={(e) => updatePartner(i, { url: e.target.value })}
+                          className={clsx(inputClass, "text-xs sm:col-start-2")}
+                        />
+                        <label className="flex items-center gap-2 text-xs text-slate-500 sm:col-start-2 dark:text-slate-400">
+                          <input
+                            type="checkbox"
+                            checked={partner.keepName}
+                            onChange={(e) => updatePartner(i, { keepName: e.target.checked })}
+                            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                          />
+                          {t("admin.home_page.partner_keep_name")}
+                        </label>
+                      </div>
+                      <button type="button" disabled={i === 0} onClick={() => movePartner(i, -1)} aria-label={t("admin.home_page.move_up")}
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30 dark:hover:bg-slate-800">
+                        <ArrowUp className="h-4 w-4" />
+                      </button>
+                      <button type="button" disabled={i === partners.length - 1} onClick={() => movePartner(i, 1)} aria-label={t("admin.home_page.move_down")}
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30 dark:hover:bg-slate-800">
+                        <ArrowDown className="h-4 w-4" />
+                      </button>
+                      <button type="button" onClick={() => setPartners(partners.filter((_, j) => j !== i))} aria-label={t("admin.home_page.remove_partner")}
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="ghost" size="sm" icon={<Plus className="h-4 w-4" />} disabled={partners.length >= 40}
+                    className="border border-slate-200 dark:border-slate-700"
+                    onClick={() => setPartners([...partners, { group: partners.at(-1)?.group ?? "agreement", name: "", url: null, keepName: false }])}>
+                    {t("admin.home_page.add_partner")}
+                  </Button>
+                  {form.partners !== null && (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => set("partners", null)}>
+                      {t("admin.home_page.default_partners")}
+                    </Button>
+                  )}
+                </div>
+              </section>
+
+              <section className="space-y-3">
+                <SectionTitle>{t("admin.home_page.section_untranslated")}</SectionTitle>
+                <p className="text-xs text-slate-400 dark:text-slate-500">{t("admin.home_page.untranslated_hint")}</p>
+                <textarea
+                  rows={4}
+                  value={(form.untranslatedTerms ?? []).join("\n")}
+                  placeholder={t("admin.home_page.untranslated_placeholder")}
+                  aria-label={t("admin.home_page.section_untranslated")}
+                  onChange={(e) => set("untranslatedTerms", e.target.value.split("\n"))}
+                  className={clsx(inputClass, "resize-y")}
+                />
               </section>
 
               <section className="space-y-4">
@@ -338,6 +459,7 @@ export function HomePageSettingsPage() {
                   [t("admin.home_page.tagline"), english?.heroSubtitle],
                   [t("admin.home_page.map_subtitle"), english?.mapSubtitle],
                   [t("admin.home_page.section_values"), english?.values?.join(" · ")],
+                  [t("admin.home_page.section_partners"), english?.partners?.map((p) => p.name).join(" · ")],
                   [t("admin.home_page.contact_address"), english?.contactAddress],
                 ].map(([label, text]) => (
                   <div key={label}>

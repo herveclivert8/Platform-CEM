@@ -105,7 +105,7 @@ CONFERENCE_2023 = {
         "Le 22 avril 2023 à la Mairie du 11e arrondissement de Paris, une conférence-débat pour mieux faire "
         "connaître Madagascar et ouvrir le dialogue sur les liens entre les deux pays."
     ),
-    "pillar": Pillar.SOCIAL,
+    "pillar": Pillar.SOLIDARITY,
     "beneficiaries": "Public parisien, diaspora malagasy et amis de Madagascar",
     "location": "Mairie du 11e arrondissement, Paris",
     "start_date": date(2023, 4, 22),

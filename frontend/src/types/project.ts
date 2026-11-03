@@ -33,6 +33,9 @@ export interface Project {
   reviewStatus: ProjectReviewStatus;
   rejectionReason: string | null;
   reviewedAt: string | null;
+  /** Flagged « achieved » by the member who proposed it: awaiting publication as an achievement */
+  completionRequestedAt: string | null;
+  completionNote: string | null;
   images: string[];
   /** Attached files: members with their fee paid and admins only (empty for visitors) */
   documents: ProjectDocument[];
@@ -91,6 +94,8 @@ export interface ProjectDto {
   review_status: ProjectReviewStatus;
   rejection_reason: string | null;
   reviewed_at: string | null;
+  completion_requested_at?: string | null;
+  completion_note?: string | null;
   images: string[];
   documents?: ProjectDocumentDto[];
   created_at: string;
@@ -124,6 +129,8 @@ export function mapProject(dto: ProjectDto): Project {
     reviewStatus: dto.review_status,
     rejectionReason: dto.rejection_reason,
     reviewedAt: dto.reviewed_at,
+    completionRequestedAt: dto.completion_requested_at ?? null,
+    completionNote: dto.completion_note ?? null,
     images: dto.images,
     documents: (dto.documents ?? []).map(mapProjectDocument),
     createdAt: dto.created_at,
@@ -131,7 +138,8 @@ export function mapProject(dto: ProjectDto): Project {
   };
 }
 
-export type ProjectStatusCounts = Record<ProjectReviewStatus, number>;
+/** Per review status, plus the projects flagged « achieved » by their member (to publish) */
+export type ProjectStatusCounts = Record<ProjectReviewStatus | "COMPLETION_REQUESTED", number>;
 
 export interface ProjectAdminListDto extends PaginatedDto<ProjectDto> {
   counts: ProjectStatusCounts;

@@ -1,18 +1,19 @@
 import { useTranslation } from "react-i18next";
-import { Landmark, GraduationCap, Building2, Users, Globe2, HeartHandshake } from "lucide-react";
+import { Landmark } from "lucide-react";
+import { usePartnerGroups } from "./partners";
 
-const PARTNER_CATEGORIES = [
-  { icon: Landmark, key: "public_institutions" },
-  { icon: GraduationCap, key: "schools" },
-  { icon: Building2, key: "corporate_foundations" },
-  { icon: Users, key: "local_associations" },
-  { icon: Globe2, key: "international_ngos" },
-  { icon: HeartHandshake, key: "diaspora_network" },
-];
+/** Below this many boxes the scrolling strip would leave a gap on wide screens: the list is repeated. */
+const MIN_ITEMS = 8;
 
 export function PartnersCarousel() {
   const { t } = useTranslation();
-  const items = [...PARTNER_CATEGORIES, ...PARTNER_CATEGORIES];
+  // Names only, in the admin's order (the kinds of partnership are shown on « Qui sommes-nous »)
+  const partners = usePartnerGroups().flatMap((g) => g.partners);
+  if (!partners.length) return null;
+
+  const base = Array.from({ length: Math.ceil(MIN_ITEMS / partners.length) }, () => partners).flat();
+  // The strip holds the list twice and scrolls by half its width, so the loop is seamless
+  const items = [...base, ...base];
 
   return (
     <section id="partenaires" className="cem-photo-section dark py-24 lg:py-32">
@@ -27,16 +28,37 @@ export function PartnersCarousel() {
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-slate-950/60 to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-slate-950/60 to-transparent" />
 
-        <div className="flex w-max animate-[marquee_28s_linear_infinite] gap-4 px-4">
-          {items.map((item, i) => (
-            <div
-              key={`${item.key}-${i}`}
-              className="flex items-center gap-2.5 rounded-xl border border-slate-200/80 bg-white px-5 py-3 text-sm font-medium text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
-            >
-              <item.icon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
-              {t(`partners.categories.${item.key}`)}
-            </div>
-          ))}
+        {/* Paused on hover, so a partner's link can be clicked */}
+        <div className="flex w-max animate-[marquee_40s_linear_infinite] gap-4 px-4 hover:[animation-play-state:paused]">
+          {items.map((partner, i) => {
+            const className =
+              "flex items-center gap-2.5 whitespace-nowrap rounded-xl border border-slate-200/80 bg-white px-5 py-3 text-sm font-medium text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400";
+            const content = (
+              <>
+                <Landmark className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                {partner.name}
+              </>
+            );
+            // Only the first copy is read by screen readers and reachable with the keyboard
+            const hidden = i >= partners.length;
+            return partner.url ? (
+              <a
+                key={i}
+                href={partner.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-hidden={hidden || undefined}
+                tabIndex={hidden ? -1 : undefined}
+                className={`${className} hover:text-emerald-600 dark:hover:text-emerald-400`}
+              >
+                {content}
+              </a>
+            ) : (
+              <div key={i} aria-hidden={hidden || undefined} className={className}>
+                {content}
+              </div>
+            );
+          })}
         </div>
       </div>
 

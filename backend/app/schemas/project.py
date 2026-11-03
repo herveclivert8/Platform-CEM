@@ -106,6 +106,9 @@ class Project(ProjectBase):
     review_status: ProjectReviewStatus
     rejection_reason: Optional[str] = None
     reviewed_at: Optional[datetime] = None
+    # Signalé « abouti » par le membre, en attente de publication comme réalisation
+    completion_requested_at: Optional[datetime] = None
+    completion_note: Optional[str] = None
     images: list[str] = Field(default_factory=list)
     # Réservé aux membres et aux admins (vide pour les visiteurs)
     documents: list[ProjectDocumentInfo] = Field(default_factory=list)
@@ -144,6 +147,8 @@ class Project(ProjectBase):
             review_status=val(project.review_status),
             rejection_reason=project.rejection_reason,
             reviewed_at=project.reviewed_at,
+            completion_requested_at=project.completion_requested_at,
+            completion_note=project.completion_note,
             images=[img.url for img in project.images],
             documents=[
                 ProjectDocumentInfo(id=d.id, title=d.title, file_name=d.file_name, content_type=d.content_type, size=d.size)
@@ -166,6 +171,13 @@ class ProjectStatusCounts(BaseModel):
     PENDING: int = 0
     APPROVED: int = 0
     REJECTED: int = 0
+    # Projets signalés « aboutis » par leur membre, à publier comme réalisations
+    COMPLETION_REQUESTED: int = 0
+
+
+class ProjectPublishAchievement(BaseModel):
+    """Publication comme réalisation : date de fin (aujourd'hui par défaut si le projet n'en a pas)."""
+    end_date: Optional[date] = None
 
 
 class ProjectAdminListResponse(ProjectListResponse):

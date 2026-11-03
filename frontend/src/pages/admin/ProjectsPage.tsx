@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import clsx from "clsx";
-import { Check, Eye, EyeOff, ImageOff, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, Eye, EyeOff, Flag, ImageOff, Pencil, Plus, Trash2, Trophy, X } from "lucide-react";
 import { Card, IconBadge } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Skeleton } from "../../components/ui/Skeleton";
@@ -16,6 +16,7 @@ import {
   useAdminProjects,
   useApproveProject,
   useDeleteProject,
+  usePublishAchievement,
   useRejectProject,
   useSetProjectVisibility,
 } from "../../hooks/useAdminProjects";
@@ -26,8 +27,12 @@ import { QueryError } from "../../components/ui/QueryError";
 import { useErrorToast } from "../../hooks/useErrorToast";
 import { useSuccessToast } from "../../hooks/useSuccessToast";
 
-const STATUS_TABS: { value: ProjectReviewStatus | undefined; labelKey: string }[] = [
+// "TO_PUBLISH": ongoing projects flagged « achieved » by their member, to publish as achievements
+type StatusTab = ProjectReviewStatus | "TO_PUBLISH" | undefined;
+
+const STATUS_TABS: { value: StatusTab; labelKey: string }[] = [
   { value: "PENDING", labelKey: "admin.projects.tab_pending" },
+  { value: "TO_PUBLISH", labelKey: "admin.projects.tab_to_publish" },
   { value: "APPROVED", labelKey: "admin.projects.tab_approved" },
   { value: "REJECTED", labelKey: "admin.projects.tab_rejected" },
   { value: undefined, labelKey: "admin.projects.tab_all" },
@@ -48,9 +53,14 @@ export function ProjectsPage() {
   const { selectedBranchId } = useAdminScopeStore();
   const pillarLabels = usePillarLabels();
 
-  const [reviewStatus, setReviewStatus] = useState<ProjectReviewStatus | undefined>(undefined);
+  const [statusTab, setStatusTab] = useState<StatusTab>(undefined);
   const [phase, setPhase] = useState<ProjectPhase | undefined>(undefined);
-  const { data, isLoading, isError, error, refetch } = useAdminProjects({ reviewStatus, phase });
+  const reviewStatus = statusTab === "TO_PUBLISH" ? undefined : statusTab;
+  const { data, isLoading, isError, error, refetch } = useAdminProjects({
+    reviewStatus,
+    phase,
+    completionRequested: statusTab === "TO_PUBLISH",
+  });
 
   // Drawer target: either a row clicked here, or ?id=… from a notification / toast link.
   const [searchParams, setSearchParams] = useSearchParams();
@@ -71,6 +81,7 @@ export function ProjectsPage() {
   const reject = useRejectProject();
   const deleteProject = useDeleteProject();
   const setVisibility = useSetProjectVisibility();
+  const publishAchievement = usePublishAchievement();
   const [rejecting, setRejecting] = useState<Project | undefined>(undefined);
   const [deleting, setDeleting] = useState<Project | undefined>(undefined);
 
@@ -98,17 +109,17 @@ export function ProjectsPage() {
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-900">
+        <div className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-900">
           {STATUS_TABS.map((tab) => {
-            const count = tab.value ? counts?.[tab.value] : undefined;
+            const count = tab.value ? counts?.[tab.value === "TO_PUBLISH" ? "COMPLETION_REQUESTED" : tab.value] : undefined;
             return (
               <button
                 key={tab.labelKey}
                 type="button"
-                onClick={() => setReviewStatus(tab.value)}
+                onClick={() => setStatusTab(tab.value)}
                 className={clsx(
                   "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-                  reviewStatus === tab.value
+                  statusTab === tab.value
                     ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-white"
                     : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white",
                 )}
@@ -118,7 +129,7 @@ export function ProjectsPage() {
                   <span
                     className={clsx(
                       "rounded-full px-1.5 text-[11px] font-bold",
-                      tab.value === "PENDING" ? "bg-orange-600 text-white" : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300",
+                      tab.value === "PENDING" ? "bg-orange-600 text-white" : tab.value === "TO_PUBLISH" ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300",
                     )}
                   >
                     {count}
@@ -152,7 +163,13 @@ export function ProjectsPage() {
         <QueryError error={error} onRetry={() => refetch()} />
       ) : !data || data.items.length === 0 ? (
         <p className="mt-8 text-sm text-slate-400 dark:text-slate-500">
-          {t(reviewStatus === "PENDING" ? "admin.projects.empty_pending" : "admin.projects.empty")}
+          {t(
+            statusTab === "PENDING"
+              ? "admin.projects.empty_pending"
+              : statusTab === "TO_PUBLISH"
+                ? "admin.projects.empty_to_publish"
+                : "admin.projects.empty",
+          )}
         </p>
       ) : (
         <div className="mt-6 space-y-3">
@@ -169,6 +186,11 @@ export function ProjectsPage() {
                   <ProjectStatusBadge status={project.reviewStatus} />
                   <ProjectPhaseBadge phase={project.phase} />
                   {!project.isVisible && <ProjectHiddenBadge />}
+                  {project.completionRequestedAt && project.phase === "ONGOING" && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                      <Flag className="h-3 w-3" aria-hidden /> {t("admin.projects.completion_badge")}
+                    </span>
+                  )}
                 </div>
                 <p className="mt-1 truncate text-xs text-slate-400 dark:text-slate-500">
                   {(isSuperAdmin && selectedBranchId === "all") ? `${project.branchName} · ` : ""}
@@ -201,6 +223,24 @@ export function ProjectsPage() {
                     {t("admin.projects.reject")}
                   </Button>
                 </div>
+              )}
+
+              {project.completionRequestedAt && project.phase === "ONGOING" && project.reviewStatus === "APPROVED" && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="shrink-0"
+                  icon={<Trophy className="h-4 w-4" />}
+                  disabled={publishAchievement.isPending}
+                  onClick={() =>
+                    publishAchievement.mutate(project.id, {
+                      onError: showError,
+                      onSuccess: () => showSuccess(t("admin.feedback.achievement_published"), project.title),
+                    })
+                  }
+                >
+                  {t("admin.projects.publish_achievement")}
+                </Button>
               )}
 
               <button

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, Check, Info, X } from "lucide-react";
+import { AlertTriangle, Check, Flag, Info, Trophy, X } from "lucide-react";
 import { Drawer } from "./Drawer";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageDropzone } from "./ImageDropzone";
@@ -15,6 +15,7 @@ import { apiErrorMessage } from "../../lib/api";
 import {
   useApproveProject,
   useCreateProject,
+  usePublishAchievement,
   useRejectProject,
   useUpdateProject,
 } from "../../hooks/useAdminProjects";
@@ -99,6 +100,7 @@ function ProjectForm({
   const updateProject = useUpdateProject(project?.id);
   const approveProject = useApproveProject();
   const rejectProject = useRejectProject();
+  const publishAchievement = usePublishAchievement();
 
   const mutation = project ? updateProject : createProject;
   const isSaving = mutation.isPending;
@@ -158,6 +160,17 @@ function ProjectForm({
     }
   };
 
+  const publish = async () => {
+    if (!project) return;
+    try {
+      await publishAchievement.mutateAsync(project.id);
+      showSuccess(t("admin.feedback.achievement_published"), project.title);
+      onDone();
+    } catch {
+      // affichée sous le formulaire
+    }
+  };
+
   const reject = async (reason: string) => {
     if (!project) return;
     try {
@@ -208,6 +221,30 @@ function ProjectForm({
               {t("admin.projects.reject")}
             </Button>
           </div>
+        </div>
+      )}
+
+      {project?.completionRequestedAt && project.phase === "ONGOING" && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+          <p className="flex items-center gap-2 text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+            <Flag className="h-4 w-4" aria-hidden /> {t("admin.projects.completion_title")}
+          </p>
+          <p className="mt-1 text-xs text-emerald-800/80 dark:text-emerald-300/80">{t("admin.projects.completion_text")}</p>
+          {project.completionNote && (
+            <blockquote className="mt-2 border-l-2 border-emerald-300 pl-3 text-sm text-slate-700 dark:border-emerald-500/50 dark:text-slate-200">
+              {project.completionNote}
+            </blockquote>
+          )}
+          <Button
+            variant="secondary"
+            size="sm"
+            className="mt-3"
+            icon={<Trophy className="h-4 w-4" />}
+            disabled={publishAchievement.isPending}
+            onClick={publish}
+          >
+            {t("admin.projects.publish_achievement")}
+          </Button>
         </div>
       )}
 
@@ -362,8 +399,10 @@ function ProjectForm({
       </Field>
 
       {mutation.isError && <p className="text-sm text-red-600 dark:text-red-400">{apiErrorMessage(mutation.error, t("admin.projects.save_error"))}</p>}
-      {(approveProject.isError || rejectProject.isError) && (
-        <p className="text-sm text-red-600 dark:text-red-400">{apiErrorMessage(approveProject.error ?? rejectProject.error, t("admin.projects.decision_error"))}</p>
+      {(approveProject.isError || rejectProject.isError || publishAchievement.isError) && (
+        <p className="text-sm text-red-600 dark:text-red-400">
+          {apiErrorMessage(approveProject.error ?? rejectProject.error ?? publishAchievement.error, t("admin.projects.decision_error"))}
+        </p>
       )}
 
       <div className="border-t border-slate-200 pt-5 dark:border-slate-800">

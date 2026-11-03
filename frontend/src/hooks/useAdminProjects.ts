@@ -15,22 +15,30 @@ import { useAuthStore } from "../store/authStore";
 interface AdminProjectsParams {
   reviewStatus?: ProjectReviewStatus;
   phase?: ProjectPhase;
+  /** Only the projects flagged « achieved » by their member, awaiting publication */
+  completionRequested?: boolean;
 }
 
 /**
  * Admin listing, all review statuses, with per-status counts. The API already scopes a
  * Branch Admin to their own branch; for a Super Admin we pass the back-office scope.
  */
-export function useAdminProjects({ reviewStatus, phase }: AdminProjectsParams = {}) {
+export function useAdminProjects({ reviewStatus, phase, completionRequested }: AdminProjectsParams = {}) {
   const user = useAuthStore((s) => s.user);
   const { selectedBranchId } = useAdminScopeStore();
   const branchId = user?.role === "SUPER_ADMIN" && selectedBranchId !== "all" ? selectedBranchId : undefined;
 
   return useQuery({
-    queryKey: ["admin-projects", branchId, reviewStatus, phase],
+    queryKey: ["admin-projects", branchId, reviewStatus, phase, completionRequested],
     queryFn: async () => {
       const { data } = await api.get<ProjectAdminListDto>("/projects/admin", {
-        params: { branch_id: branchId, review_status: reviewStatus, phase, page_size: 100 },
+        params: {
+          branch_id: branchId,
+          review_status: reviewStatus,
+          phase,
+          completion_requested: completionRequested || undefined,
+          page_size: 100,
+        },
       });
       return { ...mapPaginated(data, mapProject), counts: data.counts };
     },
@@ -96,6 +104,14 @@ export function useDeleteProject() {
 export function useApproveProject() {
   return useProjectMutation(async (projectId: number) => {
     const { data } = await api.post<ProjectDto>(`/projects/${projectId}/approve`);
+    return mapProject(data);
+  });
+}
+
+/** Publish an ongoing project as an achievement (« Nos réalisations », home page); end date: today if unset. */
+export function usePublishAchievement() {
+  return useProjectMutation(async (projectId: number) => {
+    const { data } = await api.post<ProjectDto>(`/projects/${projectId}/publish-achievement`);
     return mapProject(data);
   });
 }

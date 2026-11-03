@@ -68,6 +68,12 @@ export interface HomePage {
   heroTitle: string | null;
   heroSubtitle: string | null;
   values: string[] | null;
+  /** Comment of each value, same order ("" = none), shown on hover in the footer */
+  valueDescriptions: string[] | null;
+  /** « Ils nous font confiance »; null = the site's default partners */
+  partners: Partner[] | null;
+  /** Words the automatic translation keeps as they are, across the whole site */
+  untranslatedTerms: string[] | null;
   contactAddress: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
@@ -75,6 +81,24 @@ export interface HomePage {
   mapSubtitle: string | null;
   /** Transparency page: publish confirmed donation totals */
   showDonationTotals: boolean;
+}
+
+/** Kind of institutional partnership: formal agreement, informal, in development */
+export type PartnerGroup = "agreement" | "tacit" | "developing";
+
+export interface Partner {
+  group: PartnerGroup;
+  name: string;
+  url: string | null;
+  /** Proper noun: shown as is in English, never translated */
+  keepName: boolean;
+}
+
+export interface PartnerDto {
+  group: PartnerGroup;
+  name: string;
+  url: string | null;
+  keep_name: boolean;
 }
 
 export interface HomePageDto {
@@ -85,6 +109,9 @@ export interface HomePageDto {
   hero_title: string | null;
   hero_subtitle: string | null;
   values: string[] | null;
+  value_descriptions: string[] | null;
+  partners: PartnerDto[] | null;
+  untranslated_terms: string[] | null;
   contact_address: string | null;
   contact_email: string | null;
   contact_phone: string | null;
@@ -102,6 +129,9 @@ export function mapHomePage(dto: HomePageDto): HomePage {
     heroTitle: dto.hero_title,
     heroSubtitle: dto.hero_subtitle,
     values: dto.values,
+    valueDescriptions: dto.value_descriptions,
+    partners: dto.partners?.map(({ keep_name, ...p }) => ({ ...p, keepName: keep_name })) ?? null,
+    untranslatedTerms: dto.untranslated_terms,
     contactAddress: dto.contact_address,
     contactEmail: dto.contact_email,
     contactPhone: dto.contact_phone,

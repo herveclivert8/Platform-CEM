@@ -16,7 +16,7 @@
   "hero": {
     "badge": "Facilitator of Sustainable Development & Education",
     "title": "Fostering excellence and sustainable development in Madagascar.",
-    "subtitle": "An international network committed to education, social aid, entrepreneurship and social inclusion through sport, in Madagascar and wherever our members are active.",
+    "subtitle": "An international network committed to education, entrepreneurship, research, solidarity and sustainable development, in Madagascar and wherever our members are active.",
     "cta_primary": "Donate now",
     "cta_secondary": "Discover our branches",
     "cta_member": "Become a member"
@@ -48,10 +48,11 @@
     "branch_count_other": "{{count}} branches"
   },
   "pillars": {
-    "EDUCATION": "Education & Books",
-    "SOCIAL": "Social Support",
-    "SPORT": "Sport-Based Education",
-    "ENTERPRISE": "Entrepreneurship & Partnerships"
+    "EDUCATION": "Education and training",
+    "ENTERPRISE": "Business creation",
+    "RESEARCH": "Scientific research and innovation",
+    "SOLIDARITY": "Solidarity and humanitarian action",
+    "SUSTAINABILITY": "Sustainable development and social transformation"
   },
   "projects": {
     "completed_title": "Our Achievements",
@@ -99,14 +100,29 @@
   },
   "partners": {
     "title": "They trust us",
-    "subtitle": "Institutions, foundations and schools partnering with the CEM network.",
-    "categories": {
-      "public_institutions": "Public institutions",
-      "schools": "Schools",
-      "corporate_foundations": "Corporate foundations",
-      "local_associations": "Local associations",
-      "international_ngos": "International NGOs",
-      "diaspora_network": "Diaspora network"
+    "subtitle": "Institutional partnerships",
+    "groups": {
+      "agreement": {
+        "title": "Formal partnership agreements",
+        "partners": {
+          "education": "Ministry of National Education",
+          "economy": "Ministry of Economy and Finance, Operations Department",
+          "journalists": "Malagasy Order of Journalists (OGM)"
+        }
+      },
+      "tacit": {
+        "title": "Informal partnership",
+        "partners": {
+          "central_bank": "Banky Foiben’i Madagasikara (Central Bank of Madagascar)"
+        }
+      },
+      "developing": {
+        "title": "Partnerships in development",
+        "partners": {
+          "cedimes": "CEDIMES network",
+          "egss": "EGSS Faculty, Fianarantsoa"
+        }
+      }
     }
   },
   "hub": {
@@ -120,10 +136,11 @@
     },
     "filter_all": "All",
     "kpi": {
-      "posts_education": "Education updates",
-      "posts_social": "Social support updates",
-      "posts_sport": "Sport updates",
-      "posts_enterprise": "Entrepreneurship updates"
+      "posts_education": "Education news",
+      "posts_enterprise": "Business news",
+      "posts_research": "Research news",
+      "posts_solidarity": "Solidarity news",
+      "posts_sustainability": "Sustainability news"
     },
     "donation_sidebar_title": "Support this branch",
     "other_branches": "Discover other branches",
@@ -242,7 +259,29 @@
     "social_soon": "{{network}}: coming soon",
     "contact_title": "Contact",
     "transparency": "Transparency",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "values": {
+      "humanity": {
+        "title": "Humanity and solidarity",
+        "text": "Putting human dignity, mutual aid and commitment to serving others at the heart of our actions."
+      },
+      "work": {
+        "title": "Hard work and perseverance",
+        "text": "Cultivating rigour, effort and perseverance to turn ambitions into concrete achievements."
+      },
+      "excellence": {
+        "title": "Excellence for the common good",
+        "text": "Striving for scientific, professional and human excellence to contribute to the development of society."
+      },
+      "entrepreneurship": {
+        "title": "Entrepreneurship and innovation",
+        "text": "Encouraging initiative, creativity and responsibility to bring about useful and lasting projects."
+      },
+      "cooperation": {
+        "title": "Cooperation and partnership",
+        "text": "Mobilising skills, networks and experience internationally to carry out shared projects."
+      }
+    }
   },
   "not_found": {
     "title": "Page not found",
@@ -346,8 +385,8 @@
   "admin": {
     "nav": {
       "dashboard": "Dashboard",
-      "posts": "My posts",
-      "projects": "Achievements & projects",
+      "posts": "Branch news",
+      "projects": "Projects & achievements",
       "projects_pending": "Awaiting validation",
       "reports": "Annual reports",
       "submissions": "Entrepreneur applications",
@@ -491,8 +530,8 @@
       "save_error": "Saving failed. Please try again.",
       "save_draft": "Save as draft",
       "publish": "Publish",
-      "title": "My posts",
-      "subtitle": "News, field reports and projects."
+      "title": "Branch news",
+      "subtitle": "News published in the “News” tab of each branch's page: events, updates from the field. For a project or an achievement, use “Projects & achievements”."
     },
     "submissions": {
       "drawer_title": "New application",
@@ -729,7 +768,19 @@
       "pi_outcome_declined": "Declined",
       "pi_outcome_insufficient_funds": "Insufficient funds",
       "pi_active": "Active.",
-      "invalid_phone": "Invalid sender number (format: 034 12 345 67)."
+      "invalid_phone": "Invalid sender number (format: 034 12 345 67).",
+      "kind": "Type of donation",
+      "kind_money": "Money",
+      "kind_in_kind": "Material donation",
+      "payment_method": "Payment method",
+      "method_cash": "Cash",
+      "method_in_kind": "Material donation",
+      "cash_amount": "Amount received",
+      "currency": "Currency",
+      "material": "Material received",
+      "material_placeholder": "E.g. 50 notebooks, 20 pens, 2 laptops",
+      "manual_intro_cash": "For cash handed over in person. The donation is recorded as <strong>confirmed</strong> and counted in the totals; if an email is given, the donor receives a thank-you.",
+      "manual_intro_in_kind": "For material received (books, supplies, equipment…). The donation is recorded as <strong>confirmed</strong>, without an amount: it is not counted in the money totals. If an email is given, the donor receives a thank-you."
     },
     "home_page": {
       "title": "Home page & footer",
@@ -742,13 +793,29 @@
       "heading": "Title",
       "tagline": "Subtitle",
       "section_values": "Our values",
-      "values_hint": "List shown in the footer, in this order. Default: CEM's 4 pillars.",
+      "values_hint": "List shown in the footer, in this order. The comment appears when hovering over the value.",
       "value_label": "Value {{n}}",
+      "value_description_placeholder": "Comment shown on hover (optional)",
+      "value_description_label": "Comment for value {{n}} (shown on hover)",
       "move_up": "Move up",
       "move_down": "Move down",
       "remove_value": "Remove",
       "add_value": "Add a value",
-      "default_values": "Back to the 4 pillars",
+      "default_values": "Back to the default values",
+      "section_partners": "Partners (“They trust us”)",
+      "partners_hint": "Institutional partners shown on the home page, by type of partnership, in this order. The website is optional.",
+      "partner_group": "Partnership type of partner {{n}}",
+      "partner_name": "Name of partner {{n}}",
+      "partner_url": "Website of partner {{n}}",
+      "partner_name_placeholder": "Partner name",
+      "partner_url_placeholder": "Website (optional), e.g. www.example.mg",
+      "add_partner": "Add a partner",
+      "remove_partner": "Remove this partner",
+      "default_partners": "Back to the default partners",
+      "partner_keep_name": "Proper noun: do not translate into English",
+      "section_untranslated": "Words not to translate",
+      "untranslated_hint": "For the whole site (home, “About us”, news, projects…): the English translation keeps these words as they are. One word or phrase per line: proper nouns, acronyms, place names. Texts containing them are translated again after saving.",
+      "untranslated_placeholder": "Banky Foiben’i Madagasikara\nFianarantsoa\nCEDIMES",
       "section_contact": "Contact",
       "contact_address": "Address",
       "contact_email": "Email",
@@ -780,9 +847,9 @@
       "logo_mark_hint": "Square, at least 256 × 256 px. Browser tab icon, admin menu, member cards and badges."
     },
     "projects": {
-      "title": "Achievements & projects",
-      "subtitle_super": "All branches. Projects proposed by members are approved by their branch admin; you are notified of every publication and can delete any project.",
-      "subtitle_branch": "Your additions are published directly. Projects proposed by your branch's members await your approval.",
+      "title": "Projects & achievements",
+      "subtitle_super": "Projects shown in “Ongoing projects”, then in “Our achievements” once completed. All branches. Projects proposed by members are approved by their branch admin; you are notified of every publication and can delete any project.",
+      "subtitle_branch": "Projects shown in “Ongoing projects”, then in “Our achievements” once completed. Your additions are published directly. Projects proposed by your branch's members await your approval.",
       "add": "Add",
       "tab_pending": "Pending",
       "tab_approved": "Published",
@@ -850,7 +917,13 @@
       "hide": "Hide from the platform",
       "show": "Show on the platform",
       "visible_label": "Show on the platform",
-      "visible_hint": "Unchecked, the project is not public: it only stays in this list (branch admin and headquarters). Changing this needs no new validation."
+      "visible_hint": "Unchecked, the project is not public: it only stays in this list (branch admin and headquarters). Changing this needs no new validation.",
+      "tab_to_publish": "To publish",
+      "empty_to_publish": "No project reported as achieved by a member.",
+      "completion_badge": "Achieved according to the member",
+      "completion_title": "Project reported as achieved by the member",
+      "completion_text": "Publish it as an achievement: it will appear in “Our achievements” and on the home page (end date: today if not set).",
+      "publish_achievement": "Publish as achievement"
     },
     "reports": {
       "title": "Annual reports",
@@ -927,7 +1000,8 @@
       "notes_saved": "Notes saved",
       "submission_deleted": "Submission deleted",
       "export_done": "Export downloaded",
-      "subscriber_deleted": "Subscriber deleted"
+      "subscriber_deleted": "Subscriber deleted",
+      "achievement_published": "Published as an achievement"
     },
     "members": {
       "title": "Members",
@@ -1029,6 +1103,7 @@
       "french_only": "Type the texts in French: the English version is translated automatically after saving.",
       "section_intro": "Introduction",
       "section_values": "Our values",
+      "values_hint": "The values and their texts are the same as in the footer: edit them in “Home page”, “Our values” section.",
       "section_pillars": "Our fields of action",
       "section_network": "Branch network",
       "section_partner": "Institutional partnership",
@@ -1041,9 +1116,8 @@
         "intro_2": "Introduction: 2nd paragraph",
         "section_title": "Section title",
         "section_text": "Section text",
-        "value_title": "“{{name}}”: title",
-        "value_text": "“{{name}}”: text",
-        "pillar": "{{name}}",
+        "domain_title": "“{{name}}”: title",
+        "domain_details": "“{{name}}”: details (one point per line, “Title: text”)",
         "partner_goal": "Goal {{n}}",
         "partner_example": "Example (text before the link to achievements)",
         "type_text": "{{name}}: full description",
@@ -1182,7 +1256,15 @@
       "submit": "Send for approval",
       "error": "The project could not be sent.",
       "photo": "Photo",
-      "photo_hint": "A photo makes your project stand out (JPEG, PNG or WebP, 5 MB maximum)."
+      "photo_hint": "A photo makes your project stand out (JPEG, PNG or WebP, 5 MB maximum).",
+      "mark_completed": "Mark as achieved",
+      "mark_completed_text": "Is your project complete? Your branch admin will be notified and will publish it in “Our achievements” and on the home page.",
+      "completion_note": "What was achieved",
+      "completion_note_placeholder": "Optional: what was achieved (results, number of beneficiaries, dates…)",
+      "mark_completed_confirm": "Report as achieved",
+      "mark_completed_error": "The report could not be sent.",
+      "completion_pending": "Achieved: awaiting publication",
+      "achievement": "Achievement published"
     },
     "suspended_text": "Your monthly fee was not paid by the 30th: your account is deactivated. Pay this month's fee; your branch administrator will then reactivate your account.",
     "suspended_paid_text": "This month's fee is paid. Your branch administrator will reactivate your account.",
@@ -1352,33 +1434,31 @@
     "headline_accent": "Malagasy excellence",
     "headline_after": " to serve development.",
     "intro": "Club Excellence Madagascar (CEM) is a non-political, non-denominational, non-profit association working for the development of Madagascar. Education is one of its priorities.",
-    "intro_2": "Its volunteer members, in Madagascar and in the diaspora, put their skills to work on concrete projects: supporting pupils and teachers, highlighting talent and promoting equal opportunities across the country.",
+    "intro_2": "The network's members are students and professionals in Madagascar or from the Malagasy diaspora, as well as anyone wishing to contribute to Madagascar's development. As volunteers, they take part, as their availability allows, in concrete projects across several fields: entrepreneurship, popularising scientific and technical knowledge, and improving the organisation and functioning of Malagasy society.",
     "values_title": "Our values",
-    "values": {
-      "excellence": {
-        "title": "Excellence",
-        "text": "Promoting a spirit of excellence and rigour, and revealing talent wherever it is."
-      },
-      "equality": {
-        "title": "Equal opportunities",
-        "text": "Giving every young person, whatever their region, the same chances to succeed."
-      },
-      "independence": {
-        "title": "Independence",
-        "text": "A non-political, non-denominational association: no action is diverted for political or commercial purposes."
-      },
-      "transparency": {
-        "title": "Transparency",
-        "text": "Reporting clearly on our actions and on how donations are used."
-      }
-    },
     "pillars_title": "Our fields of action",
-    "pillars_text": "Each branch chooses its actions according to its community's needs, around four fields.",
-    "pillars": {
-      "EDUCATION": "Competitions, school supplies and textbooks, support for pupils and teachers.",
-      "SOCIAL": "Local solidarity and help for families.",
-      "SPORT": "Sports activities and youth mentoring.",
-      "ENTERPRISE": "Training, mentoring and support for project leaders."
+    "pillars_text": "Each branch chooses its actions according to its community's needs, around five fields. Click a field to see the details.",
+    "domains": {
+      "education": {
+        "title": "Education and training",
+        "details": "Training and certification: certified training courses and skills-building activities.\nKnowledge sharing: conferences, debates and popularisation of science and technology.\nAccess to education: distribution of school textbooks and easier access to educational resources.\nAwareness of today's challenges: raising awareness of ecological and societal challenges, encouraging critical thinking about social norms, and promoting dialogue, mutual understanding and the peaceful resolution of conflicts."
+      },
+      "enterprise": {
+        "title": "Business creation",
+        "details": "Project incubation: a nursery of entrepreneurial projects, especially for students completing a Master's degree.\nSupport and networking: skills sharing, mentoring and connecting members to carry out shared projects.\nFunding and partnerships: building relationships with investors, companies and support organisations.\nInnovation and social impact: competitions and awards for innovative initiatives that contribute to economic development, environmental protection and poverty reduction."
+      },
+      "research": {
+        "title": "Scientific research and innovation",
+        "details": "Research support: connecting researchers, students and professionals to foster new scientific and technical projects.\nSharing knowledge: disseminating research results and popularising scientific and technological advances.\nScientific cooperation: building partnerships between universities, laboratories, companies and civil society.\nInnovation for development: encouraging applied research projects and innovative solutions that meet the needs of Malagasy society."
+      },
+      "solidarity": {
+        "title": "Solidarity and humanitarian action",
+        "details": "Support for vulnerable people: solidarity initiatives for people and communities facing social or economic hardship.\nVolunteer mobilisation: pooling goodwill and resources to meet concrete needs.\nPublic-interest projects: designing and carrying out actions that improve living conditions and foster social inclusion.\nSolidarity partnerships: cooperation with associations, institutions and partners in Madagascar and abroad to extend the reach of humanitarian action."
+      },
+      "sustainability": {
+        "title": "Sustainable development and social transformation",
+        "details": "Environmental protection: promoting initiatives that preserve natural resources and support the ecological transition.\nBetter living conditions: supporting projects that improve access to essential services and community development.\nModernisation and digital transformation: encouraging technological innovation and digital transformation for development.\nCitizenship and collective engagement: raising awareness of societal issues, promoting civic responsibility and encouraging participation in community life."
+      }
     },
     "see_achievements": "See our achievements",
     "network_eyebrow": "A network",

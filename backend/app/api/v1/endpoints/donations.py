@@ -83,6 +83,10 @@ def format_amount(amount: float, currency: str) -> str:
 def payment_label(donation: Donation) -> str:
     if donation.payment_method == PaymentMethodModel.CARD:
         return "Carte bancaire"
+    if donation.payment_method == PaymentMethodModel.CASH:
+        return "Espèces"
+    if donation.payment_method == PaymentMethodModel.IN_KIND:
+        return "Don matériel"
     if donation.payment_method == PaymentMethodModel.MOBILE_MONEY and donation.mobile_operator:
         return f"Mobile Money ({MOBILE_OPERATOR_LABELS[MobileOperatorModel(donation.mobile_operator)]})"
     return "Virement bancaire"
@@ -171,8 +175,13 @@ async def _send_thank_you_email(donation_id: int) -> None:
             email_service.send_donation_thank_you,
             donor_email=donation.donor_email,
             donor_name=donation.donor_name,
-            amount_label=format_amount(float(donation.amount), donation.currency),
+            amount_label=(
+                donation.in_kind_description
+                if donation.payment_method == PaymentMethodModel.IN_KIND
+                else format_amount(float(donation.amount), donation.currency)
+            ),
             payment_label=payment_label(donation),
+            in_kind=donation.payment_method == PaymentMethodModel.IN_KIND,
             branch_name=branch.name if branch else None,
             donation_date=donation.created_at,
         )
@@ -392,29 +401,48 @@ async def record_manual_donation(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Enregistrer un paiement Mobile Money reçu sans déclaration du donateur (confirmé d'office).
+    Enregistrer un don reçu (confirmé d'office) : paiement Mobile Money reçu sans déclaration du
+    donateur, espèces remises en main propre, ou don matériel.
     Accessible: Admin de la branche (pour son antenne) + Super Admin.
     """
     branch_id = user.branch_id if user.role == UserRole.BRANCH_ADMIN else data.branch_id
     await _verify_can_manage(user, branch_id)
     await _get_branch_or_404(db, branch_id)
 
-    operator = MobileOperatorModel(data.operator.value)
-    await _ensure_reference_is_new(db, operator.value, data.transaction_reference)
-
-    donation = Donation(
+    common = dict(
         branch_id=branch_id,
-        amount=data.amount,
-        currency=CURRENCY_BY_METHOD[PaymentMethodModel.MOBILE_MONEY],
         donor_email=data.donor_email,
         donor_name=data.donor_name or None,
-        donor_phone=data.sender_phone,
-        payment_method=PaymentMethodModel.MOBILE_MONEY,
-        mobile_operator=operator.value,
-        transaction_reference=data.transaction_reference,
         status=DonationStatusModel.CONFIRMED,
         status_updated_at=datetime.now(timezone.utc),
     )
+    if data.kind == "MOBILE_MONEY":
+        operator = MobileOperatorModel(data.operator.value)
+        await _ensure_reference_is_new(db, operator.value, data.transaction_reference)
+        donation = Donation(
+            **common,
+            amount=data.amount,
+            currency=CURRENCY_BY_METHOD[PaymentMethodModel.MOBILE_MONEY],
+            donor_phone=data.sender_phone,
+            payment_method=PaymentMethodModel.MOBILE_MONEY,
+            mobile_operator=operator.value,
+            transaction_reference=data.transaction_reference,
+        )
+    elif data.kind == "CASH":
+        donation = Donation(
+            **common,
+            amount=data.amount,
+            currency=data.currency.value if data.currency else CURRENCY_BY_METHOD[PaymentMethodModel.CASH],
+            payment_method=PaymentMethodModel.CASH,
+        )
+    else:
+        donation = Donation(
+            **common,
+            amount=0,  # pas de montant : le matériel n'entre pas dans les totaux
+            currency=CURRENCY_BY_METHOD[PaymentMethodModel.IN_KIND],
+            payment_method=PaymentMethodModel.IN_KIND,
+            in_kind_description=data.description,
+        )
     db.add(donation)
     try:
         await db.flush()

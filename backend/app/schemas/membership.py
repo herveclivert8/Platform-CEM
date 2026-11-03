@@ -160,6 +160,11 @@ class RejectReason(BaseModel):
     reason: str = Field(..., min_length=3, max_length=500)
 
 
+class MemberProjectCompletion(BaseModel):
+    """Le membre signale que son projet est abouti ; l'admin le publie ensuite comme réalisation."""
+    note: Optional[str] = Field(None, max_length=1000)
+
+
 class MemberProjectCreate(BaseModel):
     """Projet proposé par un membre : publié sur le site une fois validé par le Super Admin."""
     title: str = Field(..., min_length=1, max_length=255)

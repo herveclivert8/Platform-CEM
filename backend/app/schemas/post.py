@@ -10,10 +10,12 @@ from pydantic import ConfigDict, BaseModel, Field
 
 
 class Pillar(str, Enum):
+    # Les cinq domaines d'action de « Qui sommes-nous »
     EDUCATION = "EDUCATION"
-    SOCIAL = "SOCIAL"
-    SPORT = "SPORT"
     ENTERPRISE = "ENTERPRISE"
+    RESEARCH = "RESEARCH"
+    SOLIDARITY = "SOLIDARITY"
+    SUSTAINABILITY = "SUSTAINABILITY"
 
 
 class PostStatus(str, Enum):

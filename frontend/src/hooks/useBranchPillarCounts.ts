@@ -1,8 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import type { Pillar, PaginatedDto, PostDto } from "../types/post";
-
-const PILLARS: Pillar[] = ["EDUCATION", "SOCIAL", "SPORT", "ENTERPRISE"];
+import { ALL_PILLARS as PILLARS, type Pillar, type PaginatedDto, type PostDto } from "../types/post";
 
 export type PillarCounts = Record<Pillar, number>;
 

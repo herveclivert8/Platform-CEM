@@ -3,6 +3,7 @@ Endpoints d'authentification - JWT + gestion du mot de passe
 """
 
 import hashlib
+from html import escape
 import secrets
 from datetime import datetime, timedelta, timezone
 
@@ -12,6 +13,7 @@ from sqlalchemy import func
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
+from app.api.deps import get_current_user as current_user_dependency
 from app.api.deps import get_current_user_allow_password_change, get_user_from_token
 from app.core.config import settings
 from app.core.email import email_service
@@ -24,6 +26,7 @@ from app.models.branch import Branch, BranchStatus
 from app.models.user import MembershipStatus, User, UserRole
 from app.models.password_reset_token import PasswordResetToken
 from app.schemas.auth import (
+    ChangeEmailRequest,
     ChangePasswordRequest,
     CurrentUserResponse,
     ForgotPasswordRequest,
@@ -57,6 +60,9 @@ def _build_current_user_response(user: User) -> CurrentUserResponse:
         phone=user.phone,
         avatar_url=user.avatar_url,
         member_access=user.has_member_access(datetime.now(timezone.utc).date()),
+        membership_type=user.membership_type if user.role == UserRole.MEMBER else None,
+        member_number=user.member_number,
+        can_participate=user.can_participate(datetime.now(timezone.utc).date()),
     )
 
 
@@ -230,6 +236,59 @@ async def change_password(
     )
     await db.commit()
 
+    return _token_response(user)
+
+
+def _send_email_changed_notice(old_email: str, new_email: str) -> None:
+    """Prévenir l'ancienne adresse : si le changement n'est pas de son fait, le titulaire le saura."""
+    email_service.send_email(
+        to_email=old_email,
+        subject="Votre adresse e-mail a été modifiée - Club Excellence Madagascar",
+        html_content=(
+            "<p>Bonjour,</p>"
+            f"<p>L'adresse e-mail de connexion de votre compte vient d'être remplacée par <strong>{escape(new_email)}</strong>.</p>"
+            "<p>Si vous n'êtes pas à l'origine de ce changement, contactez immédiatement l'association.</p>"
+        ),
+    )
+
+
+@router.post(
+    "/email/change",
+    response_model=LoginResponse,
+    status_code=200,
+    dependencies=[Depends(rate_limit("email_change", limit=10, window=15 * 60))],
+)
+async def change_email(
+    data: ChangeEmailRequest,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(current_user_dependency),
+    db: AsyncSession = Depends(get_db),
+) -> LoginResponse:
+    """
+    Changer sa propre adresse e-mail de connexion, en confirmant avec le mot de passe actuel.
+    Les autres sessions sont révoquées ; de nouveaux jetons sont renvoyés pour la session en cours.
+    """
+    if not user.hashed_password or not verify_password(data.current_password, user.hashed_password):
+        # 400 et non 401 : voir change_password
+        raise HTTPException(status_code=400, detail="Mot de passe actuel incorrect")
+
+    new_email = data.new_email.strip().lower()
+    if new_email == user.email.lower():
+        raise HTTPException(status_code=400, detail="La nouvelle adresse doit être différente de l'actuelle")
+    if await db.scalar(select(User.id).where(func.lower(User.email) == new_email, User.id != user.id)):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Un compte existe déjà avec cet email")
+
+    old_email = user.email
+    user.email = new_email
+    user.token_version += 1
+    record_audit(
+        db, user=user, action="email_change", resource_type="user", resource_id=user.id, branch_id=user.branch_id,
+        details={"old_email": old_email, "new_email": new_email},
+    )
+    await db.commit()
+
+    background_tasks.add_task(_send_email_changed_notice, old_email, new_email)
+    user = await _get_user_with_branch(db, user.id)
     return _token_response(user)
 
 

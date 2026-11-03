@@ -13,6 +13,7 @@
 #
 #   réseau "web"  : frontend, backend        (seul le frontend publie un port, sur 127.0.0.1)
 #   réseau "data" : backend, db, redis       (interne : ni Internet, ni port publié)
+#   réseau "translate" : backend, libretranslate (non publié ; Internet pour télécharger les modèles)
 # ========================================
 
 name: cem
@@ -77,6 +78,8 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       FROM_EMAIL: ${FROM_EMAIL:-noreply@cem.mg}
+      # Traduction FR -> EN gratuite par le service libretranslate ci-dessous (vide = désactivée)
+      LIBRETRANSLATE_URL: ${LIBRETRANSLATE_URL-http://libretranslate:5000}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
     volumes:
@@ -85,6 +88,7 @@ services:
     networks:
       - web
       - data
+      - translate
     # Système de fichiers en lecture seule : seuls uploads/, backups/ et /tmp sont inscriptibles
     read_only: true
     tmpfs:
@@ -121,6 +125,29 @@ services:
       backend:
         condition: service_healthy
 
+  # Traduction automatique FR -> EN des contenus saisis par les admins : joignable uniquement par le backend.
+  # Au premier démarrage, télécharge les modèles français/anglais (quelques minutes) dans un volume.
+  libretranslate:
+    <<: *common
+    image: libretranslate/libretranslate:v1.6.0
+    environment:
+      LT_LOAD_ONLY: fr,en
+      LT_DISABLE_WEB_UI: "true"
+    volumes:
+      - libretranslate_models:/home/libretranslate/.local
+    networks:
+      - translate
+    healthcheck:
+      test: ["CMD-SHELL", "./venv/bin/python scripts/healthcheck.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10m
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+
   # Redis (optionnel) : --profile with-redis + USE_REDIS=true (permet WEB_CONCURRENCY > 1)
   redis:
     <<: *common
@@ -146,6 +173,7 @@ volumes:
   postgres_data:
   backend_uploads:
   redis_data:
+  libretranslate_models:
 
 networks:
   # Sous-réseau fixe : liste des proxys de confiance (backend et nginx du frontend).
@@ -158,3 +186,5 @@ networks:
   data:
     driver: bridge
     internal: true
+  translate:
+    driver: bridge

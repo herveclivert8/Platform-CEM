@@ -10,7 +10,7 @@ import { useLogin } from "../hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { usePageMeta } from "../hooks/usePageMeta";
 import { useAuthStore } from "../store/authStore";
-import { homePathFor } from "../types/user";
+import { homePathFor, isAdminRole } from "../types/user";
 import { apiErrorMessage } from "../lib/api";
 
 export function LoginPage() {
@@ -30,7 +30,9 @@ export function LoginPage() {
       // Back to the page that required sign-in, if it belongs to this user's area
       const home = homePathFor(user.role);
       const from = location.state?.from;
-      navigate(from?.startsWith(home) ? from : home, { replace: true });
+      // Members also come back to the application form of the « Opportunités » page
+      const allowed = from?.startsWith(home) || (!isAdminRole(user.role) && from?.startsWith("/opportunites"));
+      navigate(allowed && from ? from : home, { replace: true });
     } catch {
       // error surfaced below via login.isError
     }
@@ -110,7 +112,7 @@ export function LoginPage() {
 
       <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
         {t("auth.no_account")}{" "}
-        <Link to="/inscription" className="font-medium text-emerald-600 hover:underline dark:text-emerald-400">
+        <Link to="/adhesion" className="font-medium text-emerald-600 hover:underline dark:text-emerald-400">
           {t("auth.register_link")}
         </Link>
       </p>

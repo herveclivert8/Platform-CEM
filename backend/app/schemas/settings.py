@@ -114,3 +114,56 @@ class HomePageUpdate(BaseModel):
     @classmethod
     def empty_email_is_none(cls, value):
         return value or None
+
+
+# Textes modifiables de « Qui sommes-nous » : clés de traduction du site (frontend/src/i18n/fr.json)
+_ABOUT_VALUES = ("excellence", "equality", "independence", "transparency")
+_ABOUT_PILLARS = ("EDUCATION", "SOCIAL", "SPORT", "ENTERPRISE")
+_MEMBERSHIP_TYPES = ("ACTIVE", "BENEFACTOR", "SPONSOR")
+ABOUT_FIELDS: tuple[str, ...] = (
+    "about.headline_before",
+    "about.headline_accent",
+    "about.headline_after",
+    "about.intro",
+    "about.intro_2",
+    "about.values_title",
+    *(f"about.values.{v}.{part}" for v in _ABOUT_VALUES for part in ("title", "text")),
+    "about.pillars_title",
+    "about.pillars_text",
+    *(f"about.pillars.{p}" for p in _ABOUT_PILLARS),
+    "about.network_title",
+    "about.network_text",
+    "about.partner_title",
+    "about.partner_text",
+    *(f"about.partner_goals.{g}" for g in ("skills", "resources", "excellence")),
+    "about.partner_example",
+    "about.membership.title",
+    "about.membership.text",
+    *(f"membership_types.{m}.{part}" for m in _MEMBERSHIP_TYPES for part in ("summary", "text")),
+)
+ABOUT_TEXT_MAX_LENGTH = 3000
+
+
+class AboutPageRead(BaseModel):
+    """
+    Textes personnalisés de « Qui sommes-nous », par clé de traduction. En anglais (?lang=en), leur
+    traduction automatique à jour, ou le français tant qu'elle n'est pas prête. Clé absente = texte par défaut.
+    """
+    content: dict[str, str]
+    lang: str = "fr"
+
+
+class AboutPageUpdate(BaseModel):
+    """Saisie en français uniquement. Un texte vidé (ou absent) revient au contenu par défaut du site."""
+    content: dict[str, Optional[str]]
+
+    @field_validator("content")
+    @classmethod
+    def clean_content(cls, content: dict[str, Optional[str]]) -> dict[str, Optional[str]]:
+        unknown = sorted(set(content) - set(ABOUT_FIELDS))
+        if unknown:
+            raise ValueError(f"Textes inconnus : {', '.join(unknown)}")
+        cleaned = {key: value.strip() for key, value in content.items() if value and value.strip()}
+        if any(len(v) > ABOUT_TEXT_MAX_LENGTH for v in cleaned.values()):
+            raise ValueError(f"Chaque texte fait au plus {ABOUT_TEXT_MAX_LENGTH} caractères")
+        return cleaned

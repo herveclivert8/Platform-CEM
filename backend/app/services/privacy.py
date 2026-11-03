@@ -27,8 +27,9 @@ from app.models import (
     ProjectSubmission,
     User,
 )
+from app.models.opportunity_application import OpportunityApplication
 from app.models.password_reset_token import PasswordResetToken
-from app.models.user import MembershipStatus, UserRole, new_badge_token
+from app.models.user import MembershipStatus, MembershipType, UserRole, new_badge_token
 from app.services import membership as membership_dates
 from app.services.audit import record_audit
 
@@ -105,6 +106,8 @@ async def anonymize_user(db: AsyncSession, user: User, *, reason: str) -> None:
     await db.execute(delete(NewsletterSubscriber).where(NewsletterSubscriber.email.ilike(email)))
     await db.execute(delete(Notification).where(Notification.user_id == user.id))
     await db.execute(delete(PasswordResetToken).where(PasswordResetToken.user_id == user.id))
+    # Candidatures aux opportunités : coordonnées, lettre et dossier personnels
+    await db.execute(delete(OpportunityApplication).where(OpportunityApplication.user_id == user.id))
     # Journal d'audit : les actions restent tracées, mais plus sous l'email du membre
     await db.execute(
         update(AuditLog).where(AuditLog.user_id == user.id).values(user_email=f"supprime-{user.id}@anonyme.invalid")
@@ -166,6 +169,8 @@ async def anonymize_expired_accounts(db: AsyncSession) -> int:
         limit = membership_dates.today() - timedelta(days=settings.RETENTION_FORMER_MEMBER_DAYS)
         conditions.append(
             (User.membership_status == MembershipStatus.SUSPENDED)
+            # Bienfaiteurs et parrains : pas de cotisation ; effacés avec leur fiche par le Super Admin
+            & (User.membership_type == MembershipType.ACTIVE.value)
             & or_(User.paid_until < limit, User.paid_until.is_(None) & (User.created_at < now - timedelta(days=settings.RETENTION_FORMER_MEMBER_DAYS)))
         )
     if not conditions:

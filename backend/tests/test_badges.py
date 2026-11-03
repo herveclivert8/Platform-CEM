@@ -23,6 +23,7 @@ async def test_member_badge_shows_live_information(client, branch_ids, tana_admi
     token = await _my_token(client, headers)
 
     scan = (await client.get(f"/badges/verify/{token}")).json()
+    assert scan.pop("member_number").startswith("ANTA")
     assert scan == {
         "valid": True,
         "role": "MEMBER",
@@ -51,7 +52,8 @@ async def test_overdue_member_badge_is_invalid_without_details(client, branch_id
 
     await _set_paid_until(tokens["user"]["id"], datetime.now(timezone.utc).date() - timedelta(days=1))
     assert (await client.get(f"/badges/verify/{token}")).json() == {
-        "valid": False, "role": None, "first_name": None, "last_name": None, "email": None, "title": None,
+        "valid": False, "role": None, "first_name": None, "last_name": None, "email": None, "member_number": None,
+        "title": None,
     }
     assert (await client.get("/badges/me", headers=headers)).status_code == 404
 

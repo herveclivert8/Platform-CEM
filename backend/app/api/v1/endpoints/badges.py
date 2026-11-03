@@ -38,6 +38,7 @@ class BadgeVerification(BaseModel):
     last_name: str | None = None
     # Membres uniquement
     email: str | None = None
+    member_number: str | None = None
     # « CEM Antananarivo », « ADMIN Antananarivo » ou « Superadmin »
     title: str | None = None
 
@@ -83,5 +84,6 @@ async def verify_badge(token: str, db: AsyncSession = Depends(get_db)):
         first_name=user.first_name,
         last_name=user.last_name,
         email=user.email if user.role == UserRole.MEMBER else None,
+        member_number=user.member_number if user.role == UserRole.MEMBER else None,
         title=title,
     )

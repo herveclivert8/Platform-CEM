@@ -32,6 +32,11 @@ class CurrentUserResponse(BaseModel):
     # Membres : dernier jour couvert par les cotisations, et accès aux privilèges de l'espace membre
     paid_until: Optional[date] = None
     member_access: bool = False
+    # ACTIVE, BENEFACTOR ou SPONSOR (membres) ; can_participate : propose des projets et discute
+    membership_type: Optional[str] = None
+    # Numéro d'adhérent (ex. PARI0045), attribué à la validation
+    member_number: Optional[str] = None
+    can_participate: bool = False
 
 
 class LoginResponse(BaseModel):
@@ -76,6 +81,12 @@ class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str = Field(..., min_length=8)
     confirm_password: str
+
+
+class ChangeEmailRequest(BaseModel):
+    """Changement d'adresse e-mail (utilisateur connecté), confirmé par le mot de passe actuel"""
+    new_email: EmailStr
+    current_password: str
 
 
 class ForgotPasswordRequest(BaseModel):

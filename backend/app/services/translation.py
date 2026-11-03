@@ -1,5 +1,6 @@
 """
-Traduction automatique FR → EN des contenus saisis par les admins, avec Claude (API Anthropic).
+Traduction automatique FR → EN des contenus saisis par les admins, avec LibreTranslate (serveur
+auto-hébergé, gratuit) ou, à défaut, Claude (API Anthropic, payante).
 
 Principe :
 - les admins n'écrivent qu'en français ;
@@ -8,15 +9,18 @@ Principe :
 - à la lecture, `localize` ne renvoie une traduction que si elle correspond au français actuel :
   jamais de traduction d'une ancienne version. À défaut, le français est affiché.
 
-Sans ANTHROPIC_API_KEY, rien n'est traduit et le site reste en français.
+LIBRETRANSLATE_URL renseignée : LibreTranslate est utilisé ; sinon ANTHROPIC_API_KEY : Claude.
+Sans l'un ni l'autre, rien n'est traduit et le site reste en français.
 """
 
 import asyncio
 import hashlib
 import logging
+import re
 from collections.abc import Iterable
 
 import anthropic
+import httpx
 from fastapi import BackgroundTasks
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -58,7 +62,11 @@ def normalize_lang(lang: str | None) -> str:
 
 
 def is_enabled() -> bool:
-    return bool(settings.ANTHROPIC_API_KEY)
+    return bool(settings.LIBRETRANSLATE_URL or settings.ANTHROPIC_API_KEY)
+
+
+def provider_name() -> str:
+    return "LibreTranslate" if settings.LIBRETRANSLATE_URL else settings.TRANSLATION_MODEL
 
 
 def _get_client() -> anthropic.AsyncAnthropic:
@@ -69,8 +77,14 @@ def _get_client() -> anthropic.AsyncAnthropic:
     return _client
 
 
+# Contenu HTML (éditeur riche) : LibreTranslate doit alors garder les balises intactes
+_HTML_TAG = re.compile(r"<[a-zA-Z/][^>]*>")
+
+
 async def translate_text(text: str) -> str | None:
-    """Traduction anglaise de `text`, ou None si l'API est indisponible ou refuse."""
+    """Traduction anglaise de `text`, ou None si le service est indisponible ou refuse."""
+    if settings.LIBRETRANSLATE_URL:
+        return await _translate_with_libretranslate(text)
     if not is_enabled():
         return None
     async with _concurrency:
@@ -102,6 +116,28 @@ async def translate_text(text: str) -> str | None:
         logger.warning("Traduction non utilisée (stop_reason=%s, requête %s)", response.stop_reason, response._request_id)
         return None
     translated = "".join(block.text for block in response.content if block.type == "text").strip()
+    return translated or None
+
+
+async def _translate_with_libretranslate(text: str) -> str | None:
+    payload = {
+        "q": text,
+        "source": "fr",
+        "target": TARGET_LANG,
+        "format": "html" if _HTML_TAG.search(text) else "text",
+    }
+    async with _concurrency:
+        try:
+            # Traduction sur le processeur du serveur : un long article peut prendre du temps
+            async with httpx.AsyncClient(timeout=180) as client:
+                response = await client.post(f"{settings.LIBRETRANSLATE_URL.rstrip('/')}/translate", json=payload)
+        except httpx.HTTPError as exc:
+            logger.warning("Traduction impossible : LibreTranslate injoignable (%s)", exc)
+            return None
+    if response.status_code != 200:
+        logger.warning("Traduction impossible (LibreTranslate, HTTP %s) : %s", response.status_code, response.text[:200])
+        return None
+    translated = (response.json().get("translatedText") or "").strip()
     return translated or None
 
 

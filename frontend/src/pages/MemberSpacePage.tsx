@@ -11,12 +11,14 @@ import { MemberDues } from "../components/membership/MemberDues";
 import { MemberProjectsTab } from "../components/membership/MemberProjectsTab";
 import { MemberDiscussionsTab } from "../components/membership/MemberDiscussionsTab";
 import { MemberProfileTab } from "../components/membership/MemberProfileTab";
+import { SupporterDashboard } from "../components/membership/SupporterDashboard";
 import { useCurrentUser } from "../hooks/useAuth";
 import { useBranch } from "../hooks/useBranches";
 import { useMembershipFees, useMyMembership, useMyProjects } from "../hooks/useMembership";
 import { usePageMeta } from "../hooks/usePageMeta";
 import { useAuthStore } from "../store/authStore";
 import type { MembershipSummary } from "../types/membership";
+import { isSupporter } from "../types/user";
 
 const TABS: { key: MemberTab; label: string; icon: LucideIcon }[] = [
   { key: "tableau", label: "member.tabs.dashboard", icon: LayoutGrid },
@@ -25,6 +27,8 @@ const TABS: { key: MemberTab; label: string; icon: LucideIcon }[] = [
   { key: "discussions", label: "member.tabs.discussions", icon: MessageCircle },
   { key: "profil", label: "member.tabs.profile", icon: UserRound },
 ];
+// Benefactors and sponsors: no fees, no project proposals, no discussions
+const SUPPORTER_TABS = TABS.filter((x) => x.key === "tableau" || x.key === "profil");
 
 /** Status chip of the header: up to date, fee due, awaiting approval, deactivated or declined. */
 function StatusChip({ membership }: { membership: MembershipSummary }) {
@@ -66,8 +70,10 @@ export function MemberSpacePage() {
   const { data: projects } = useMyProjects();
   const { data: branch, isLoading: branchLoading } = useBranch(user?.branchId ?? undefined);
   const [searchParams, setSearchParams] = useSearchParams();
+  const supporter = isSupporter(user);
+  const tabs = supporter ? SUPPORTER_TABS : TABS;
   const requested = searchParams.get("onglet") as MemberTab | null;
-  const tab: MemberTab = requested && TABS.some((x) => x.key === requested) ? requested : "tableau";
+  const tab: MemberTab = requested && tabs.some((x) => x.key === requested) ? requested : "tableau";
   const propose = searchParams.get("proposer") === "1";
 
   const navigate = (next: MemberTab, options?: { propose?: boolean }) => {
@@ -96,12 +102,14 @@ export function MemberSpacePage() {
               <Avatar name={`${user.firstName} ${user.lastName}`} url={user.avatarUrl} size="lg" className="ring-[3px] ring-orange-400 ring-offset-0" />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-200">
-                  {t("member.card.branch", { branch: user.branchName ?? "—" })}
+                  {supporter && user.membershipType
+                    ? t(`membership_types.${user.membershipType}.title`)
+                    : t("member.card.branch", { branch: user.branchName ?? "—" })}
                 </p>
                 <h1 className="mt-1.5 text-4xl text-white sm:text-5xl">{t("member.hello_comma", { name: user.firstName })}</h1>
               </div>
             </div>
-            {membership && <StatusChip membership={membership} />}
+            {membership && !supporter && <StatusChip membership={membership} />}
           </header>
 
           <div className="flex flex-wrap gap-8">
@@ -110,7 +118,7 @@ export function MemberSpacePage() {
               className="w-full self-start rounded-2xl border border-white/10 bg-slate-900/75 p-3 lg:w-64 lg:shrink-0"
             >
               <ul className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
-                {TABS.map(({ key, label, icon: Icon }) => (
+                {tabs.map(({ key, label, icon: Icon }) => (
                   <li key={key} className="shrink-0">
                     <button
                       type="button"
@@ -140,6 +148,8 @@ export function MemberSpacePage() {
                 <MemberDiscussionsTab hasAccess={hasAccess} />
               ) : tab === "profil" ? (
                 <MemberProfileTab user={user} phone={user.phone} />
+              ) : supporter ? (
+                <SupporterDashboard user={user} />
               ) : (
                 <MemberDashboard user={user} membership={membership} projects={projects ?? []} onNavigate={navigate} />
               )}

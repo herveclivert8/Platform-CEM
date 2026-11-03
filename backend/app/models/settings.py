@@ -48,6 +48,10 @@ class AssociationSettings(Base):
     # Phrase sous « Nos antennes » (carte). NULL = phrase calculée par le site (antennes, pays).
     map_subtitle: Mapped[str | None] = mapped_column(String(300), nullable=True)
 
+    # Page « Qui sommes-nous » : textes modifiés par le Super Admin, en français, indexés par la clé
+    # de traduction du site qu'ils remplacent ({"about.intro": "...", ...}). Clé absente = texte par défaut.
+    about_content: Mapped[dict[str, str] | None] = mapped_column(JSON, nullable=True)
+
     # Page « Transparence » : publier les totaux des dons confirmés (désactivé par défaut)
     show_donation_totals: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false(), nullable=False)
 

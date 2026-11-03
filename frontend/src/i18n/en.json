@@ -10,7 +10,8 @@
     "register": "Join",
     "member_area": "Member area",
     "my_area": "My area",
-    "about": "About us"
+    "about": "About us",
+    "opportunities": "Opportunities"
   },
   "hero": {
     "badge": "Facilitator of Sustainable Development & Education",
@@ -351,7 +352,7 @@
       "reports": "Annual reports",
       "submissions": "Entrepreneur applications",
       "donations": "Donations",
-      "settings": "Settings",
+      "settings": "My account",
       "my_branch": "My branch",
       "branches": "Branches",
       "accounts": "Admin accounts",
@@ -364,7 +365,9 @@
       "menu": "Back-office menu",
       "open_menu": "Open menu",
       "members": "Members",
-      "social_publishing": "Auto-posting"
+      "social_publishing": "Auto-posting",
+      "about_page": "“About us” page",
+      "opportunities": "Opportunities"
     },
     "scope": {
       "all": "All branches"
@@ -398,8 +401,8 @@
       "greeting": "{{greeting}}, {{name}}!"
     },
     "settings": {
-      "title": "Settings",
-      "subtitle": "Manage your account.",
+      "title": "My account",
+      "subtitle": "Your sign-in email address and your password.",
       "profile": "Profile",
       "change_password": "Change password",
       "current_password": "Current password",
@@ -411,7 +414,13 @@
       "password_error": "The password could not be changed. Please try again.",
       "password_updated_title": "Password updated",
       "password_updated_text": "Your new password is active and your other sessions have been signed out. Do you want to stay signed in on this device?",
-      "password_updated_short": "Your new password is active. You can stay signed in or sign out."
+      "password_updated_short": "Your new password is active. You can stay signed in or sign out.",
+      "email": "Sign-in email address",
+      "change_email": "Change email address",
+      "new_email": "New email address",
+      "email_hint": "Your current password confirms the change. You will sign in with the new address from now on; the old one receives a warning email and your other sessions are signed out.",
+      "email_updated": "Email address updated.",
+      "email_error": "The email address could not be changed. Please try again."
     },
     "accounts": {
       "title": "Admin accounts",
@@ -924,7 +933,7 @@
       "title": "Members",
       "subtitle": "Memberships, registration fees and monthly fees.",
       "tab_payments": "Payments",
-      "tab_members": "Memberships",
+      "tab_members": "Active members",
       "filter_all": "All",
       "no_payments": "No payments.",
       "no_members": "No members.",
@@ -934,7 +943,7 @@
       "payment_confirmed": "Payment confirmed",
       "reject_payment_title": "Reject {{name}}'s payment",
       "reject_payment_text": "Say why (transaction not found, wrong amount…). The member will be able to declare a new payment.",
-      "search": "Name, email, phone",
+      "search": "Name, email, phone, member no.",
       "registration_paid": "Registration paid",
       "registration_unpaid": "Registration not paid",
       "pending_payments_one": "{{count}} payment to check",
@@ -954,7 +963,9 @@
       "cash_recorded": "Cash payment recorded",
       "reactivate": "Reactivate",
       "reactivate_needs_fee": "This month's fee must be paid first.",
-      "member_reactivated": "Account reactivated"
+      "member_reactivated": "Account reactivated",
+      "tab_benefactor": "Benefactors",
+      "tab_sponsor": "Sponsors and mentors"
     },
     "social_publishing": {
       "title": "Auto-posting",
@@ -982,6 +993,82 @@
       "show_message": "Show posted text",
       "view": "View",
       "retry": "Retry"
+    },
+    "supporters": {
+      "subtitle": "People who left their details to be contacted. Confidential records: visible only to the Super Admin, never in the directory or the member area.",
+      "status_new": "To contact",
+      "status_contacted": "Contacted",
+      "all": "All",
+      "search": "Search a name or address…",
+      "empty": "No contacts in this category.",
+      "mark_contacted": "Mark as contacted",
+      "mark_new": "Mark as to contact",
+      "delete_confirm": "Permanently delete {{name}}'s record? Their account, if any, will also be erased (right to erasure).",
+      "deleted": "Record deleted",
+      "updated": "Status updated",
+      "received": "Received on {{date}}",
+      "status_accepted": "Accepted",
+      "accept": "Accept membership",
+      "accept_text": "An account will be created: the person will be able to follow ongoing projects, without proposing projects or taking part in discussions. Check their first and last name.",
+      "last_name": "Last name",
+      "first_name": "First name",
+      "accept_confirm": "Create the account",
+      "created_title": "{{name}}'s membership accepted",
+      "temp_password_hint": "Temporary password to give to the person (sign in with {{email}}, to be replaced at first sign-in):",
+      "done": "Done",
+      "accepted_on": "Accepted on {{date}}",
+      "remove_access": "Remove access",
+      "restore_access": "Give access back",
+      "access_removed": "Access removed"
+    },
+    "about_page": {
+      "title": "“About us” page",
+      "subtitle": "Edit the texts of the page. Each field shows the site's current text: “Restore” brings back its original version.",
+      "view": "View the page",
+      "loading": "Loading…",
+      "french_only": "Type the texts in French: the English version is translated automatically after saving.",
+      "section_intro": "Introduction",
+      "section_values": "Our values",
+      "section_pillars": "Our fields of action",
+      "section_network": "Branch network",
+      "section_partner": "Institutional partnership",
+      "section_membership": "Membership types",
+      "fields": {
+        "headline_before": "Heading: start",
+        "headline_accent": "Heading: highlighted words (in colour)",
+        "headline_after": "Heading: end",
+        "intro": "Introduction: 1st paragraph",
+        "intro_2": "Introduction: 2nd paragraph",
+        "section_title": "Section title",
+        "section_text": "Section text",
+        "value_title": "“{{name}}”: title",
+        "value_text": "“{{name}}”: text",
+        "pillar": "{{name}}",
+        "partner_goal": "Goal {{n}}",
+        "partner_example": "Example (text before the link to achievements)",
+        "type_text": "{{name}}: full description",
+        "type_summary": "{{name}}: summary (“Become a member” page and home page)"
+      },
+      "restore": "Restore",
+      "save": "Save",
+      "saved": "“About us” page saved",
+      "reset": "Restore everything",
+      "reset_confirm": "Bring every text back to its original version? (Remember to save afterwards.)",
+      "error": "The texts could not be saved. Please try again."
+    },
+    "opportunities": {
+      "title": "Opportunities: applications",
+      "subtitle": "Members' applications for further studies in Italy. Visible only to the Super Admin.",
+      "all": "All",
+      "search": "Name, email, member no., faculty…",
+      "empty": "No applications in this category.",
+      "received": "Received on {{date}}",
+      "dossier": "Financing file",
+      "motivation": "Cover letter",
+      "status_label": "Status",
+      "updated": "Status updated",
+      "deleted": "Application deleted",
+      "delete_confirm": "Permanently delete {{name}}'s application and file?"
     }
   },
   "posts_page": {
@@ -1011,7 +1098,9 @@
     "branch_of_elided": "{{city}} branch",
     "login": "Sign in",
     "register": "Join",
-    "member": "Member area"
+    "member": "Member area",
+    "membership": "Become a member",
+    "opportunities": "Opportunities"
   },
   "transparency": {
     "title": "Transparency",
@@ -1199,6 +1288,11 @@
       "delete_confirm": "I understand that deletion is permanent and ends my membership.",
       "delete_final": "Delete permanently",
       "delete_error": "The account could not be deleted."
+    },
+    "supporter": {
+      "access": "As a benefactor or sponsor, you can follow the association's ongoing projects. Project proposals and discussions are reserved for active members.",
+      "ongoing_title": "Ongoing projects",
+      "no_projects": "No ongoing projects at the moment."
     }
   },
   "membership": {
@@ -1242,13 +1336,15 @@
     "delete_confirm": "Delete this comment?",
     "empty": "No comments yet. Start the discussion!",
     "locked_member": "The discussion is reserved for members whose fee is up to date.",
-    "locked_visitor": "Join the association to take part in the discussion on this project."
+    "locked_visitor": "Join the association to take part in the discussion on this project.",
+    "locked_supporter": "Discussions are reserved for active members."
   },
   "join": {
     "title_before": "Your place is ",
     "title_accent": "here",
     "text": "Join the branch of your choice to follow ongoing projects, propose your own and connect with the network.",
-    "cta": "Join CEM"
+    "cta": "Join CEM",
+    "types_cta": "Discover membership types"
   },
   "about": {
     "title": "About us",
@@ -1302,7 +1398,13 @@
     "legal_title": "The association",
     "legal_status": "Status",
     "legal_status_value": "Non-profit association (French law of 1901)",
-    "legal_seat": "Head office"
+    "legal_seat": "Head office",
+    "membership": {
+      "eyebrow": "Membership",
+      "title": "Membership types",
+      "text": "The association brings together three categories of members, each with its own role and conditions.",
+      "cta": "Become a member"
+    }
   },
   "documents": {
     "label": "Documents",
@@ -1332,7 +1434,8 @@
       "unknown": "Unknown badge",
       "unknown_text": "This QR code does not match any CEM badge.",
       "checked_at": "Checked on {{date}}",
-      "back_home": "Back to home"
+      "back_home": "Back to home",
+      "member_number": "Member number"
     }
   },
   "privacy": {
@@ -1422,5 +1525,117 @@
       }
     ],
     "contact": "A question about your personal data? Write to us:"
+  },
+  "membership_types": {
+    "ACTIVE": {
+      "title": "Active members",
+      "summary": "You take part in the life of the association and its projects, and benefit from its support, notably for your own entrepreneurial projects. Open from the third year of a bachelor's degree and to working professionals.",
+      "text": "They take part in the life of the association and contribute to carrying out its projects. They can also benefit from its support, notably to develop their own entrepreneurial projects. Membership is open to students from the third year of a bachelor's degree, as well as to people already in professional life. This requirement reflects a fundamental ambition: to make each member not only a beneficiary of the association's actions, but also a committed actor, called upon to create value and contribute to the development of society.",
+      "cta": "Join"
+    },
+    "BENEFACTOR": {
+      "title": "Benefactor members",
+      "summary": "You support the association's missions and projects through financial, material or any other form of contribution. Your details remain confidential.",
+      "text": "They support the association's missions and projects through financial, material or any other form of contribution. To preserve the association's independence, neutrality and secular character, people holding political office and leaders of religious groups may not become benefactor members. People who have been convicted by a court are also excluded.",
+      "cta": "Leave your details, we will contact you"
+    },
+    "SPONSOR": {
+      "title": "Sponsors and mentors",
+      "summary": "You support the association with your experience, advice, network or moral support, for the development of Madagascar. Your details remain confidential.",
+      "text": "They support the development of the association by bringing their experience, advice, network or moral support. They help strengthen initiatives, facilitate partnerships and foster new opportunities for the development of Madagascar. Their commitment respects the association's values, its independence and its non-political character. They may not use their role to promote a political party, a candidacy or partisan interests.",
+      "cta": "Leave your details, we will contact you"
+    }
+  },
+  "membership_choice": {
+    "eyebrow": "Become a member",
+    "title": "How would you like to join CEM?",
+    "intro": "Three ways to get involved with us. Choose the one that suits you.",
+    "more_info": "More information about membership types",
+    "already_member": "Already a member?",
+    "login": "Sign in"
+  },
+  "supporter_contact": {
+    "title_BENEFACTOR": "Become a benefactor member",
+    "title_SPONSOR": "Become a sponsor or mentor",
+    "intro": "Leave us your details and we will contact you. They are only visible to the association's management: never published nor shared with members.",
+    "full_name": "Full name",
+    "email": "Email address",
+    "phone": "Phone (optional)",
+    "message": "Message (optional)",
+    "message_placeholder": "How would you like to support the association? When can we reach you?",
+    "submit": "Send my details",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "success": "Thank you! We will contact you very soon.",
+    "error": "Sending failed. Please try again."
+  },
+  "opportunities": {
+    "page": {
+      "eyebrow": "Opportunities",
+      "title": "Opportunities to go further",
+      "intro": "Through its partnerships, the Club supports its members in their studies, research and projects.",
+      "italy": {
+        "title": "Further studies in Italy",
+        "presentation": "About the project",
+        "p1": "Through its partnerships, the Club supports students finishing their first year of a Master's or in their second year in preparing and carrying out their plan to continue their studies in Italy.",
+        "p2": "This is not a scholarship scheme, but support through each stage of the journey: preparing the project, the steps required before leaving, and follow-up during the programme in Italy.",
+        "p3": "To benefit from this support, the student must be a member of the Club and belong to one of its branches.",
+        "apply_title": "How to apply",
+        "apply_intro": "Fill in the form, together with:",
+        "apply_letter": "a cover letter (5 lines maximum) presenting your plans, commitments and means;",
+        "apply_dossier": "the financing file, which may be a project to carry out through CEM.",
+        "apply": "Apply"
+      },
+      "research": {
+        "title": "Research and international mobility",
+        "p1": "Through the partnership between Club Excellence Madagascar, the international CEDIMES network and the EGSS Faculty, students finishing their second year of a Master's can access calls for projects and mobility opportunities for researchers offered by CEDIMES.",
+        "p2": "Some CEDIMES services and schemes are reserved for its members. To take full advantage of the opportunities offered, you therefore need to join the network directly.",
+        "p3": "To learn more about the membership conditions and the opportunities offered, visit the CEDIMES website.",
+        "link": "CEDIMES website"
+      },
+      "innovation": {
+        "title": "Innovative projects and social impact",
+        "p1": "Club Excellence Madagascar encourages its members to design and carry out innovative, viable projects with a strong social impact. It provides support, training, networking and partnership-seeking schemes to help project leaders turn their ideas into concrete achievements. The Club is not a funding body and does not guarantee any allocation of funds.",
+        "p2": "True to its motto “Excel to serve”, the Club aims to train people able to create value and contribute to the development of their society. The support offered rests on one conviction: solid projects are built through work, rigour, initiative and perseverance, not through the search for funding alone.",
+        "p3": "The Club thus wishes to encourage a culture of responsibility and commitment: training pioneers who take initiative and bring solutions, rather than passive beneficiaries waiting for aid."
+      }
+    },
+    "apply": {
+      "title": "Apply: further studies in Italy",
+      "back": "Back to opportunities",
+      "login_required": "To apply, sign in with your member account.",
+      "login": "Sign in",
+      "not_member": "This support is reserved for Club members whose membership has been approved and who belong to a branch.",
+      "already": "Your application of {{date}} has been received. Status: {{status}}.",
+      "sent": "Thank you! Your application has been sent. The Club will get back to you.",
+      "last_name": "Last name",
+      "first_name": "First name",
+      "member_number": "Member number",
+      "phone": "Phone",
+      "email": "Email",
+      "study_level": "Level of study",
+      "study_level_placeholder": "Choose…",
+      "levels": {
+        "M1": "End of Master 1",
+        "M2": "Master 2",
+        "OTHER": "Other"
+      },
+      "faculty": "Faculty",
+      "major": "Field of study",
+      "motivation": "Cover letter (5 lines maximum)",
+      "motivation_hint": "Your plans, commitments and means. {{lines}}/5 lines.",
+      "motivation_too_long": "5 lines maximum.",
+      "dossier": "Financing file",
+      "dossier_hint": "PDF, Word, Excel or PowerPoint, 10 MB maximum. It may be a project to carry out through CEM.",
+      "submit": "Send my application",
+      "sending": "Sending…",
+      "error": "The application could not be sent. Please try again."
+    },
+    "status": {
+      "NEW": "Received",
+      "IN_REVIEW": "Under review",
+      "ACCEPTED": "Accepted",
+      "REJECTED": "Not selected"
+    }
   }
 }

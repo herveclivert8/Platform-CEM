@@ -126,7 +126,8 @@ class MembershipSummary(BaseModel):
     monthly_pending: bool
     payments: list[MembershipPayment]
     # Carte de membre
-    member_number: int
+    # Numéro d'adhérent (ex. PARI0045), attribué à la validation de l'adhésion
+    member_number: Optional[str] = None
     member_since: datetime
 
 
@@ -141,6 +142,7 @@ class MemberAdmin(BaseModel):
     membership_status: MembershipStatus
     paid_until: Optional[date] = None
     has_access: bool
+    member_number: Optional[str] = None
     registration_paid: bool
     pending_payments: int
     created_at: datetime

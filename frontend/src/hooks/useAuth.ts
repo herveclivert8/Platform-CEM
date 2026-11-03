@@ -116,6 +116,26 @@ export function useChangePassword() {
   });
 }
 
+/** Change the sign-in email, confirmed with the current password (other sessions are revoked). */
+export function useChangeEmail() {
+  return useMutation({
+    mutationFn: async (params: { newEmail: string; currentPassword: string }) => {
+      const { data } = await api.post<LoginResponseDto>("/auth/email/change", {
+        new_email: params.newEmail,
+        current_password: params.currentPassword,
+      });
+      return data;
+    },
+    onSuccess: (data) => {
+      useAuthStore.getState().login({
+        user: mapCurrentUser(data.user),
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+      });
+    },
+  });
+}
+
 export function useForgotPassword() {
   return useMutation({
     mutationFn: async (email: string) => {

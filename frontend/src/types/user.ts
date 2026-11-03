@@ -8,9 +8,17 @@ export function isAdminRole(role: UserRole | undefined): boolean {
   return role === "SUPER_ADMIN" || role === "BRANCH_ADMIN";
 }
 
-/** Admins, and approved members with this month's fee paid: they see members-only content (ongoing projects, authors' emails). */
+/** ACTIVE: signed up on the site, pays the fees. BENEFACTOR / SPONSOR: account created by the Super Admin, read-only. */
+export type MembershipType = "ACTIVE" | "BENEFACTOR" | "SPONSOR";
+
+/** Admins, approved members with this month's fee paid, and accepted benefactors / sponsors: they see members-only content (ongoing projects, authors' emails). */
 export function canSeeMemberContent(user: CurrentUser | null): boolean {
   return !!user && (isAdminRole(user.role) || user.memberAccess);
+}
+
+/** Benefactor or sponsor: sees ongoing projects, but neither proposes projects, discusses nor pays fees. */
+export function isSupporter(user: CurrentUser | null): boolean {
+  return !!user && user.role === "MEMBER" && !!user.membershipType && user.membershipType !== "ACTIVE";
 }
 
 /** Where a user lands after signing in. */
@@ -32,8 +40,14 @@ export interface CurrentUser {
   membershipStatus: MembershipStatus | null;
   /** Members: last day covered by the monthly fees (ISO date) */
   paidUntil: string | null;
-  /** Approved member with this month's fee paid: may publish projects and join discussions */
+  /** Sees members-only content: approved member with this month's fee paid, or accepted benefactor / sponsor */
   memberAccess: boolean;
+  /** Members only */
+  membershipType: MembershipType | null;
+  /** Given when the membership is approved (e.g. PARI0045) */
+  memberNumber: string | null;
+  /** Active member with this month's fee paid: may propose projects and join discussions */
+  canParticipate: boolean;
   phone: string | null;
   avatarUrl: string | null;
 }
@@ -51,6 +65,9 @@ export interface CurrentUserDto {
   membership_status?: MembershipStatus | null;
   paid_until?: string | null;
   member_access?: boolean;
+  membership_type?: MembershipType | null;
+  member_number?: string | null;
+  can_participate?: boolean;
   phone?: string | null;
   avatar_url?: string | null;
 }
@@ -68,6 +85,9 @@ export function mapCurrentUser(dto: CurrentUserDto): CurrentUser {
     membershipStatus: dto.membership_status ?? null,
     paidUntil: dto.paid_until ?? null,
     memberAccess: dto.member_access ?? false,
+    membershipType: dto.membership_type ?? null,
+    memberNumber: dto.member_number ?? null,
+    canParticipate: dto.can_participate ?? false,
     phone: dto.phone ?? null,
     avatarUrl: dto.avatar_url ?? null,
   };

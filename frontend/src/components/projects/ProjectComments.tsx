@@ -8,7 +8,7 @@ import { buttonClasses } from "../ui/buttonStyles";
 import { useAddComment, useDeleteComment, useProjectComments } from "../../hooks/useComments";
 import { useErrorToast } from "../../hooks/useErrorToast";
 import { useAuthStore } from "../../store/authStore";
-import { isAdminRole } from "../../types/user";
+import { isAdminRole, isSupporter } from "../../types/user";
 import type { ProjectComment } from "../../types/membership";
 
 const inputClass =
@@ -99,11 +99,13 @@ function CommentItem({ comment, projectId, onReply }: { comment: ProjectComment;
   );
 }
 
-/** Discussion under a project: members with their fee paid and admins; others see an invitation to join. */
+/** Discussion under a project: active members with their fee paid and admins; others see an invitation to join (benefactors and sponsors: a notice). */
 export function ProjectComments({ projectId }: { projectId: number }) {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
-  const canTakePart = !!user && (isAdminRole(user.role) || user.memberAccess);
+  // Benefactors and sponsors see the project but do not take part in the discussion
+  const canTakePart = !!user && (isAdminRole(user.role) || user.canParticipate);
+  const supporter = isSupporter(user);
   const { data: comments } = useProjectComments(projectId, canTakePart);
   const [replyTo, setReplyTo] = useState<number | null>(null);
 
@@ -119,14 +121,16 @@ export function ProjectComments({ projectId }: { projectId: number }) {
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-50 px-5 py-4 dark:bg-slate-900">
           <p className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
             <Lock className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
-            {t(user ? "discussion.locked_member" : "discussion.locked_visitor")}
+            {t(supporter ? "discussion.locked_supporter" : user ? "discussion.locked_member" : "discussion.locked_visitor")}
           </p>
-          <Link
-            to={user ? "/espace-membre" : "/inscription"}
-            className={buttonClasses({ variant: "secondary", size: "sm" })}
-          >
-            {t(user ? "nav.member_area" : "nav.register")}
-          </Link>
+          {!supporter && (
+            <Link
+              to={user ? "/espace-membre" : "/inscription"}
+              className={buttonClasses({ variant: "secondary", size: "sm" })}
+            >
+              {t(user ? "nav.member_area" : "nav.register")}
+            </Link>
+          )}
         </div>
       ) : (
         <div className="mt-5 space-y-5">

@@ -7,17 +7,20 @@ import { Button } from "../components/ui/Button";
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { useChangePassword, useLogout } from "../hooks/useAuth";
 import { useAuthStore } from "../store/authStore";
+import { homePathFor } from "../types/user";
 import { useTranslation } from "react-i18next";
 import { useSuccessToast } from "../hooks/useSuccessToast";
 
 const inputClass =
   "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition-colors focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white";
 
-/** First login with a temporary password: the admin must choose their own before going further. */
+/** First login with a temporary password: the user must choose their own before going further. */
 export function ChangePasswordPage() {
   const { t } = useTranslation();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const mustChangePassword = useAuthStore((s) => s.user?.mustChangePassword ?? false);
+  // Admins, and benefactors / sponsors whose account was created by the Super Admin
+  const home = homePathFor(useAuthStore((s) => s.user?.role));
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,7 +30,7 @@ export function ChangePasswordPage() {
   const showSuccess = useSuccessToast();
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (!mustChangePassword && !changePassword.isPending) return <Navigate to="/admin" replace />;
+  if (!mustChangePassword && !changePassword.isPending) return <Navigate to={home} replace />;
 
   const mismatch = confirmPassword.length > 0 && newPassword !== confirmPassword;
 
@@ -38,7 +41,7 @@ export function ChangePasswordPage() {
       await changePassword.mutateAsync({ currentPassword, newPassword, confirmPassword });
       // Confirmation dans le back-office, avec le choix de rester connecté ou de se déconnecter
       showSuccess(t("admin.settings.password_updated_title"), t("admin.settings.password_updated_short"));
-      navigate("/admin", { replace: true });
+      navigate(home, { replace: true });
     } catch {
       // error surfaced below via changePassword.isError
     }

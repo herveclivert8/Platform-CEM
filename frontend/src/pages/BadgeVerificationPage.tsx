@@ -62,6 +62,14 @@ export function BadgeVerificationPage() {
                     <dd className="text-slate-600 dark:text-slate-300">{badge.email}</dd>
                   </>
                 )}
+                {badge.memberNumber && (
+                  <>
+                    <dt className="sr-only">{t("badge.verify.member_number")}</dt>
+                    <dd className="font-mono text-sm font-semibold text-slate-600 dark:text-slate-300">
+                      {t("member.card.number", { number: badge.memberNumber })}
+                    </dd>
+                  </>
+                )}
                 <dd
                   className={clsx(
                     "pt-3 text-lg font-bold uppercase tracking-wide",

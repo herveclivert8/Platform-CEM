@@ -17,6 +17,8 @@ from app.models.uploaded_file import UploadedFile
 from app.models.membership import MembershipPayment
 from app.models.project_comment import ProjectComment
 from app.models.social_publication import SocialPublication
+from app.models.supporter_contact import SupporterContact
+from app.models.opportunity_application import OpportunityApplication
 
 __all__ = [
     "Publication",
@@ -49,4 +51,6 @@ __all__ = [
     "MembershipPayment",
     "ProjectComment",
     "SocialPublication",
+    "SupporterContact",
+    "OpportunityApplication",
 ]

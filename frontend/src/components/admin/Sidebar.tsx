@@ -6,7 +6,7 @@ import {
   Newspaper,
   Briefcase,
   HeartHandshake,
-  Settings,
+  UserCog,
   MapPin,
   Users,
   ScrollText,
@@ -18,6 +18,8 @@ import {
   Mail,
   UserPlus,
   Send,
+  Info,
+  Plane,
   X,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
@@ -35,13 +37,15 @@ const NAV_ITEMS = [
   { to: "/admin/submissions", labelKey: "admin.nav.submissions", icon: Briefcase },
   { to: "/admin/donations", labelKey: "admin.nav.donations", icon: HeartHandshake },
   { to: "/admin/members", labelKey: "admin.nav.members", icon: UserPlus },
-  { to: "/admin/settings", labelKey: "admin.nav.settings", icon: Settings },
+  { to: "/admin/settings", labelKey: "admin.nav.settings", icon: UserCog },
 ];
 
 const BRANCH_ADMIN_ITEMS = [{ to: "/admin/my-branch", labelKey: "admin.nav.my_branch", icon: MapPin }];
 
 const SUPER_ADMIN_ITEMS = [
   { to: "/admin/home-page", labelKey: "admin.nav.home_page", icon: ImageIcon },
+  { to: "/admin/about-page", labelKey: "admin.nav.about_page", icon: Info },
+  { to: "/admin/opportunities", labelKey: "admin.nav.opportunities", icon: Plane },
   { to: "/admin/branches", labelKey: "admin.nav.branches", icon: MapPin },
   { to: "/admin/accounts", labelKey: "admin.nav.accounts", icon: Users },
   { to: "/admin/audit", labelKey: "admin.nav.audit", icon: ScrollText },

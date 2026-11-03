@@ -116,6 +116,31 @@ class EmailService:
             html_content=html,
         )
 
+    def send_supporter_welcome_email(self, user_email: str, user_name: str) -> bool:
+        """Bienfaiteur ou parrain/marraine : adhésion acceptée, compte créé."""
+        template = """
+        <html>
+            <body>
+                <h1>Bienvenue au Club Excellence Madagascar, {{ user_name }} !</h1>
+                <p>Votre adhésion a été acceptée et votre espace membre est ouvert.</p>
+                <p>Email : {{ user_email }}</p>
+                <p>Connectez-vous avec le mot de passe temporaire que vous a transmis l'association :
+                <a href="{{ login_url }}">se connecter</a>. Vous devrez le remplacer par votre propre mot de passe.</p>
+                <p>Vous pourrez y suivre les projets en cours de l'association.</p>
+                <p>Cordialement,<br>L'équipe CEM</p>
+            </body>
+        </html>
+        """
+
+        html = Template(template, autoescape=True).render(
+            user_email=user_email, user_name=user_name, login_url=f"{settings.FRONTEND_URL}/login"
+        )
+        return self.send_email(
+            to_email=user_email,
+            subject="Votre adhésion au Club Excellence Madagascar est acceptée",
+            html_content=html,
+        )
+
     def send_publication_notification(
         self,
         admin_email: str,

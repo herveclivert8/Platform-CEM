@@ -32,10 +32,10 @@ _member_document_limit = rate_limit("member_document", limit=20, window=60 * 60)
 async def _document_uploader(request: Request, user: User = Depends(get_current_user)) -> User:
     if user.is_admin:
         return user
-    if user.has_member_access(datetime.now(timezone.utc).date()):
+    if user.can_participate(datetime.now(timezone.utc).date()):
         await _member_document_limit(request)
         return user
-    raise HTTPException(status_code=403, detail="Réservé aux membres à jour de cotisation.")
+    raise HTTPException(status_code=403, detail="Réservé aux membres actifs à jour de cotisation.")
 
 
 @router.post("", response_model=ProjectDocumentInfo, status_code=status.HTTP_201_CREATED)

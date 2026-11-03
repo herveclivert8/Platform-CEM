@@ -87,8 +87,10 @@ class Settings(BaseSettings):
     # Un vrai prestataire (Stripe...) s'ajoute dans app/services/payments.py.
     CARD_PAYMENT_PROVIDER: str = "simulation"
 
-    # Traduction automatique FR → EN des contenus saisis par les admins (Claude, API Anthropic).
-    # Sans clé, le site fonctionne normalement : les contenus s'affichent en français.
+    # Traduction automatique FR → EN des contenus saisis par les admins : LibreTranslate (gratuit,
+    # auto-hébergé, ex. http://libretranslate:5000) s'il est renseigné, sinon Claude (API Anthropic).
+    # Sans l'un ni l'autre, le site fonctionne normalement : les contenus s'affichent en français.
+    LIBRETRANSLATE_URL: str = ""
     ANTHROPIC_API_KEY: str = ""
     TRANSLATION_MODEL: str = "claude-opus-5"
 

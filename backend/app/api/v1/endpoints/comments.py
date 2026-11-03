@@ -23,11 +23,11 @@ router = APIRouter(prefix="/projects/{project_id}/comments", tags=["comments"])
 
 
 async def get_discussion_user(user: User = Depends(get_current_user)) -> User:
-    """Admin, ou membre validé et à jour de cotisation."""
-    if not user.is_admin and not user.has_member_access(datetime.now(timezone.utc).date()):
+    """Admin, ou membre actif validé et à jour de cotisation (pas les bienfaiteurs ni les parrains)."""
+    if not user.is_admin and not user.can_participate(datetime.now(timezone.utc).date()):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Discussions réservées aux membres à jour de cotisation",
+            detail="Discussions réservées aux membres actifs à jour de cotisation",
         )
     return user
 

@@ -49,6 +49,7 @@ export function Navbar() {
     { label: t("nav.about"), to: "/qui-sommes-nous" },
     { label: t("nav.branches"), to: "/antennes" },
     { label: t("nav.achievements"), to: "/realisations" },
+    { label: t("nav.opportunities"), to: "/opportunites" },
     ...(memberView ? [{ label: t("nav.ongoing"), to: "/projets-en-cours" }] : []),
   ];
 
@@ -127,7 +128,7 @@ export function Navbar() {
                 {t("nav.login")}
               </Link>
               <Link
-                to="/inscription"
+                to="/adhesion"
                 className={buttonClasses({ variant: "secondary", size: "sm", className: "hidden sm:inline-flex" })}
               >
                 {t("nav.register")}
@@ -203,7 +204,7 @@ export function Navbar() {
                     {t("nav.login")}
                   </Link>
                   <Link
-                    to="/inscription"
+                    to="/adhesion"
                     onClick={() => setMobileOpen(false)}
                     className={buttonClasses({ variant: "secondary", size: "sm" })}
                   >

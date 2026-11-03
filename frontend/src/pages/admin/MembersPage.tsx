@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Banknote, Check, RotateCcw, Search, X } from "lucide-react";
 import clsx from "clsx";
@@ -9,6 +10,7 @@ import { Skeleton } from "../../components/ui/Skeleton";
 import { Pagination } from "../../components/ui/Pagination";
 import { RejectDialog } from "../../components/admin/RejectDialog";
 import { CashPaymentDialog } from "../../components/admin/CashPaymentDialog";
+import { SupportersList } from "../../components/admin/SupportersList";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { useErrorToast } from "../../hooks/useErrorToast";
 import { useSuccessToast } from "../../hooks/useSuccessToast";
@@ -24,8 +26,13 @@ import {
 import { OPERATOR_LABELS, formatAmount, formatDateTime, formatMgPhone } from "../../types/donation";
 import { formatDay, type AdminMember, type AdminMembershipPayment, type MembershipPaymentStatus } from "../../types/membership";
 import type { MembershipStatus } from "../../types/user";
+import { useAuthStore } from "../../store/authStore";
 
-type Tab = "payments" | "members";
+type Tab = "payments" | "members" | "benefactor" | "sponsor";
+
+const MEMBER_TABS: Tab[] = ["payments", "members"];
+// Benefactors and sponsors (details left on the membership page): Super Admin only, for their privacy
+const SUPER_ADMIN_TABS: Tab[] = [...MEMBER_TABS, "benefactor", "sponsor"];
 
 const PAYMENT_TONES: Record<MembershipPaymentStatus, "orange" | "emerald" | "slate"> = {
   PENDING: "orange",
@@ -216,6 +223,7 @@ function MembersTab() {
                   <p className="text-sm font-semibold text-slate-900 dark:text-white">
                     {m.firstName} {m.lastName}
                   </p>
+                  {m.memberNumber && <span className="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">{m.memberNumber}</span>}
                   <Badge tone={MEMBER_TONES[m.membershipStatus]}>{t(`member.status.${m.membershipStatus}`)}</Badge>
                   {m.branchName && <Badge>{m.branchName}</Badge>}
                   <Badge tone={m.registrationPaid ? "emerald" : "orange"}>
@@ -307,15 +315,21 @@ function MembersTab() {
 
 export function MembersPage() {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<Tab>("payments");
+  const isSuperAdmin = useAuthStore((s) => s.user?.role === "SUPER_ADMIN");
+  const tabs = isSuperAdmin ? SUPER_ADMIN_TABS : MEMBER_TABS;
+  // ?onglet=<tab>: links from notifications (new benefactor / sponsor)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requested = searchParams.get("onglet") as Tab | null;
+  const tab: Tab = requested && tabs.includes(requested) ? requested : "payments";
+  const setTab = (next: Tab) => setSearchParams(next === "payments" ? {} : { onglet: next }, { replace: true });
 
   return (
     <div>
       <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{t("admin.members.title")}</h1>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("admin.members.subtitle")}</p>
 
-      <div className="mt-6 flex gap-1 border-b border-slate-200 dark:border-slate-800" role="tablist">
-        {(["payments", "members"] as const).map((key) => (
+      <div className="mt-6 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-800" role="tablist">
+        {tabs.map((key) => (
           <button
             key={key}
             type="button"
@@ -323,7 +337,7 @@ export function MembersPage() {
             aria-selected={tab === key}
             onClick={() => setTab(key)}
             className={clsx(
-              "-mb-px border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors",
+              "-mb-px shrink-0 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors",
               tab === key
                 ? "border-emerald-600 text-emerald-700 dark:text-emerald-400"
                 : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white",
@@ -334,7 +348,16 @@ export function MembersPage() {
         ))}
       </div>
 
-      <div className="mt-5">{tab === "payments" ? <PaymentsTab /> : <MembersTab />}</div>
+      <div className="mt-5">
+        {tab === "payments" ? (
+          <PaymentsTab />
+        ) : tab === "members" ? (
+          <MembersTab />
+        ) : (
+          // Keyed: each type keeps its own filters
+          <SupportersList key={tab} kind={tab === "benefactor" ? "BENEFACTOR" : "SPONSOR"} />
+        )}
+      </div>
     </div>
   );
 }

@@ -16,7 +16,7 @@ from sqlalchemy import or_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import AsyncSessionLocal
-from app.models.user import MembershipStatus, User, UserRole
+from app.models.user import MembershipStatus, MembershipType, User, UserRole
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +49,8 @@ async def suspend_overdue_members(db: AsyncSession) -> int:
         update(User)
         .where(
             User.role == UserRole.MEMBER,
+            # Bienfaiteurs et parrains ne paient pas de cotisation
+            User.membership_type == MembershipType.ACTIVE.value,
             User.membership_status == MembershipStatus.ACTIVE,
             or_(User.paid_until.is_(None), User.paid_until < today()),
         )

@@ -39,7 +39,7 @@ from app.models.membership import (
 )
 from app.models.project import ProjectPhase, ProjectReviewStatus
 from app.models.settings import AssociationSettings
-from app.models.user import MembershipStatus as MembershipStatusModel, UserRole
+from app.models.user import MembershipStatus as MembershipStatusModel, MembershipType, UserRole
 from app.schemas.membership import (
     AccountDeletion,
     AdminCashPayment,
@@ -63,6 +63,7 @@ from app.schemas.membership import (
 )
 from app.schemas.project import Project as ProjectSchema
 from app.services.audit import record_audit
+from app.services.member_numbers import assign_member_number
 from app.services.notification_service import get_branch_notification_recipients, send_batch_notification
 from app.services import membership as membership_dates
 from app.services.payments import get_card_provider
@@ -89,7 +90,11 @@ def _today() -> date:
 
 def _suspend_if_overdue(user: User) -> None:
     """Désactivation immédiate (sans attendre la vérification horaire) d'un membre dont l'échéance est passée."""
-    if user.membership_status == MembershipStatusModel.ACTIVE and (not user.paid_until or user.paid_until < _today()):
+    if (
+        not user.is_supporter  # bienfaiteurs et parrains ne paient pas de cotisation
+        and user.membership_status == MembershipStatusModel.ACTIVE
+        and (not user.paid_until or user.paid_until < _today())
+    ):
         user.membership_status = MembershipStatusModel.SUSPENDED
 
 
@@ -106,8 +111,10 @@ async def get_current_member(user: User = Depends(get_current_user)) -> User:
 
 
 async def get_member_with_access(user: User = Depends(get_current_member)) -> User:
-    """Membre validé et à jour de cotisation."""
-    if not user.has_member_access(_today()):
+    """Membre actif validé et à jour de cotisation (propositions de projet, discussions)."""
+    if user.is_supporter:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Réservé aux membres actifs")
+    if not user.can_participate(_today()):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Adhésion non validée ou cotisation du mois non payée",
@@ -136,13 +143,15 @@ def _summary(user: User, payments: list[MembershipPayment]) -> MembershipSummary
         registration_pending=has(KindModel.REGISTRATION, PaymentStatusModel.PENDING),
         monthly_pending=has(KindModel.MONTHLY, PaymentStatusModel.PENDING),
         payments=[MembershipPaymentSchema.model_validate(p) for p in payments],
-        member_number=user.id,
+        member_number=user.member_number,
         member_since=user.created_at,
     )
 
 
 async def _check_can_pay(db: AsyncSession, user: User, kind: KindModel) -> None:
     """Règles communes aux trois modes de paiement."""
+    if user.is_supporter:
+        raise HTTPException(status_code=400, detail="Les bienfaiteurs, parrains et marraines ne paient pas de cotisation.")
     if user.membership_status == MembershipStatusModel.REJECTED:
         raise HTTPException(status_code=400, detail="Votre demande d'adhésion a été refusée.")
 
@@ -546,7 +555,8 @@ async def list_members(
     # Statuts à jour même si la vérification horaire n'est pas encore passée depuis l'échéance
     await membership_dates.suspend_overdue_members(db)
     # Comptes supprimés (anonymisés) : plus des membres, seulement le support des cotisations passées
-    filters = [User.role == UserRole.MEMBER, User.anonymized_at.is_(None)]
+    # Membres actifs seulement : bienfaiteurs et parrains sont dans l'onglet du Super Admin (fiches de contact)
+    filters = [User.role == UserRole.MEMBER, User.membership_type == MembershipType.ACTIVE.value, User.anonymized_at.is_(None)]
     if scope is not None:
         filters.append(User.branch_id == scope)
     if membership_status:
@@ -558,6 +568,7 @@ async def list_members(
                 User.first_name.ilike(pattern),
                 User.last_name.ilike(pattern),
                 User.email.ilike(pattern),
+                User.member_number.ilike(pattern),
                 User.phone.ilike(pattern),
             )
         )
@@ -606,6 +617,7 @@ async def list_members(
                 membership_status=MembershipStatus(m.membership_status.value),
                 paid_until=m.paid_until,
                 has_access=m.has_member_access(today),
+                member_number=m.member_number,
                 registration_paid=m.id in registration_paid,
                 pending_payments=pending.get(m.id, 0),
                 created_at=m.created_at,
@@ -640,6 +652,9 @@ async def approve_member(member_id: int, user: User = Depends(get_current_admin)
         raise HTTPException(status_code=400, detail="Les frais d'inscription de ce membre n'ont pas encore été confirmés.")
 
     member.membership_status = MembershipStatusModel.ACTIVE
+    # Numéro d'adhérent (ex. PARI0045) attribué à la première validation, conservé ensuite
+    if member.branch:
+        await assign_member_number(db, member, member.branch.name)
     # Les frais d'inscription valent cotisation du premier mois, à partir de la validation (une seule
     # fois : une adhésion refusée puis validée à nouveau ne redonne pas de mois gratuit)
     if registration.period_start is None:

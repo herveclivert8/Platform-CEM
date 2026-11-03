@@ -43,7 +43,7 @@ export function Hero() {
           <p className="max-w-xl text-lg leading-relaxed text-slate-200">{subtitle}</p>
           <div className="flex flex-wrap items-center gap-3">
             <Link
-              to={signedInRole ? homePathFor(signedInRole) : "/inscription"}
+              to={signedInRole ? homePathFor(signedInRole) : "/adhesion"}
               className={buttonClasses({ variant: "primary", size: "lg" })}
             >
               {t(signedInRole ? "nav.my_area" : "hero.cta_member")}

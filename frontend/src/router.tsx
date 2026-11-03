@@ -17,6 +17,8 @@ import { PostsPage } from "./pages/admin/PostsPage";
 import { ProjectsPage } from "./pages/admin/ProjectsPage";
 import { ReportsPage } from "./pages/admin/ReportsPage";
 import { SubscribersPage } from "./pages/admin/SubscribersPage";
+import { AboutPageSettingsPage } from "./pages/admin/AboutPageSettingsPage";
+import { OpportunityApplicationsPage } from "./pages/admin/OpportunityApplicationsPage";
 import { SubmissionsPage } from "./pages/admin/SubmissionsPage";
 import { DonationsPage } from "./pages/admin/DonationsPage";
 import { SettingsPage } from "./pages/admin/SettingsPage";
@@ -56,6 +58,15 @@ const ProjectsListPage = lazy(() =>
 );
 const ProjectDetailPage = lazy(() =>
   import("./pages/ProjectDetailPage").then((m) => ({ default: m.ProjectDetailPage })),
+);
+const MembershipChoicePage = lazy(() =>
+  import("./pages/MembershipChoicePage").then((m) => ({ default: m.MembershipChoicePage })),
+);
+const OpportunitiesPage = lazy(() =>
+  import("./pages/OpportunitiesPage").then((m) => ({ default: m.OpportunitiesPage })),
+);
+const ItalyApplicationPage = lazy(() =>
+  import("./pages/ItalyApplicationPage").then((m) => ({ default: m.ItalyApplicationPage })),
 );
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage").then((m) => ({ default: m.PrivacyPage })));
 const BadgeVerificationPage = lazy(() =>
@@ -118,6 +129,10 @@ export const router = createBrowserRouter([
       { path: "cem-international", element: <Navigate to="/antennes" replace /> },
       { path: "transparence", element: lazyPage(<TransparencyPage />) },
       { path: "qui-sommes-nous", element: lazyPage(<PhotoPage><AboutPage /></PhotoPage>) },
+      // « S'inscrire » : choice of membership type before the account sign-up (/inscription)
+      { path: "adhesion", element: lazyPage(<PhotoPage><MembershipChoicePage /></PhotoPage>) },
+      { path: "opportunites", element: lazyPage(<PhotoPage><OpportunitiesPage /></PhotoPage>) },
+      { path: "opportunites/italie/postuler", element: lazyPage(<PhotoPage><ItalyApplicationPage /></PhotoPage>) },
       { path: "newsletter/confirmation", element: lazyPage(<NewsletterStatusPage key="confirm" action="confirm" />) },
       { path: "newsletter/desinscription", element: lazyPage(<NewsletterStatusPage key="unsubscribe" action="unsubscribe" />) },
       { path: "realisations", element: lazyPage(<PhotoPage><ProjectsListPage key="COMPLETED" phase="COMPLETED" /></PhotoPage>) },
@@ -168,6 +183,9 @@ export const router = createBrowserRouter([
               { path: "social-links", element: <SocialLinksPage /> },
               { path: "social-publishing", element: <SocialPublishingPage /> },
               { path: "subscribers", element: <SubscribersPage /> },
+              { path: "supporters", element: <Navigate to="/admin/members?onglet=benefactor" replace /> },
+              { path: "about-page", element: <AboutPageSettingsPage /> },
+              { path: "opportunities", element: <OpportunityApplicationsPage /> },
               { path: "payment-info", element: <PaymentInfoPage /> },
             ],
           },

@@ -12,6 +12,7 @@ export interface BadgeVerification {
   lastName: string | null;
   /** Members only */
   email: string | null;
+  memberNumber: string | null;
   /** "CEM Antananarivo", "ADMIN Antananarivo" or "Superadmin" */
   title: string | null;
 }
@@ -22,6 +23,7 @@ interface BadgeVerificationDto {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
+  member_number?: string | null;
   title: string | null;
 }
 
@@ -50,6 +52,7 @@ export function useBadgeVerification(token: string | undefined) {
           firstName: data.first_name,
           lastName: data.last_name,
           email: data.email,
+          memberNumber: data.member_number ?? null,
           title: data.title,
         };
       } catch (error) {

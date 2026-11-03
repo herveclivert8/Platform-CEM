@@ -87,8 +87,8 @@ export interface MembershipSummary {
   registrationPending: boolean;
   monthlyPending: boolean;
   payments: MembershipPayment[];
-  /** Member card */
-  memberNumber: number;
+  /** Member card: member number (e.g. PARI0045), given when the membership is approved */
+  memberNumber: string | null;
   memberSince: string;
 }
 
@@ -100,7 +100,7 @@ export interface MembershipSummaryDto {
   registration_pending: boolean;
   monthly_pending: boolean;
   payments: MembershipPaymentDto[];
-  member_number: number;
+  member_number: string | null;
   member_since: string;
 }
 
@@ -129,6 +129,8 @@ export interface AdminMember {
   membershipStatus: MembershipStatus;
   paidUntil: string | null;
   hasAccess: boolean;
+  /** Given when the membership is approved (e.g. PARI0045) */
+  memberNumber: string | null;
   registrationPaid: boolean;
   pendingPayments: number;
   createdAt: string;
@@ -145,6 +147,7 @@ export interface AdminMemberDto {
   membership_status: MembershipStatus;
   paid_until: string | null;
   has_access: boolean;
+  member_number: string | null;
   registration_paid: boolean;
   pending_payments: number;
   created_at: string;
@@ -162,6 +165,7 @@ export function mapAdminMember(dto: AdminMemberDto): AdminMember {
     membershipStatus: dto.membership_status,
     paidUntil: dto.paid_until,
     hasAccess: dto.has_access,
+    memberNumber: dto.member_number,
     registrationPaid: dto.registration_paid,
     pendingPayments: dto.pending_payments,
     createdAt: dto.created_at,

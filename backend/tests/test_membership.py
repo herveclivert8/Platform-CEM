@@ -420,7 +420,7 @@ async def test_ongoing_projects_and_author_email_are_for_members(client, branch_
 async def test_member_profile_and_discussions(client, branch_ids, tana_admin):
     tokens, headers = await _active_member(client, branch_ids["Antananarivo"], tana_admin)
     me = (await client.get("/members/me", headers=headers)).json()
-    assert me["member_number"] == tokens["user"]["id"]
+    assert me["member_number"].startswith("ANTA")
     assert me["member_since"]
 
     updated = await client.patch(
@@ -461,3 +461,63 @@ async def test_member_avatar(client, branch_ids, request):
     assert (await client.get("/auth/me", headers=headers)).json()["avatar_url"] == url
     assert (await client.put("/members/me/avatar", headers=headers, json={"avatar_url": None})).status_code == 204
     assert (await client.get("/auth/me", headers=headers)).json()["avatar_url"] is None
+
+
+def test_branch_prefix():
+    from app.services.member_numbers import branch_prefix, format_member_number
+
+    assert branch_prefix("Paris") == "PARI"
+    assert branch_prefix("Île-de-France") == "ILED"
+    assert branch_prefix("Pau") == "PAU"
+    assert format_member_number("PARI", 45) == "PARI0045"
+
+
+async def test_member_number_given_at_validation(client, branch_ids, paris_admin):
+    pending = await _register(client, branch_ids["Paris"])
+    me = (await client.get("/members/me", headers=bearer(pending["access_token"]))).json()
+    assert me["member_number"] is None  # pas encore validé
+
+    first, first_headers = await _active_member(client, branch_ids["Paris"], paris_admin)
+    second, second_headers = await _active_member(client, branch_ids["Paris"], paris_admin)
+    a = (await client.get("/members/me", headers=first_headers)).json()["member_number"]
+    b = (await client.get("/members/me", headers=second_headers)).json()["member_number"]
+    assert a.startswith("PARI") and len(a) == 8
+    assert int(b[4:]) == int(a[4:]) + 1
+
+    listed = (await client.get("/members/admin", headers=paris_admin, params={"q": b})).json()
+    assert [m["member_number"] for m in listed["items"]] == [b]
+
+
+async def test_italy_application(client, branch_ids, paris_admin, super_admin):
+    form = {
+        "last_name": "Rabe", "first_name": "Hery", "phone": "034 12 345 67", "email": "hery@example.com",
+        "study_level": "Master 2", "faculty": "EGSS", "major": "Économie",
+        "motivation": "Je souhaite poursuivre en Italie.\nMon projet : ...",
+    }
+    pdf = {"dossier": ("financement.pdf", b"%PDF-1.4 test", "application/pdf")}
+
+    # Membre non validé : refusé
+    pending = await _register(client, branch_ids["Paris"])
+    refused = await client.post("/opportunities/italy/applications", headers=bearer(pending["access_token"]), data=form, files=pdf)
+    assert refused.status_code == 403
+
+    tokens, headers = await _active_member(client, branch_ids["Paris"], paris_admin)
+    too_long = await client.post(
+        "/opportunities/italy/applications", headers=headers, data={**form, "motivation": "a\nb\nc\nd\ne\nf"}, files=pdf
+    )
+    assert too_long.status_code == 422
+    sent = await client.post("/opportunities/italy/applications", headers=headers, data=form, files=pdf)
+    assert sent.status_code == 201, sent.text
+    assert (await client.post("/opportunities/italy/applications", headers=headers, data=form, files=pdf)).status_code == 409
+    assert (await client.get("/opportunities/italy/applications/me", headers=headers)).json()["status"] == "NEW"
+
+    # Super Admin seulement
+    assert (await client.get("/opportunities/applications", headers=paris_admin)).status_code == 403
+    me = (await client.get("/members/me", headers=headers)).json()
+    [application] = (await client.get("/opportunities/applications", headers=super_admin, params={"q": me["member_number"]})).json()["items"]
+    assert application["member_number"] == me["member_number"] and application["branch_name"] == "Paris"
+    dossier = await client.get(f"/opportunities/applications/{application['id']}/dossier", headers=super_admin)
+    assert dossier.content == b"%PDF-1.4 test"
+    updated = await client.patch(f"/opportunities/applications/{application['id']}", headers=super_admin, json={"status": "ACCEPTED"})
+    assert updated.json()["status"] == "ACCEPTED"
+    assert (await client.delete(f"/opportunities/applications/{application['id']}", headers=super_admin)).status_code == 204

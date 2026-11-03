@@ -22,6 +22,8 @@ from app.api.v1.endpoints import (
     badges,
     comments,
     social,
+    supporter_contacts,
+    opportunities,
 )
 
 api_router = APIRouter()
@@ -77,6 +79,12 @@ api_router.include_router(transparency.router)
 
 # Lettre d'information (inscriptions, export pour l'outil d'envoi)
 api_router.include_router(newsletter.router)
+
+# Bienfaiteurs et parrains/marraines : coordonnées laissées pour être recontactés
+api_router.include_router(supporter_contacts.router)
+
+# Opportunités : candidatures des membres (poursuite d'études en Italie)
+api_router.include_router(opportunities.router)
 
 # Notifications
 api_router.include_router(notifications.router)

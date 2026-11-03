@@ -24,7 +24,7 @@ from app.db.session import AsyncSessionLocal
 from app.models import AssociationSettings, ContentTranslation, Post, Project, Publication
 from app.models.post import PostStatus
 from app.models.project import ProjectReviewStatus
-from app.services.translation import TARGET_LANG, is_enabled, source_hash, translate_resource
+from app.services.translation import TARGET_LANG, is_enabled, provider_name, source_hash, translate_resource
 
 # Estimation grossière (Claude Opus 5 : 5 $ / 25 $ par million de tokens en entrée / sortie)
 PRICE_INPUT_PER_TOKEN = 5 / 1_000_000
@@ -40,6 +40,7 @@ async def collect_stale(db: AsyncSession) -> list[tuple[str, int, dict[str, str 
     home = await db.get(AssociationSettings, SETTINGS_ID)
     if home is not None:
         resources.append(("home", SETTINGS_ID, _home_sources(home)))
+        resources.append(("about", SETTINGS_ID, dict(home.about_content or {})))
 
     posts = await db.execute(select(Post).where(Post.status == PostStatus.PUBLISHED))
     resources += [("post", p.id, {f: getattr(p, f) for f in POST_FIELDS}) for p in posts.scalars()]
@@ -98,17 +99,20 @@ async def main() -> None:
         by_type[resource_type] = by_type.get(resource_type, 0) + len(missing)
     detail = ", ".join(f"{n} {t}" for t, n in sorted(by_type.items()))
     print(f"{count} texte(s) à traduire ({detail}), {chars} caractères.")
-    print(f"Coût estimé avec {app_settings.TRANSLATION_MODEL} : environ {cost:.2f} $.")
+    if app_settings.LIBRETRANSLATE_URL:
+        print("Traduction avec LibreTranslate : gratuite.")
+    else:
+        print(f"Coût estimé avec {provider_name()} : environ {cost:.2f} $.")
 
     if not is_enabled():
-        sys.exit("ANTHROPIC_API_KEY n'est pas renseignée dans backend/.env : rien n'a été traduit.")
+        sys.exit("Ni LIBRETRANSLATE_URL ni ANTHROPIC_API_KEY ne sont renseignées : rien n'a été traduit.")
     if "--yes" not in sys.argv:
         sys.exit("Relancez avec --yes pour lancer les traductions : python -m app.translate_all --yes")
 
     translated = await translate_stale()
     print(f"{translated} texte(s) traduit(s) sur {count}.")
     if translated < count:
-        print("Les autres restent en français (API indisponible ou refus) : relancez plus tard.")
+        print("Les autres restent en français (service indisponible ou refus) : relancez plus tard.")
 
 
 if __name__ == "__main__":

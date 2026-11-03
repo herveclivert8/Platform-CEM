@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, BookOpen, Briefcase, HeartHandshake, Landmark, Scale, ShieldCheck, Sparkles, Trophy } from "lucide-react";
 import { buttonClasses } from "../components/ui/buttonStyles";
@@ -6,6 +7,8 @@ import { usePageMeta } from "../hooks/usePageMeta";
 import { useDonationUiStore } from "../store/donationUiStore";
 import { useAuthStore } from "../store/authStore";
 import { ASSOCIATION } from "../config/association";
+import { MEMBERSHIP_TYPES, MEMBERSHIP_TYPES_SECTION } from "../config/membershipTypes";
+import { useAboutText } from "../hooks/useAboutPage";
 
 const VALUES = [
   { key: "excellence", icon: Sparkles },
@@ -21,12 +24,20 @@ const PILLARS = [
   { key: "ENTERPRISE", icon: Briefcase },
 ] as const;
 
-/** « Qui sommes-nous » : mission, values, fields of action, network, institutional partnership, legal identity. */
+/** « Qui sommes-nous » : mission, values, fields of action, network, institutional partnership, membership types, legal identity. */
 export function AboutPage() {
   const { t } = useTranslation();
-  usePageMeta(t("about.title"), t("about.intro"));
+  // Texts the Super Admin can edit (back-office « Qui sommes-nous »); the others stay translations
+  const text = useAboutText();
+  usePageMeta(t("about.title"), text("about.intro"));
   const openDonation = useDonationUiStore((s) => s.open);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { hash } = useLocation();
+
+  // Links such as /qui-sommes-nous#types-adhesion (from the membership choice page)
+  useEffect(() => {
+    if (hash) document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ block: "start" });
+  }, [hash]);
 
   const sectionTitle = "text-3xl font-extrabold leading-tight text-slate-900 sm:text-4xl dark:text-white";
   const eyebrow = "text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-400";
@@ -37,26 +48,26 @@ export function AboutPage() {
       <section className="mx-auto max-w-7xl px-4 pb-20 lg:pb-28 pt-14 sm:px-6 lg:px-8 lg:pt-20">
         <p className={eyebrow}>{t("about.title")}</p>
         <h1 className="mt-5 max-w-5xl text-4xl font-extrabold text-slate-900 sm:text-5xl lg:text-6xl dark:text-white">
-          {t("about.headline_before")}
-          <span className="text-emerald-600 dark:text-emerald-400">{t("about.headline_accent")}</span>
-          {t("about.headline_after")}
+          {text("about.headline_before")}
+          <span className="text-emerald-600 dark:text-emerald-400">{text("about.headline_accent")}</span>
+          {text("about.headline_after")}
         </h1>
         <div className="mt-10 grid gap-8 lg:grid-cols-2">
-          <p className="text-lg leading-relaxed text-slate-700 dark:text-slate-300">{t("about.intro")}</p>
-          <p className="text-lg leading-relaxed text-slate-700 dark:text-slate-300">{t("about.intro_2")}</p>
+          <p className="text-lg leading-relaxed text-slate-700 dark:text-slate-300">{text("about.intro")}</p>
+          <p className="text-lg leading-relaxed text-slate-700 dark:text-slate-300">{text("about.intro_2")}</p>
         </div>
       </section>
 
       {/* Values */}
       <section className="border-y border-slate-200 dark:border-white/10">
         <div className="mx-auto max-w-7xl px-4 py-20 lg:py-28 sm:px-6 lg:px-8">
-          <h2 className={sectionTitle}>{t("about.values_title")}</h2>
+          <h2 className={sectionTitle}>{text("about.values_title")}</h2>
           <div className="mt-10 grid gap-px overflow-hidden border border-slate-200 bg-slate-200 sm:grid-cols-2 lg:grid-cols-4 dark:border-slate-800 dark:bg-slate-800">
             {VALUES.map(({ key, icon: Icon }) => (
               <div key={key} className="bg-white p-7 dark:bg-slate-900">
                 <Icon className="h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden />
-                <h3 className="mt-5 text-xl font-extrabold text-slate-900 dark:text-white">{t(`about.values.${key}.title`)}</h3>
-                <p className="mt-2 leading-relaxed text-slate-600 dark:text-slate-300">{t(`about.values.${key}.text`)}</p>
+                <h3 className="mt-5 text-xl font-extrabold text-slate-900 dark:text-white">{text(`about.values.${key}.title`)}</h3>
+                <p className="mt-2 leading-relaxed text-slate-600 dark:text-slate-300">{text(`about.values.${key}.text`)}</p>
               </div>
             ))}
           </div>
@@ -66,18 +77,18 @@ export function AboutPage() {
       {/* Fields of action */}
       <section className="mx-auto max-w-7xl px-4 py-20 lg:py-28 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2 className={sectionTitle}>{t("about.pillars_title")}</h2>
+          <h2 className={sectionTitle}>{text("about.pillars_title")}</h2>
           <Link to="/realisations" className="inline-flex items-center gap-1.5 font-semibold text-emerald-700 hover:underline dark:text-emerald-400">
             {t("about.see_achievements")} <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
         </div>
-        <p className="mt-4 max-w-3xl text-lg text-slate-600 dark:text-slate-300">{t("about.pillars_text")}</p>
+        <p className="mt-4 max-w-3xl text-lg text-slate-600 dark:text-slate-300">{text("about.pillars_text")}</p>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {PILLARS.map(({ key, icon: Icon }) => (
             <div key={key} className="border border-slate-200 p-6 dark:border-slate-800">
               <Icon className="h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden />
               <h3 className="mt-4 text-lg font-extrabold text-slate-900 dark:text-white">{t(`pillars.${key}`)}</h3>
-              <p className="mt-2 text-slate-600 dark:text-slate-300">{t(`about.pillars.${key}`)}</p>
+              <p className="mt-2 text-slate-600 dark:text-slate-300">{text(`about.pillars.${key}`)}</p>
             </div>
           ))}
         </div>
@@ -87,30 +98,53 @@ export function AboutPage() {
       <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-20 lg:pb-28 sm:px-6 lg:grid-cols-2 lg:px-8">
         <div className="bg-slate-900 p-8 text-white sm:p-10 dark:bg-white dark:text-slate-950">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300 dark:text-emerald-700">{t("about.network_eyebrow")}</p>
-          <h2 className="mt-4 text-3xl font-extrabold leading-tight">{t("about.network_title")}</h2>
-          <p className="mt-4 leading-relaxed text-slate-300 dark:text-slate-600">{t("about.network_text")}</p>
+          <h2 className="mt-4 text-3xl font-extrabold leading-tight">{text("about.network_title")}</h2>
+          <p className="mt-4 leading-relaxed text-slate-300 dark:text-slate-600">{text("about.network_text")}</p>
           <Link to="/antennes" className={buttonClasses({ variant: "primary", className: "mt-8" })}>
             {t("about.network_cta")} <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
         </div>
         <div className="border border-slate-200 bg-white p-8 sm:p-10 dark:border-slate-800 dark:bg-slate-900">
           <p className={eyebrow}>{t("about.partner_eyebrow")}</p>
-          <h2 className="mt-4 text-3xl font-extrabold leading-tight text-slate-900 dark:text-white">{t("about.partner_title")}</h2>
-          <p className="mt-4 leading-relaxed text-slate-600 dark:text-slate-300">{t("about.partner_text")}</p>
+          <h2 className="mt-4 text-3xl font-extrabold leading-tight text-slate-900 dark:text-white">{text("about.partner_title")}</h2>
+          <p className="mt-4 leading-relaxed text-slate-600 dark:text-slate-300">{text("about.partner_text")}</p>
           <ul className="mt-5 space-y-2 text-slate-700 dark:text-slate-300">
             {(["skills", "resources", "excellence"] as const).map((key) => (
               <li key={key} className="flex gap-2.5">
                 <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600 dark:bg-emerald-400" aria-hidden />
-                {t(`about.partner_goals.${key}`)}
+                {text(`about.partner_goals.${key}`)}
               </li>
             ))}
           </ul>
           <p className="mt-6 text-slate-600 dark:text-slate-300">
-            {t("about.partner_example")}{" "}
+            {text("about.partner_example")}{" "}
             <Link to="/realisations" className="font-semibold text-emerald-700 hover:underline dark:text-emerald-400">
               {t("about.partner_example_link")}
             </Link>
           </p>
+        </div>
+      </section>
+
+      {/* Membership types (full descriptions; « S'inscrire » links here) */}
+      <section id={MEMBERSHIP_TYPES_SECTION} className="scroll-mt-20 border-t border-slate-200 dark:border-white/10">
+        <div className="mx-auto max-w-7xl px-4 py-20 lg:py-28 sm:px-6 lg:px-8">
+          <p className={eyebrow}>{t("about.membership.eyebrow")}</p>
+          <h2 className={`mt-4 ${sectionTitle}`}>{text("about.membership.title")}</h2>
+          <p className="mt-4 max-w-3xl text-lg text-slate-600 dark:text-slate-300">{text("about.membership.text")}</p>
+          <div className="mt-10 grid gap-4 lg:grid-cols-3">
+            {MEMBERSHIP_TYPES.map(({ key, icon: Icon, anchor }) => (
+              <div key={key} id={anchor} className="scroll-mt-20 border border-slate-200 bg-white p-7 dark:border-slate-800 dark:bg-slate-900">
+                <Icon className="h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                <h3 className="mt-5 text-xl font-extrabold text-slate-900 dark:text-white">{t(`membership_types.${key}.title`)}</h3>
+                <p className="mt-3 leading-relaxed text-slate-600 dark:text-slate-300">{text(`membership_types.${key}.text`)}</p>
+              </div>
+            ))}
+          </div>
+          {!isAuthenticated && (
+            <Link to="/adhesion" className={buttonClasses({ variant: "primary", size: "lg", className: "mt-10" })}>
+              {t("about.membership.cta")} <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          )}
         </div>
       </section>
 
@@ -128,7 +162,7 @@ export function AboutPage() {
           </div>
           <div className="flex flex-wrap gap-3">
             {!isAuthenticated && (
-              <Link to="/inscription" className={buttonClasses({ variant: "primary", size: "lg" })}>
+              <Link to="/adhesion" className={buttonClasses({ variant: "primary", size: "lg" })}>
                 {t("hero.cta_member")}
               </Link>
             )}

@@ -10,7 +10,8 @@
     "register": "S'inscrire",
     "member_area": "Espace membre",
     "my_area": "Mon espace",
-    "about": "Qui sommes-nous"
+    "about": "Qui sommes-nous",
+    "opportunities": "Opportunités"
   },
   "hero": {
     "badge": "Facilitateur de Développement Durable & Éducation",
@@ -351,7 +352,7 @@
       "reports": "Bilans annuels",
       "submissions": "Dossiers Entrepreneurs",
       "donations": "Dons",
-      "settings": "Paramètres",
+      "settings": "Mon compte",
       "my_branch": "Mon antenne",
       "branches": "Antennes",
       "accounts": "Comptes admin",
@@ -364,7 +365,9 @@
       "menu": "Menu du back-office",
       "open_menu": "Ouvrir le menu",
       "members": "Membres",
-      "social_publishing": "Publication automatique"
+      "social_publishing": "Publication automatique",
+      "about_page": "Page « Qui sommes-nous »",
+      "opportunities": "Opportunités"
     },
     "scope": {
       "all": "Toutes les antennes"
@@ -398,8 +401,8 @@
       "greeting": "{{greeting}}, {{name}} !"
     },
     "settings": {
-      "title": "Paramètres",
-      "subtitle": "Gérez votre compte.",
+      "title": "Mon compte",
+      "subtitle": "Votre adresse e-mail de connexion et votre mot de passe.",
       "profile": "Profil",
       "change_password": "Changer de mot de passe",
       "current_password": "Mot de passe actuel",
@@ -411,7 +414,13 @@
       "password_error": "Le mot de passe n'a pas pu être modifié. Veuillez réessayer.",
       "password_updated_title": "Mot de passe mis à jour",
       "password_updated_text": "Votre nouveau mot de passe est actif et vos autres sessions ont été déconnectées. Voulez-vous rester connecté sur cet appareil ?",
-      "password_updated_short": "Votre nouveau mot de passe est actif. Vous pouvez rester connecté ou vous déconnecter."
+      "password_updated_short": "Votre nouveau mot de passe est actif. Vous pouvez rester connecté ou vous déconnecter.",
+      "email": "Adresse e-mail de connexion",
+      "change_email": "Changer d'adresse e-mail",
+      "new_email": "Nouvelle adresse e-mail",
+      "email_hint": "Votre mot de passe actuel confirme le changement. Vous vous connecterez désormais avec la nouvelle adresse ; l'ancienne reçoit un e-mail d'avertissement et vos autres sessions sont déconnectées.",
+      "email_updated": "Adresse e-mail mise à jour.",
+      "email_error": "L'adresse e-mail n'a pas pu être modifiée. Veuillez réessayer."
     },
     "accounts": {
       "title": "Comptes admin",
@@ -924,7 +933,7 @@
       "title": "Membres",
       "subtitle": "Adhésions, frais d'inscription et cotisations mensuelles.",
       "tab_payments": "Paiements",
-      "tab_members": "Adhésions",
+      "tab_members": "Membres actifs",
       "filter_all": "Tous",
       "no_payments": "Aucun paiement.",
       "no_members": "Aucun membre.",
@@ -934,7 +943,7 @@
       "payment_confirmed": "Paiement confirmé",
       "reject_payment_title": "Rejeter le paiement de {{name}}",
       "reject_payment_text": "Indiquez pourquoi (transaction introuvable, montant incorrect…). Le membre pourra déclarer un nouveau paiement.",
-      "search": "Nom, email, téléphone",
+      "search": "Nom, email, téléphone, n° d'adhérent",
       "registration_paid": "Inscription payée",
       "registration_unpaid": "Inscription non payée",
       "pending_payments_one": "{{count}} paiement à vérifier",
@@ -954,7 +963,9 @@
       "cash_recorded": "Paiement en espèces enregistré",
       "reactivate": "Réactiver",
       "reactivate_needs_fee": "La cotisation du mois en cours doit d'abord être payée.",
-      "member_reactivated": "Compte réactivé"
+      "member_reactivated": "Compte réactivé",
+      "tab_benefactor": "Bienfaiteurs",
+      "tab_sponsor": "Parrains et marraines"
     },
     "social_publishing": {
       "title": "Publication automatique",
@@ -982,6 +993,82 @@
       "show_message": "Voir le texte publié",
       "view": "Voir",
       "retry": "Réessayer"
+    },
+    "supporters": {
+      "subtitle": "Personnes ayant laissé leurs coordonnées pour être recontactées. Fiches confidentielles : visibles uniquement par le Super Admin, jamais dans l'annuaire ni l'espace membre.",
+      "status_new": "À contacter",
+      "status_contacted": "Contactés",
+      "all": "Tous",
+      "search": "Rechercher un nom ou une adresse…",
+      "empty": "Aucun contact dans cette catégorie.",
+      "mark_contacted": "Marquer comme contacté",
+      "mark_new": "Remettre à contacter",
+      "delete_confirm": "Supprimer définitivement la fiche de {{name}} ? Son compte, s'il en a un, sera aussi effacé (droit à l'effacement).",
+      "deleted": "Fiche supprimée",
+      "updated": "Statut mis à jour",
+      "received": "Reçu le {{date}}",
+      "status_accepted": "Acceptés",
+      "accept": "Accepter l'adhésion",
+      "accept_text": "Un compte sera créé : la personne pourra suivre les projets en cours, sans proposer de projet ni participer aux discussions. Vérifiez son nom et son prénom.",
+      "last_name": "Nom",
+      "first_name": "Prénom",
+      "accept_confirm": "Créer le compte",
+      "created_title": "Adhésion de {{name}} acceptée",
+      "temp_password_hint": "Mot de passe temporaire à communiquer à la personne (connexion avec {{email}}, à remplacer à la première connexion) :",
+      "done": "Terminé",
+      "accepted_on": "Acceptée le {{date}}",
+      "remove_access": "Retirer l'accès",
+      "restore_access": "Rendre l'accès",
+      "access_removed": "Accès retiré"
+    },
+    "about_page": {
+      "title": "Page « Qui sommes-nous »",
+      "subtitle": "Modifiez les textes de la page. Chaque champ affiche le texte actuel du site : « Rétablir » le remet à sa version d'origine.",
+      "view": "Voir la page",
+      "loading": "Chargement…",
+      "french_only": "Saisissez les textes en français : la version anglaise est traduite automatiquement après l'enregistrement.",
+      "section_intro": "Introduction",
+      "section_values": "Nos valeurs",
+      "section_pillars": "Nos domaines d'action",
+      "section_network": "Réseau d'antennes",
+      "section_partner": "Partenariat institutionnel",
+      "section_membership": "Types d'adhésion",
+      "fields": {
+        "headline_before": "Titre : début",
+        "headline_accent": "Titre : mots mis en valeur (en couleur)",
+        "headline_after": "Titre : fin",
+        "intro": "Présentation : 1er paragraphe",
+        "intro_2": "Présentation : 2e paragraphe",
+        "section_title": "Titre de la section",
+        "section_text": "Texte de la section",
+        "value_title": "« {{name}} » : titre",
+        "value_text": "« {{name}} » : texte",
+        "pillar": "{{name}}",
+        "partner_goal": "Objectif {{n}}",
+        "partner_example": "Exemple (texte avant le lien vers les réalisations)",
+        "type_text": "{{name}} : description complète",
+        "type_summary": "{{name}} : résumé (page « Devenir membre » et accueil)"
+      },
+      "restore": "Rétablir",
+      "save": "Enregistrer",
+      "saved": "Page « Qui sommes-nous » enregistrée",
+      "reset": "Tout rétablir",
+      "reset_confirm": "Remettre tous les textes à leur version d'origine ? (Pensez à enregistrer ensuite.)",
+      "error": "Les textes n'ont pas pu être enregistrés. Veuillez réessayer."
+    },
+    "opportunities": {
+      "title": "Opportunités : candidatures",
+      "subtitle": "Candidatures des membres à la poursuite d'études en Italie. Visibles uniquement par le Super Admin.",
+      "all": "Toutes",
+      "search": "Nom, e-mail, n° d'adhérent, faculté…",
+      "empty": "Aucune candidature dans cette catégorie.",
+      "received": "Reçue le {{date}}",
+      "dossier": "Dossier de financement",
+      "motivation": "Lettre de motivation",
+      "status_label": "Statut",
+      "updated": "Statut mis à jour",
+      "deleted": "Candidature supprimée",
+      "delete_confirm": "Supprimer définitivement la candidature de {{name}} et son dossier ?"
     }
   },
   "posts_page": {
@@ -1011,7 +1098,9 @@
     "branch_of_elided": "Antenne d’{{city}}",
     "login": "Connexion",
     "register": "Inscription",
-    "member": "Espace membre"
+    "member": "Espace membre",
+    "membership": "Devenir membre",
+    "opportunities": "Opportunités"
   },
   "transparency": {
     "title": "Transparence",
@@ -1199,6 +1288,11 @@
       "delete_confirm": "Je comprends que la suppression est définitive et que mon adhésion prend fin.",
       "delete_final": "Supprimer définitivement",
       "delete_error": "Le compte n'a pas pu être supprimé."
+    },
+    "supporter": {
+      "access": "En tant que bienfaiteur ou parrain/marraine, vous pouvez suivre les projets en cours de l'association. Les propositions de projet et les discussions sont réservées aux membres actifs.",
+      "ongoing_title": "Projets en cours",
+      "no_projects": "Aucun projet en cours pour le moment."
     }
   },
   "membership": {
@@ -1242,13 +1336,15 @@
     "delete_confirm": "Supprimer ce commentaire ?",
     "empty": "Aucun commentaire pour l'instant. Lancez la discussion !",
     "locked_member": "La discussion est réservée aux membres à jour de leur cotisation.",
-    "locked_visitor": "Rejoignez l'association pour participer à la discussion sur ce projet."
+    "locked_visitor": "Rejoignez l'association pour participer à la discussion sur ce projet.",
+    "locked_supporter": "Les discussions sont réservées aux membres actifs."
   },
   "join": {
     "title_before": "Votre place est ",
     "title_accent": "ici",
     "text": "Inscrivez-vous dans l'antenne de votre choix pour suivre les projets en cours, proposer les vôtres et échanger avec le réseau.",
-    "cta": "Rejoindre le CEM"
+    "cta": "Rejoindre le CEM",
+    "types_cta": "Découvrir les types d'adhésion"
   },
   "about": {
     "title": "Qui sommes-nous",
@@ -1302,7 +1398,13 @@
     "legal_title": "L'association",
     "legal_status": "Statut",
     "legal_status_value": "Association loi 1901",
-    "legal_seat": "Siège"
+    "legal_seat": "Siège",
+    "membership": {
+      "eyebrow": "Adhésion",
+      "title": "Les types d'adhésion",
+      "text": "L'association réunit trois catégories de membres, chacune avec son rôle et ses conditions.",
+      "cta": "Devenir membre"
+    }
   },
   "documents": {
     "label": "Documents",
@@ -1332,7 +1434,8 @@
       "unknown": "Badge inconnu",
       "unknown_text": "Ce code QR ne correspond à aucun badge du CEM.",
       "checked_at": "Vérifié le {{date}}",
-      "back_home": "Retour à l'accueil"
+      "back_home": "Retour à l'accueil",
+      "member_number": "Numéro d'adhérent"
     }
   },
   "privacy": {
@@ -1422,5 +1525,117 @@
       }
     ],
     "contact": "Une question sur vos données personnelles ? Écrivez-nous :"
+  },
+  "membership_types": {
+    "ACTIVE": {
+      "title": "Membres actifs",
+      "summary": "Vous participez à la vie de l'association et à ses projets, et bénéficiez de son accompagnement, notamment pour vos projets entrepreneuriaux. Ouvert dès la 3e année de licence et aux professionnels.",
+      "text": "Ils participent à la vie de l'association et contribuent à la réalisation de ses projets. Ils peuvent également bénéficier de son accompagnement, notamment pour développer leurs propres projets entrepreneuriaux. L'adhésion est ouverte aux étudiants à partir de la troisième année de licence ainsi qu'aux personnes déjà engagées dans la vie professionnelle. Cette exigence traduit une ambition fondamentale : faire de chaque membre non seulement un bénéficiaire des actions de l'association, mais aussi un acteur engagé, appelé à créer de la valeur et à contribuer au développement de la société.",
+      "cta": "Adhérer"
+    },
+    "BENEFACTOR": {
+      "title": "Membres bienfaiteurs",
+      "summary": "Vous soutenez les missions et les projets de l'association par des contributions financières, matérielles ou toute autre forme de soutien. Vos coordonnées restent confidentielles.",
+      "text": "Ils soutiennent les missions et les projets de l'association par des contributions financières, matérielles ou toute autre forme de soutien. Afin de préserver l'indépendance, la neutralité et le caractère laïque de l'association, ne peuvent accéder à cette qualité les personnalités exerçant des fonctions politiques ni les dirigeants de groupes religieux. Sont également exclues les personnes ayant fait l'objet d'une condamnation judiciaire.",
+      "cta": "Laissez vos coordonnées, nous vous contacterons"
+    },
+    "SPONSOR": {
+      "title": "Parrains et marraines",
+      "summary": "Vous accompagnez l'association par votre expérience, vos conseils, votre réseau ou votre soutien moral, au service du développement de Madagascar. Vos coordonnées restent confidentielles.",
+      "text": "Ils accompagnent le développement de l'association en lui apportant leur expérience, leurs conseils, leur réseau ou leur soutien moral. Ils contribuent à renforcer les initiatives, à faciliter les partenariats et à favoriser l'émergence de nouvelles opportunités au service du développement de Madagascar. Leur engagement respecte les valeurs de l'association, son indépendance et son caractère apolitique. Ils ne peuvent utiliser leur rôle pour promouvoir un parti politique, une candidature ou des intérêts partisans.",
+      "cta": "Laissez vos coordonnées, nous vous contacterons"
+    }
+  },
+  "membership_choice": {
+    "eyebrow": "Devenir membre",
+    "title": "Comment souhaitez-vous rejoindre le CEM ?",
+    "intro": "Trois façons de s'engager à nos côtés. Choisissez celle qui vous correspond.",
+    "more_info": "Plus d'informations sur les types d'adhésion",
+    "already_member": "Déjà membre ?",
+    "login": "Se connecter"
+  },
+  "supporter_contact": {
+    "title_BENEFACTOR": "Devenir membre bienfaiteur",
+    "title_SPONSOR": "Devenir parrain ou marraine",
+    "intro": "Laissez-nous vos coordonnées, nous vous contacterons. Elles ne sont visibles que par la direction de l'association : jamais publiées ni communiquées aux membres.",
+    "full_name": "Nom et prénom",
+    "email": "Adresse e-mail",
+    "phone": "Téléphone (facultatif)",
+    "message": "Message (facultatif)",
+    "message_placeholder": "Comment souhaitez-vous soutenir l'association ? Quand êtes-vous joignable ?",
+    "submit": "Envoyer mes coordonnées",
+    "sending": "Envoi…",
+    "cancel": "Annuler",
+    "success": "Merci ! Nous vous contacterons très prochainement.",
+    "error": "L'envoi a échoué. Veuillez réessayer."
+  },
+  "opportunities": {
+    "page": {
+      "eyebrow": "Opportunités",
+      "title": "Des opportunités pour aller plus loin",
+      "intro": "Grâce à ses partenariats, le Club accompagne ses membres dans leurs études, leurs recherches et leurs projets.",
+      "italy": {
+        "title": "Poursuite d'études en Italie",
+        "presentation": "Présentation du projet",
+        "p1": "Grâce à ses partenariats, le Club accompagne les étudiants en fin de Master 1 ou en Master 2 dans la préparation et la réalisation de leur projet de poursuite d'études en Italie.",
+        "p2": "Il ne s'agit pas d'un dispositif de bourses d'études, mais d'un accompagnement dans les différentes étapes du parcours : préparation du projet, démarches nécessaires au départ et suivi pendant la formation en Italie.",
+        "p3": "Pour bénéficier de cet accompagnement, l'étudiant doit être membre du Club et rattaché à l'une de ses antennes.",
+        "apply_title": "Pour postuler",
+        "apply_intro": "Complétez le formulaire, accompagné de :",
+        "apply_letter": "une lettre de motivation (5 lignes maximum) présentant vos projets, vos engagements et vos moyens ;",
+        "apply_dossier": "le dossier de financement, qui peut être un projet à réaliser à travers le CEM.",
+        "apply": "Postuler"
+      },
+      "research": {
+        "title": "Recherche et mobilité internationale",
+        "p1": "Grâce au partenariat entre le Club Excellence Madagascar, le réseau international CEDIMES et la Faculté EGSS, les étudiants en fin de Master 2 peuvent accéder à des appels à projets et à des opportunités de mobilité pour chercheurs proposés par le CEDIMES.",
+        "p2": "Certains services et dispositifs du CEDIMES sont réservés à ses membres. Pour bénéficier pleinement des opportunités proposées, il est donc nécessaire d'adhérer directement au réseau.",
+        "p3": "Pour en savoir plus sur les conditions d'adhésion et les possibilités offertes, consultez le site du CEDIMES.",
+        "link": "Site du CEDIMES"
+      },
+      "innovation": {
+        "title": "Projets innovants et impact sociétal",
+        "p1": "Le Club Excellence Madagascar encourage ses membres à concevoir et à réaliser des projets innovants, viables et à fort impact sociétal. Il met en place des dispositifs d'accompagnement, de formation, de mise en réseau et de recherche de partenariats pour aider les porteurs de projets à transformer leurs idées en réalisations concrètes. Le Club n'est pas un organisme de financement et ne garantit aucune attribution de fonds.",
+        "p2": "Fidèle à sa devise « Exceller pour servir », le Club entend former des acteurs capables de créer de la valeur et de contribuer au développement de leur société. L'accompagnement proposé repose sur une conviction : les projets solides se construisent par le travail, la rigueur, l'initiative et la persévérance, et non par la seule recherche de financements.",
+        "p3": "Le Club souhaite ainsi encourager une culture de responsabilité et d'engagement : former des pionniers qui entreprennent et apportent des solutions, plutôt que des bénéficiaires passifs qui attendent des aides."
+      }
+    },
+    "apply": {
+      "title": "Postuler : poursuite d'études en Italie",
+      "back": "Retour aux opportunités",
+      "login_required": "Pour postuler, connectez-vous avec votre compte de membre.",
+      "login": "Se connecter",
+      "not_member": "Cet accompagnement est réservé aux membres du Club dont l'adhésion est validée et qui sont rattachés à une antenne.",
+      "already": "Votre candidature du {{date}} a bien été reçue. Statut : {{status}}.",
+      "sent": "Merci ! Votre candidature a été envoyée. Le Club reviendra vers vous.",
+      "last_name": "Nom",
+      "first_name": "Prénom",
+      "member_number": "Numéro d'adhérent",
+      "phone": "Téléphone",
+      "email": "Courriel",
+      "study_level": "Niveau d'études",
+      "study_level_placeholder": "Choisir…",
+      "levels": {
+        "M1": "Fin de Master 1",
+        "M2": "Master 2",
+        "OTHER": "Autre"
+      },
+      "faculty": "Faculté",
+      "major": "Mention",
+      "motivation": "Lettre de motivation (5 lignes maximum)",
+      "motivation_hint": "Vos projets, vos engagements et vos moyens. {{lines}}/5 lignes.",
+      "motivation_too_long": "5 lignes maximum.",
+      "dossier": "Dossier de financement",
+      "dossier_hint": "PDF, Word, Excel ou PowerPoint, 10 Mo maximum. Il peut s'agir d'un projet à réaliser à travers le CEM.",
+      "submit": "Envoyer ma candidature",
+      "sending": "Envoi…",
+      "error": "La candidature n'a pas pu être envoyée. Veuillez réessayer."
+    },
+    "status": {
+      "NEW": "Reçue",
+      "IN_REVIEW": "En cours d'examen",
+      "ACCEPTED": "Acceptée",
+      "REJECTED": "Non retenue"
+    }
   }
 }

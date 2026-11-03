@@ -101,7 +101,8 @@ export function MemberDashboard({ user, membership, projects, onNavigate }: Memb
               {user.firstName} {user.lastName}
             </p>
             <p className="mt-2 text-sm text-slate-300">
-              {t("member.card.number", { number: String(membership.memberNumber).padStart(5, "0") })} · {t("member.card.since", { date: memberSince })}
+              {membership.memberNumber && <>{t("member.card.number", { number: membership.memberNumber })} · </>}
+              {t("member.card.since", { date: memberSince })}
             </p>
             <div className="mt-4 flex flex-wrap justify-between gap-2 border-t border-orange-400/35 pt-3.5 text-sm text-slate-300">
               <span>{t("member.card.branch", { branch: user.branchName ?? "—" })}</span>

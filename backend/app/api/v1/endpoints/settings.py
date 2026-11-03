@@ -1,6 +1,6 @@
 """
 Endpoints pour les réglages globaux de l'association (réseaux sociaux, coordonnées de paiement,
-page d'accueil : couverture, « Nos valeurs », contact)
+page d'accueil : couverture, « Nos valeurs », contact ; textes de « Qui sommes-nous »)
 """
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
@@ -13,6 +13,8 @@ from app.services.translation import localize, normalize_lang, schedule_translat
 from app.models.settings import AssociationSettings
 from app.models.user import User
 from app.schemas.settings import (
+    AboutPageRead,
+    AboutPageUpdate,
     HomeHeroRead,
     HomeHeroUpdate,
     HomePageRead,
@@ -195,3 +197,43 @@ async def update_home_page(
     await db.refresh(settings)
     schedule_translation(background_tasks, "home", SETTINGS_ID, _home_sources(settings))
     return await get_home_page(db, "fr")
+
+
+@router.get("/about-page", response_model=AboutPageRead)
+async def get_about_page(
+    db: AsyncSession = Depends(get_db),
+    lang: str | None = Query(None, description="« en » : textes traduits automatiquement"),
+):
+    """Textes personnalisés de « Qui sommes-nous ». Accessible: Public."""
+    settings = await _get_or_create_settings(db)
+    sources = settings.about_content or {}
+    translated = (await localize(db, "about", {SETTINGS_ID: sources}, lang or "")).get(SETTINGS_ID, {})
+    return AboutPageRead(
+        content={key: translated.get(key) or text for key, text in sources.items()},
+        lang=normalize_lang(lang),
+    )
+
+
+@router.put("/about-page", response_model=AboutPageRead)
+async def update_about_page(
+    data: AboutPageUpdate,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Remplacer les textes de « Qui sommes-nous », en français. L'anglais est traduit automatiquement
+    en arrière-plan. Accessible: Super Admin only.
+    """
+    await verify_super_admin_only(user)
+
+    settings = await _get_or_create_settings(db)
+    settings.about_content = data.content or None
+    record_audit(
+        db, user=user, action="update", resource_type="settings",
+        details={"section": "about_page", "fields": sorted(data.content)},
+    )
+    await db.commit()
+    await db.refresh(settings)
+    schedule_translation(background_tasks, "about", SETTINGS_ID, settings.about_content or {})
+    return await get_about_page(db, "fr")

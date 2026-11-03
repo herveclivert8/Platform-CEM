@@ -111,3 +111,30 @@ async def test_login_email_is_case_and_space_insensitive(client):
     email, password = TANA_ADMIN
     response = await client.post("/auth/login", json={"email": f"  {email.upper()} ", "password": password})
     assert response.status_code == 200, response.text
+
+
+async def test_change_email(client, super_admin, branch_ids):
+    email, temporary = await _create_admin(client, super_admin, branch_ids["Lyon"])
+    headers = bearer((await login(client, email, temporary))["access_token"])
+    password = "MonNouveauMdp1!"
+    changed = await client.post(
+        "/auth/password/change",
+        headers=headers,
+        json={"current_password": temporary, "new_password": password, "confirm_password": password},
+    )
+    headers = bearer(changed.json()["access_token"])
+
+    wrong = await client.post("/auth/email/change", headers=headers, json={"new_email": "x@example.com", "current_password": "faux"})
+    assert wrong.status_code == 400
+    taken = await client.post("/auth/email/change", headers=headers, json={"new_email": TANA_ADMIN[0], "current_password": password})
+    assert taken.status_code == 409
+
+    new_email = f"nouvelle-{uuid.uuid4().hex[:8]}@example.com"
+    response = await client.post("/auth/email/change", headers=headers, json={"new_email": new_email.upper(), "current_password": password})
+    assert response.status_code == 200, response.text
+    assert response.json()["user"]["email"] == new_email
+
+    # Ancienne session révoquée ; connexion avec la nouvelle adresse seulement
+    assert (await client.get("/auth/me", headers=headers)).status_code == 401
+    assert (await client.post("/auth/login", json={"email": email, "password": password})).status_code == 401
+    await login(client, new_email, password)

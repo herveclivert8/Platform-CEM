@@ -173,7 +173,7 @@ Côté frontend : `npm run lint` puis `npm run build`.
 
 ## Déploiement (Docker)
 
-Chaque partie a son image : [`backend/Dockerfile`](backend/Dockerfile) (API, applique les migrations au démarrage) et [`frontend/Dockerfile`](frontend/Dockerfile) (site compilé, servi par nginx, qui relaie `/api` et `/uploads` vers l'API). `docker-compose.prod.yml` (conservé hors du dépôt, avec `.env.production.example`) assemble base de données, Redis, API et site :
+Chaque partie a son image : [`backend/Dockerfile`](backend/Dockerfile) (API, applique les migrations au démarrage) et [`frontend/Dockerfile`](frontend/Dockerfile) (site compilé, servi par nginx, qui relaie `/api` et `/uploads` vers l'API). `docker-compose.prod.yml` (avec `.env.production.example`) assemble base de données, Redis, API et site :
 
 ```bash
 cp .env.production.example .env.production   # puis renseignez POSTGRES_PASSWORD, SECRET_KEY et FRONTEND_URL
@@ -181,6 +181,8 @@ docker compose -f docker-compose.prod.yml --env-file .env.production up -d --bui
 ```
 
 Le site est alors servi sur le port 8080 (`HTTP_PORT` pour en changer). Pour une mise en ligne publique, placez un serveur HTTPS devant (Caddy, Traefik, ou le proxy de l'hébergeur). La base et les images envoyées sont conservées dans des volumes Docker.
+
+**Traduction automatique FR → EN** : les textes saisis par les admins (accueil, « Qui sommes-nous », actualités, projets...) sont traduits par le conteneur `libretranslate` (gratuit, sur le VPS, environ 1 à 2 Go de RAM). Au premier démarrage, il télécharge les modèles français/anglais en quelques minutes. Pour traduire ensuite les textes déjà enregistrés : `docker compose -f docker-compose.prod.yml exec backend python -m app.translate_all --yes`. Les nouveaux textes sont traduits à chaque enregistrement.
 
 > Le paiement par carte y est désactivé (`CARD_PAYMENT_PROVIDER=disabled`) tant qu'aucun vrai prestataire n'est branché, et les données de démo ne sont pas chargées.
 

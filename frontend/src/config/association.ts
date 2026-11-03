@@ -10,4 +10,6 @@ export const ASSOCIATION = {
   /** Répertoire national des associations */
   rna: "W751259047",
   siren: "894677269",
+  /** CEDIMES network site (« Opportunités » page); null: the text is shown without a link */
+  cedimesUrl: null as string | null,
 };

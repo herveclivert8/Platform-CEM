@@ -26,6 +26,15 @@ class MembershipStatus(str, enum.Enum):
     SUSPENDED = "SUSPENDED"
 
 
+class MembershipType(str, enum.Enum):
+    """Type d'adhésion d'un MEMBER (voir la page « Devenir membre »)."""
+    ACTIVE = "ACTIVE"  # Membre actif : inscrit depuis le site, paie ses cotisations, participe
+    # Bienfaiteur, parrain ou marraine : compte créé par le Super Admin après avoir accepté sa
+    # demande ; voit les contenus réservés aux membres, sans cotisation, mais n'y participe pas
+    BENEFACTOR = "BENEFACTOR"
+    SPONSOR = "SPONSOR"
+
+
 class OAuthProvider(str, enum.Enum):
     GOOGLE = "google"
 
@@ -76,9 +85,15 @@ class User(Base):
         nullable=True,
         index=True,
     )
+    membership_type: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=MembershipType.ACTIVE.value, server_default=MembershipType.ACTIVE.value, index=True
+    )
     # Dernier jour couvert par les cotisations confirmées (un mois par cotisation)
     paid_until: Mapped[date | None] = mapped_column(Date, nullable=True)
 
+    # Numéro d'adhérent attribué à la validation : 4 premières lettres de l'antenne + rang, ex. PARI0045
+    # (app/services/member_numbers.py). Conservé même si l'antenne est renommée.
+    member_number: Mapped[str | None] = mapped_column(String(16), unique=True, nullable=True)
     # Code QR du badge : il ne contient que ce jeton (lien /verifier/<jeton>). Les informations
     # affichées au scan sont relues en base à chaque fois, donc toujours à jour.
     badge_token: Mapped[str] = mapped_column(
@@ -96,14 +111,25 @@ class User(Base):
     def is_admin(self) -> bool:
         return self.role in ADMIN_ROLES
 
+    @property
+    def is_supporter(self) -> bool:
+        """Bienfaiteur ou parrain/marraine (pas de cotisation, pas de participation)."""
+        return self.role == UserRole.MEMBER and self.membership_type != MembershipType.ACTIVE.value
+
     def has_member_access(self, today: date) -> bool:
-        """Membre validé et à jour de cotisation : accès aux privilèges de l'espace membre."""
-        return (
-            self.role == UserRole.MEMBER
-            and self.membership_status == MembershipStatus.ACTIVE
-            and self.paid_until is not None
-            and self.paid_until >= today
-        )
+        """
+        Accès aux contenus réservés aux membres (projets en cours) : membre actif validé et à jour de
+        cotisation, ou bienfaiteur / parrain dont l'adhésion est acceptée.
+        """
+        if self.role != UserRole.MEMBER or self.membership_status != MembershipStatus.ACTIVE:
+            return False
+        if self.is_supporter:
+            return True
+        return self.paid_until is not None and self.paid_until >= today
+
+    def can_participate(self, today: date) -> bool:
+        """Membre actif à jour de cotisation : propose des projets, discute, envoie des documents."""
+        return self.has_member_access(today) and not self.is_supporter
 
     @property
     def full_name(self) -> str:

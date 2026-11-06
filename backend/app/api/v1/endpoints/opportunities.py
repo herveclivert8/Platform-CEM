@@ -21,9 +21,11 @@ from app.api.scope import like_pattern
 from app.core.permissions import verify_super_admin_only
 from app.core.rate_limit import rate_limit
 from app.models.opportunity_application import (
+    MAX_APPLICATION_FILES,
     OPEN_STATUSES,
     PROGRAM_ITALY,
     OpportunityApplication,
+    OpportunityApplicationFile,
 )
 from app.models.user import MembershipStatus, User, UserRole
 from app.services.audit import record_audit
@@ -36,6 +38,14 @@ MOTIVATION_MAX_LINES = 5
 MOTIVATION_MAX_LENGTH = 800
 
 Status = Literal["NEW", "IN_REVIEW", "ACCEPTED", "REJECTED"]
+
+
+class ApplicationFileRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    file_name: str
+    size: int
 
 
 class ApplicationRead(BaseModel):
@@ -53,8 +63,7 @@ class ApplicationRead(BaseModel):
     faculty: str
     major: str
     motivation: str
-    dossier_file_name: str
-    dossier_size: int
+    files: list[ApplicationFileRead]
     status: str
     created_at: datetime
 
@@ -122,13 +131,14 @@ async def apply_italy(
     faculty: str = Form(...),
     major: str = Form(...),
     motivation: str = Form(...),
-    dossier: UploadFile = File(...),
+    files: list[UploadFile] = File(...),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Postuler à l'accompagnement pour une poursuite d'études en Italie, avec la lettre de motivation
-    (5 lignes maximum) et le dossier de financement. Accessible: membre validé rattaché à une antenne.
+    (5 lignes maximum) et 1 à 5 fichiers joints (CV, projet de Master ou de Doctorat, dossier de
+    financement…). Accessible: membre validé rattaché à une antenne.
     """
     _check_eligible(user)
     if await db.scalar(
@@ -147,10 +157,24 @@ async def apply_italy(
     if "@" not in email:
         raise HTTPException(status_code=422, detail="Courriel invalide")
 
-    if not dossier.filename:
-        raise HTTPException(status_code=400, detail="Dossier de financement manquant")
-    content = await dossier.read()
-    mime = check_document(dossier.filename, content)
+    files = [f for f in files if f.filename]
+    if not files:
+        raise HTTPException(status_code=400, detail="Joignez au moins un fichier.")
+    if len(files) > MAX_APPLICATION_FILES:
+        raise HTTPException(status_code=400, detail=f"{MAX_APPLICATION_FILES} fichiers maximum.")
+    attachments = []
+    for position, upload in enumerate(files):
+        content = await upload.read()
+        mime = check_document(upload.filename, content)
+        attachments.append(
+            OpportunityApplicationFile(
+                position=position,
+                file_name=Path(upload.filename).name[:255],
+                content_type=mime,
+                size=len(content),
+                content=content,
+            )
+        )
 
     branch = user.branch
     application = OpportunityApplication(
@@ -167,10 +191,7 @@ async def apply_italy(
         faculty=_clean(faculty, "Faculté"),
         major=_clean(major, "Mention"),
         motivation=motivation,
-        dossier_file_name=Path(dossier.filename).name[:255],
-        dossier_content_type=mime,
-        dossier_size=len(content),
-        dossier_content=content,
+        files=attachments,
     )
     db.add(application)
     await db.commit()
@@ -286,24 +307,24 @@ async def update_application(
     return ApplicationRead.model_validate(application)
 
 
-@router.get("/applications/{application_id}/dossier")
-async def download_dossier(
-    application_id: int, user: User = Depends(get_current_admin), db: AsyncSession = Depends(get_db)
+@router.get("/applications/{application_id}/files/{file_id}")
+async def download_application_file(
+    application_id: int, file_id: int, user: User = Depends(get_current_admin), db: AsyncSession = Depends(get_db)
 ):
-    """Télécharger le dossier de financement. Accessible: Super Admin only."""
+    """Télécharger un fichier joint à une candidature. Accessible: Super Admin only."""
     await verify_super_admin_only(user)
-    application = await db.scalar(
-        select(OpportunityApplication)
-        .options(undefer(OpportunityApplication.dossier_content))
-        .where(OpportunityApplication.id == application_id)
+    attachment = await db.scalar(
+        select(OpportunityApplicationFile)
+        .options(undefer(OpportunityApplicationFile.content))
+        .where(OpportunityApplicationFile.id == file_id, OpportunityApplicationFile.application_id == application_id)
     )
-    if application is None:
-        raise HTTPException(status_code=404, detail="Candidature introuvable")
+    if attachment is None:
+        raise HTTPException(status_code=404, detail="Fichier introuvable")
     return Response(
-        content=application.dossier_content,
-        media_type=application.dossier_content_type,
+        content=attachment.content,
+        media_type=attachment.content_type,
         headers={
-            "Content-Disposition": f"attachment; filename*=UTF-8''{quote(application.dossier_file_name)}",
+            "Content-Disposition": f"attachment; filename*=UTF-8''{quote(attachment.file_name)}",
             "Cache-Control": "private, no-store",
             "X-Content-Type-Options": "nosniff",
         },
@@ -314,7 +335,7 @@ async def download_dossier(
 async def delete_application(
     application_id: int, user: User = Depends(get_current_admin), db: AsyncSession = Depends(get_db)
 ):
-    """Supprimer définitivement une candidature et son dossier. Accessible: Super Admin only."""
+    """Supprimer définitivement une candidature et ses fichiers. Accessible: Super Admin only."""
     await verify_super_admin_only(user)
     application = await _get_application(db, application_id)
     record_audit(db, user=user, action="delete", resource_type="opportunity_application", resource_id=application.id)

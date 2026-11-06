@@ -10,6 +10,16 @@ export interface MyApplication {
   createdAt: string;
 }
 
+/** Most files a member may attach to one application (as checked by the API). */
+export const MAX_APPLICATION_FILES = 5;
+export const MAX_APPLICATION_FILE_BYTES = 10 * 1024 * 1024;
+
+export interface ApplicationFile {
+  id: number;
+  fileName: string;
+  size: number;
+}
+
 export interface Application {
   id: number;
   lastName: string;
@@ -22,8 +32,7 @@ export interface Application {
   faculty: string;
   major: string;
   motivation: string;
-  dossierFileName: string;
-  dossierSize: number;
+  files: ApplicationFile[];
   status: ApplicationStatus;
   createdAt: string;
 }
@@ -40,8 +49,7 @@ interface ApplicationDto {
   faculty: string;
   major: string;
   motivation: string;
-  dossier_file_name: string;
-  dossier_size: number;
+  files: { id: number; file_name: string; size: number }[];
   status: ApplicationStatus;
   created_at: string;
 }
@@ -55,7 +63,7 @@ export interface ItalyApplicationInput {
   faculty: string;
   major: string;
   motivation: string;
-  dossier: File;
+  files: File[];
 }
 
 /** Signed-in member's latest application to the studies in Italy (null: none yet). */
@@ -86,7 +94,7 @@ export function useApplyItaly() {
       formData.append("faculty", input.faculty);
       formData.append("major", input.major);
       formData.append("motivation", input.motivation);
-      formData.append("dossier", input.dossier);
+      for (const file of input.files) formData.append("files", file);
       // Let the browser set the multipart boundary (the shared client defaults to JSON)
       await api.post("/opportunities/italy/applications", formData, { headers: { "Content-Type": undefined } });
     },
@@ -121,8 +129,7 @@ export function useApplications(filters: { page: number; status?: ApplicationSta
           faculty: a.faculty,
           major: a.major,
           motivation: a.motivation,
-          dossierFileName: a.dossier_file_name,
-          dossierSize: a.dossier_size,
+          files: a.files.map((f) => ({ id: f.id, fileName: f.file_name, size: f.size })),
           status: a.status,
           createdAt: a.created_at,
         })),
@@ -156,13 +163,15 @@ export function useDeleteApplication() {
   });
 }
 
-/** Download the financing file through the API (no public link), then hand it to the browser. */
-export async function downloadApplicationDossier(application: Application): Promise<void> {
-  const { data } = await api.get<Blob>(`/opportunities/applications/${application.id}/dossier`, { responseType: "blob" });
+/** Download one attached file through the API (no public link), then hand it to the browser. */
+export async function downloadApplicationFile(application: Application, file: ApplicationFile): Promise<void> {
+  const { data } = await api.get<Blob>(`/opportunities/applications/${application.id}/files/${file.id}`, {
+    responseType: "blob",
+  });
   const url = URL.createObjectURL(data);
   const link = document.createElement("a");
   link.href = url;
-  link.download = application.dossierFileName;
+  link.download = file.fileName;
   document.body.appendChild(link);
   link.click();
   link.remove();

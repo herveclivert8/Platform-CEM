@@ -14,7 +14,7 @@
     "opportunities": "Opportunities"
   },
   "hero": {
-    "badge": "Facilitator of Sustainable Development & Education",
+    "badge": "Club Excellence Madagascar",
     "title": "Fostering excellence and sustainable development in Madagascar.",
     "subtitle": "An international network committed to education, entrepreneurship, research, solidarity and sustainable development, in Madagascar and wherever our members are active.",
     "cta_primary": "Donate now",
@@ -131,7 +131,6 @@
     "tabs": {
       "projects": "Achievements & projects",
       "news": "News",
-      "team": "Team & Contact",
       "reports": "Reports & News"
     },
     "filter_all": "All",
@@ -146,21 +145,7 @@
     "other_branches": "Discover other branches",
     "no_posts": "No news published for this branch yet.",
     "inactive_badge": "Inactive branch",
-    "inactive_notice": "This branch is no longer active. Its news remain available, but it no longer accepts donations or project applications.",
-    "inactive_submissions": "This branch is not accepting applications at the moment.",
-    "contact": {
-      "manager": "Branch manager",
-      "coming_soon": "Contact details coming soon.",
-      "apply_title": "Project leader or craftsperson?",
-      "apply_subtitle": "Submit your application to the {{city}} branch.",
-      "apply_success": "Your application has been sent to the local branch.",
-      "full_name": "Full name",
-      "email": "Email",
-      "summary": "Describe your project in a few lines",
-      "too_many": "Too many applications sent from your connection. Try again in an hour.",
-      "sending": "Sending…",
-      "send": "Send my application"
-    },
+    "inactive_notice": "This branch is no longer active. Its news remain available, but it no longer accepts donations.",
     "reports": {
       "title": "Downloadable activity reports",
       "none": "No reports published yet.",
@@ -389,7 +374,6 @@
       "projects": "Projects & achievements",
       "projects_pending": "Awaiting validation",
       "reports": "Annual reports",
-      "submissions": "Entrepreneur applications",
       "donations": "Donations",
       "settings": "My account",
       "my_branch": "My branch",
@@ -419,7 +403,8 @@
       "mark_all_read": "Mark all as read",
       "no_notifications": "No notifications yet.",
       "logout": "Sign out",
-      "logout_confirm": "Do you really want to sign out?"
+      "logout_confirm": "Do you really want to sign out?",
+      "home_page": "Home page"
     },
     "dashboard": {
       "good_morning": "Good morning",
@@ -428,8 +413,6 @@
       "branch_of": "{{name}} branch.",
       "posts_published": "Published posts",
       "drafts": "Drafts",
-      "submissions": "Applications received",
-      "submissions_new": "Applications received ({{count}} to process)",
       "donations": "Confirmed donations",
       "donations_pending": "Confirmed donations ({{count}} to verify)",
       "global_view": "Global view",
@@ -486,14 +469,14 @@
       "status_active": "Active",
       "status_pending": "Pending",
       "status_inactive": "Inactive",
-      "delete_confirm": "Permanently delete the {{name}} branch?\n\nIts posts, entrepreneur applications and team members will be erased; its donations are kept without a branch.\n\nFor a branch that is closing, use \"Deactivate\" instead: nothing is lost.",
+      "delete_confirm": "Permanently delete the {{name}} branch?\n\nIts posts and team members will be erased; its donations are kept without a branch.\n\nFor a branch that is closing, use \"Deactivate\" instead: nothing is lost.",
       "delete_failed": "Deletion failed.",
       "edit": "Edit",
       "deactivate": "Deactivate",
       "reactivate": "Reactivate",
       "activate": "Activate",
       "delete": "Delete",
-      "deactivate_confirm": "Deactivate the {{name}} branch?\n\nIt will be removed from the directory and will no longer receive donations or applications. Its page and news stay online, and you can reactivate it at any time.",
+      "deactivate_confirm": "Deactivate the {{name}} branch?\n\nIt will be removed from the directory and will no longer receive donations. Its page and news stay online, and you can reactivate it at any time.",
       "status_failed": "The status change failed.",
       "no_position": "position not found: missing from the map, edit the city or pick the address"
     },
@@ -532,37 +515,6 @@
       "publish": "Publish",
       "title": "Branch news",
       "subtitle": "News published in the “News” tab of each branch's page: events, updates from the field. For a project or an achievement, use “Projects & achievements”."
-    },
-    "submissions": {
-      "drawer_title": "New application",
-      "branch_placeholder": "Branch concerned…",
-      "applicant_placeholder": "Applicant's full name",
-      "summary_placeholder": "Project summary",
-      "save_error": "Saving failed. Check the email and try again.",
-      "add": "Add application",
-      "status": {
-        "RECEIVED": "Received",
-        "IN_REVIEW": "Under review",
-        "ACCEPTED": "Accepted",
-        "REJECTED": "Declined"
-      },
-      "title": "Entrepreneur applications",
-      "subtitle": "Applications from project leaders and craftspeople submitted to the branch.",
-      "new": "Add an application",
-      "search": "Search a name, email or project…",
-      "filter_status": "Filter by status",
-      "all_statuses": "All statuses",
-      "none_match": "No application matches these filters.",
-      "none": "No applications received yet.",
-      "count_label": "applications",
-      "status_label": "Application status",
-      "notes_placeholder": "Internal notes (visible to admins only)",
-      "notes": "Notes:",
-      "add_note": "Add a note",
-      "received_on": "Received on {{date}}",
-      "ack_sent": "Acknowledgment sent",
-      "delete_confirm": "Delete {{name}}'s application?",
-      "drawer_intro": "Record an application received outside the site (email, phone, meeting…)."
     },
     "editor": {
       "bold": "Bold",
@@ -995,10 +947,6 @@
       "branch_status": "Branch status updated",
       "branch_deleted": "Branch deleted",
       "account_deleted": "Account deleted",
-      "submission_created": "Submission saved",
-      "submission_status": "Submission status updated",
-      "notes_saved": "Notes saved",
-      "submission_deleted": "Submission deleted",
       "export_done": "Export downloaded",
       "subscriber_deleted": "Subscriber deleted",
       "achievement_published": "Published as an achievement"
@@ -1266,8 +1214,8 @@
       "completion_pending": "Achieved: awaiting publication",
       "achievement": "Achievement published"
     },
-    "suspended_text": "Your monthly fee was not paid by the 30th: your account is deactivated. Pay this month's fee; your branch administrator will then reactivate your account.",
-    "suspended_paid_text": "This month's fee is paid. Your branch administrator will reactivate your account.",
+    "suspended_text": "Your monthly fee was not paid by the 30th: your account is deactivated. Pay this month's fee: your account will be reactivated as soon as the payment is confirmed.",
+    "suspended_paid_text": "This month's fee is paid: your account is about to be reactivated.",
     "hello": "Hello {{name}}",
     "tabs": {
       "dashboard": "Dashboard",
@@ -1536,7 +1484,6 @@
           "Membership and fees: amounts, dates, payment method, sender number and Mobile Money transaction reference. Card numbers are never stored by the site: they are handled directly by the payment provider.",
           "Contributions: proposed projects and messages posted in discussions.",
           "Donations: amount and, if you provide them, name, email and phone (receipt and thanks).",
-          "Project applications: name, email and project description.",
           "Newsletter: email address, once you have confirmed your subscription.",
           "Technical data: IP address and browser, recorded in the security log on sign-in and on administrators' actions."
         ]
@@ -1706,10 +1653,15 @@
       "motivation_hint": "Your plans, commitments and means. {{lines}}/5 lines.",
       "motivation_too_long": "5 lines maximum.",
       "dossier": "Financing file",
-      "dossier_hint": "PDF, Word, Excel or PowerPoint, 10 MB maximum. It may be a project to carry out through CEM.",
+      "dossier_hint": "PDF, Word, Excel or PowerPoint, 10 MB maximum. It may be a CV, a Master's or PhD project, or other documents",
       "submit": "Send my application",
       "sending": "Sending…",
-      "error": "The application could not be sent. Please try again."
+      "error": "The application could not be sent. Please try again.",
+      "file_add": "Choose one or more files ({{count}} maximum)",
+      "file_add_more": "Add another file ({{count}} maximum)",
+      "file_remove": "Remove {{name}}",
+      "file_too_big": "{{name}} is larger than 10 MB.",
+      "files_too_many": "{{count}} files maximum."
     },
     "status": {
       "NEW": "Received",

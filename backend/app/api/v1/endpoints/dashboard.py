@@ -9,10 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_admin, get_db
 from app.api.scope import resolve_branch_scope
-from app.models import Donation, Post, ProjectSubmission, User
+from app.models import Donation, Post, User
 from app.models.donation import MONETARY_METHODS, DonationStatus
 from app.models.post import PostStatus
-from app.models.project_submission import SubmissionStatus
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -25,9 +24,6 @@ class CurrencyTotal(BaseModel):
 class DashboardSummary(BaseModel):
     posts_published: int
     posts_draft: int
-    submissions_total: int
-    # Dossiers pas encore traités (statut "reçu")
-    submissions_new: int
     donations_pending: int
     donations_confirmed: int
     donations_rejected: int
@@ -49,15 +45,6 @@ async def get_dashboard_summary(
 
     posts = dict(
         (await db.execute(select(Post.status, func.count(Post.id)).where(*scoped(Post)).group_by(Post.status))).all()
-    )
-    submissions = dict(
-        (
-            await db.execute(
-                select(ProjectSubmission.status, func.count(ProjectSubmission.id))
-                .where(*scoped(ProjectSubmission))
-                .group_by(ProjectSubmission.status)
-            )
-        ).all()
     )
     donations = dict(
         (
@@ -81,8 +68,6 @@ async def get_dashboard_summary(
     return DashboardSummary(
         posts_published=count(posts, PostStatus.PUBLISHED),
         posts_draft=count(posts, PostStatus.DRAFT),
-        submissions_total=sum(submissions.values()),
-        submissions_new=count(submissions, SubmissionStatus.RECEIVED.value),
         donations_pending=count(donations, DonationStatus.PENDING),
         donations_confirmed=count(donations, DonationStatus.CONFIRMED),
         donations_rejected=count(donations, DonationStatus.REJECTED),

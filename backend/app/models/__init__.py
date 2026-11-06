@@ -2,7 +2,6 @@ from app.models.publication import Publication, PublicationFormat, publication_c
 from app.models.post import Post, PostImage, Pillar, PostStatus
 from app.models.project import Project, ProjectDocument, ProjectImage, ProjectPhase, ProjectReviewStatus
 from app.models.donation import Donation
-from app.models.project_submission import ProjectSubmission
 from app.models.password_reset_token import PasswordResetToken
 from app.models.user import OAuthProvider, User, UserRole
 from app.models.branch import Branch
@@ -18,7 +17,7 @@ from app.models.membership import MembershipPayment
 from app.models.project_comment import ProjectComment
 from app.models.social_publication import SocialPublication
 from app.models.supporter_contact import SupporterContact
-from app.models.opportunity_application import OpportunityApplication
+from app.models.opportunity_application import OpportunityApplication, OpportunityApplicationFile
 
 __all__ = [
     "Publication",
@@ -34,7 +33,6 @@ __all__ = [
     "ProjectPhase",
     "ProjectReviewStatus",
     "Donation",
-    "ProjectSubmission",
     "PasswordResetToken",
     "OAuthProvider",
     "User",
@@ -53,4 +51,5 @@ __all__ = [
     "SocialPublication",
     "SupporterContact",
     "OpportunityApplication",
+    "OpportunityApplicationFile",
 ]

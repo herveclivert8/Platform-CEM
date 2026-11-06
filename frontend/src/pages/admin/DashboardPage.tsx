@@ -1,4 +1,4 @@
-import { Newspaper, Briefcase, HeartHandshake, MapPin, Users, Activity } from "lucide-react";
+import { Newspaper, HeartHandshake, MapPin, Users, Activity } from "lucide-react";
 import { Card, IconBadge } from "../../components/ui/Card";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { useAuthStore } from "../../store/authStore";
@@ -69,19 +69,9 @@ export function DashboardPage() {
       {isError && <QueryError error={error} onRetry={() => refetch()} />}
       {isSuperAdmin && globalError && <QueryError error={globalErr} onRetry={() => refetchGlobal()} />}
 
-      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard icon={Newspaper} label={t("admin.dashboard.posts_published")} value={summary?.posts_published ?? 0} loading={isLoading} />
         <StatCard icon={Activity} label={t("admin.dashboard.drafts")} value={summary?.posts_draft ?? 0} loading={isLoading} />
-        <StatCard
-          icon={Briefcase}
-          label={
-            summary?.submissions_new
-              ? t("admin.dashboard.submissions_new", { count: summary.submissions_new })
-              : t("admin.dashboard.submissions")
-          }
-          value={summary?.submissions_total ?? 0}
-          loading={isLoading}
-        />
         <StatCard
           icon={HeartHandshake}
           label={

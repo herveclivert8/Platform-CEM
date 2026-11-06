@@ -60,6 +60,16 @@ server {
         proxy_read_timeout 60s;
     }
 
+    # Candidature aux opportunités : jusqu'à 5 fichiers de 10 Mo (voir MAX_APPLICATION_FILES côté API)
+    location = /api/v1/opportunities/italy/applications {
+        client_max_body_size 51m;
+        proxy_pass $backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+
     location /uploads/ {
         proxy_pass $backend;
         proxy_set_header Host $host;

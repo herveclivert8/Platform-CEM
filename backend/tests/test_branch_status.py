@@ -4,8 +4,6 @@ import random
 import uuid
 from contextlib import asynccontextmanager
 
-SUBMISSION = {"applicant_name": "Porteur", "email": "porteur@test.cem", "project_summary": "Un projet"}
-
 
 @asynccontextmanager
 async def branch_status(client, super_admin, branch_id: int, status: str):
@@ -44,11 +42,6 @@ async def test_inactive_branch_is_readable_but_closed(client, super_admin, tana_
         page = await client.get(f"/branches/{tana}")
         assert page.status_code == 200 and page.json()["status"] == "inactive"
         assert (await client.get(f"/branches/{tana}/posts")).status_code == 200
-
-        assert (await client.post(f"/branches/{tana}/submissions", json=SUBMISSION)).status_code == 409
-        # Un admin peut toujours saisir un dossier reçu hors du site
-        by_admin = await client.post(f"/branches/{tana}/submissions", headers=tana_admin, json=SUBMISSION)
-        assert by_admin.status_code == 201, by_admin.text
 
         card = await client.post("/donations/card", json={
             "branch_id": tana, "currency": "EUR", "amount": 10,

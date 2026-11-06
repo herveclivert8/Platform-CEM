@@ -24,7 +24,6 @@ from app.models import (
     Notification,
     Project,
     ProjectComment,
-    ProjectSubmission,
     User,
 )
 from app.models.opportunity_application import OpportunityApplication
@@ -50,7 +49,6 @@ async def export_user_data(db: AsyncSession, user: User) -> dict:
     projects = (await db.scalars(select(Project).where(Project.author_id == user.id).order_by(Project.created_at))).all()
     comments = (await db.scalars(select(ProjectComment).where(ProjectComment.author_id == user.id).order_by(ProjectComment.created_at))).all()
     donations = (await db.scalars(select(Donation).where(Donation.donor_email.ilike(email)).order_by(Donation.created_at))).all()
-    submissions = (await db.scalars(select(ProjectSubmission).where(ProjectSubmission.email.ilike(email)))).all()
     newsletter = await db.scalar(select(NewsletterSubscriber).where(NewsletterSubscriber.email.ilike(email)))
 
     return {
@@ -86,10 +84,6 @@ async def export_user_data(db: AsyncSession, user: User) -> dict:
             {"amount": float(d.amount), "currency": d.currency, "status": d.status.value, "created_at": _iso(d.created_at)}
             for d in donations
         ],
-        "project_submissions": [
-            {"applicant_name": s.applicant_name, "summary": s.project_summary, "status": s.status, "created_at": _iso(s.created_at)}
-            for s in submissions
-        ],
         "newsletter": {"subscribed_at": _iso(newsletter.created_at), "confirmed_at": _iso(newsletter.confirmed_at)} if newsletter else None,
     }
 
@@ -106,7 +100,7 @@ async def anonymize_user(db: AsyncSession, user: User, *, reason: str) -> None:
     await db.execute(delete(NewsletterSubscriber).where(NewsletterSubscriber.email.ilike(email)))
     await db.execute(delete(Notification).where(Notification.user_id == user.id))
     await db.execute(delete(PasswordResetToken).where(PasswordResetToken.user_id == user.id))
-    # Candidatures aux opportunités : coordonnées, lettre et dossier personnels
+    # Candidatures aux opportunités : coordonnées, lettre et fichiers joints (supprimés en cascade)
     await db.execute(delete(OpportunityApplication).where(OpportunityApplication.user_id == user.id))
     # Journal d'audit : les actions restent tracées, mais plus sous l'email du membre
     await db.execute(

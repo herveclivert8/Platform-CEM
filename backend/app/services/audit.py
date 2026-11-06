@@ -55,7 +55,7 @@ def record_audit(
     """
     action : "create", "update", "delete", "login", "logout", "password_change", "password_reset",
              "confirm", "reject", "reopen".
-    resource_type : "post", "publication", "branch", "user", "submission", "donation", "settings", "file".
+    resource_type : "post", "publication", "branch", "user", "donation", "settings", "file".
     """
     db.add(
         AuditLog(

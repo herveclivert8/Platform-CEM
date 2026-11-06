@@ -3,8 +3,8 @@
 
 La cotisation se renouvelle le 30 de chaque mois (le dernier jour en février). Un membre dont la
 cotisation n'est pas payée à l'échéance est désactivé (SUSPENDED) le lendemain : il peut encore se
-connecter pour payer, mais ne voit que l'interface des visiteurs. Après son paiement, l'admin de
-son antenne (ou le Super Admin) le réactive.
+connecter pour payer, mais ne voit que l'interface des visiteurs. Il est réactivé automatiquement
+dès que sa cotisation est confirmée (paiement par carte, ou confirmé par un admin).
 """
 
 import asyncio

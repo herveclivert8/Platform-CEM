@@ -7,8 +7,8 @@ Parcours d'un membre (inscrit via /auth/register, adhésion PENDING) :
    les frais d'inscription valent cotisation jusqu'à la prochaine échéance (le 30) ;
 3. la cotisation se renouvelle le 30 de chaque mois : chaque cotisation confirmée couvre jusqu'à
    l'échéance suivante (User.paid_until). Non payée à l'échéance, le membre est désactivé
-   automatiquement (SUSPENDED, voir app/services/membership.py) ; après son paiement, l'admin de son
-   antenne le réactive. Seule la cotisation du mois en cours est due, pas les mois de désactivation.
+   automatiquement (SUSPENDED, voir app/services/membership.py) ; il est réactivé dès que sa cotisation
+   est confirmée. Seule la cotisation du mois en cours est due, pas les mois de désactivation.
 
 Un membre validé et à jour de cotisation peut proposer des projets (publiés après validation du
 Super Admin) et participer aux discussions. Sinon, il ne voit que l'interface des visiteurs.
@@ -167,7 +167,7 @@ async def _check_can_pay(db: AsyncSession, user: User, kind: KindModel) -> None:
             raise HTTPException(status_code=409, detail="Vos frais d'inscription sont déjà payés ou en cours de vérification.")
         return
 
-    # Un membre désactivé paie la cotisation du mois en cours, puis l'admin le réactive
+    # Un membre désactivé paie la cotisation du mois en cours : il est réactivé dès sa confirmation
     if user.membership_status not in (MembershipStatusModel.ACTIVE, MembershipStatusModel.SUSPENDED):
         raise HTTPException(status_code=400, detail="La cotisation se paie une fois votre adhésion validée.")
     if any(p.kind == kind and p.status == PaymentStatusModel.PENDING for p in payments):
@@ -176,16 +176,22 @@ async def _check_can_pay(db: AsyncSession, user: User, kind: KindModel) -> None:
         raise HTTPException(status_code=400, detail="Votre cotisation est déjà payée pour plus d'un an.")
 
 
-def _extend_access(user: User, payment: MembershipPayment) -> None:
+def _extend_access(user: User, payment: MembershipPayment) -> bool:
     """
     Paiement confirmé : couvert jusqu'à l'échéance (le 30) suivant le mois déjà payé ; en retard (ou
     première cotisation), jusqu'à la prochaine échéance seulement : les mois de désactivation ne sont pas dus.
+    Un membre désactivé faute de cotisation est réactivé aussitôt. Renvoie True s'il a été réactivé.
     """
     today = _today()
     covered = user.paid_until if user.paid_until and user.paid_until >= today else None
     payment.period_start = covered + timedelta(days=1) if covered else today
     payment.period_end = membership_dates.next_due_after(covered or today)
     user.paid_until = payment.period_end
+    # Un bienfaiteur désactivé l'a été par un admin, pas faute de cotisation : il reste désactivé
+    if user.membership_status == MembershipStatusModel.SUSPENDED and not user.is_supporter:
+        user.membership_status = MembershipStatusModel.ACTIVE
+        return True
+    return False
 
 
 async def _ensure_uploaded_by(db: AsyncSession, user: User, url: str) -> None:
@@ -205,7 +211,7 @@ async def _notify_admins_of_payment(db: AsyncSession, user: User, payment: Membe
         message=(
             f"{user.full_name} : {KIND_LABELS[payment.kind]}, "
             f"{_format_amount(float(payment.amount), payment.currency)}."
-            + (" Compte désactivé : à réactiver une fois le paiement reçu." if user.membership_status == MembershipStatusModel.SUSPENDED else "")
+            + (" Compte désactivé : il sera réactivé dès la confirmation de ce paiement." if user.membership_status == MembershipStatusModel.SUSPENDED else "")
         ),
         notification_type="info" if payment.status == PaymentStatusModel.PENDING else "success",
         action_url="/admin/members",
@@ -679,7 +685,7 @@ async def approve_member(member_id: int, user: User = Depends(get_current_admin)
     if member.membership_status == MembershipStatusModel.ACTIVE:
         raise HTTPException(status_code=400, detail="Cette adhésion est déjà validée.")
     if member.membership_status == MembershipStatusModel.SUSPENDED:
-        raise HTTPException(status_code=400, detail="Ce compte est désactivé : utilisez « Réactiver » après le paiement de la cotisation.")
+        raise HTTPException(status_code=400, detail="Ce compte est désactivé : il sera réactivé dès la confirmation de sa cotisation.")
 
     registration = await db.scalar(
         select(MembershipPayment).where(
@@ -794,14 +800,16 @@ async def record_cash_payment(
         reviewed_by_id=user.id,
         reviewed_at=datetime.now(timezone.utc),
     )
-    if kind == KindModel.MONTHLY:
-        _extend_access(member, payment)
+    reactivated = kind == KindModel.MONTHLY and _extend_access(member, payment)
     db.add(payment)
     await db.flush()
     record_audit(
         db, user=user, action="create", resource_type="membership_payment", resource_id=payment.id,
         branch_id=member.branch_id,
-        details={"member": member.full_name, "amount": _format_amount(float(payment.amount), currency), "method": "cash"},
+        details={
+            "member": member.full_name, "amount": _format_amount(float(payment.amount), currency), "method": "cash",
+            **({"reactivated": True} if reactivated else {}),
+        },
     )
     await db.commit()
     await db.refresh(payment)
@@ -870,12 +878,14 @@ async def confirm_payment(payment_id: int, user: User = Depends(get_current_admi
     payment.status = PaymentStatusModel.CONFIRMED
     payment.reviewed_by_id = user.id
     payment.reviewed_at = datetime.now(timezone.utc)
-    if payment.kind == KindModel.MONTHLY:
-        _extend_access(payment.user, payment)
+    reactivated = payment.kind == KindModel.MONTHLY and _extend_access(payment.user, payment)
     record_audit(
         db, user=user, action="confirm", resource_type="membership_payment", resource_id=payment.id,
         branch_id=payment.branch_id,
-        details={"member": payment.user.full_name, "amount": _format_amount(float(payment.amount), payment.currency)},
+        details={
+            "member": payment.user.full_name, "amount": _format_amount(float(payment.amount), payment.currency),
+            **({"reactivated": True} if reactivated else {}),
+        },
     )
     await db.commit()
     await db.refresh(payment)

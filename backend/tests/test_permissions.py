@@ -78,14 +78,3 @@ async def test_upload_rejects_fake_image(client, tana_admin):
 async def test_branch_with_admins_cannot_be_deleted(client, super_admin, branch_ids):
     response = await client.delete(f"/branches/{branch_ids['Antananarivo']}", headers=super_admin)
     assert response.status_code == 409
-
-
-async def test_submission_isolation(client, tana_admin, branch_ids):
-    paris = branch_ids["Paris"]
-    created = await client.post(
-        f"/branches/{paris}/submissions",
-        json={"applicant_name": "Jean Test", "email": "jean@test.cem", "project_summary": "Un projet"},
-    )
-    assert created.status_code == 201, created.text
-    assert (await client.get("/submissions", headers=tana_admin, params={"branch_id": paris})).status_code == 403
-    assert (await client.delete(f"/branches/{paris}/submissions/{created.json()['id']}", headers=tana_admin)).status_code == 403

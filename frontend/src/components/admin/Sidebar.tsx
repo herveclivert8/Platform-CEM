@@ -4,7 +4,6 @@ import clsx from "clsx";
 import {
   LayoutDashboard,
   Newspaper,
-  Briefcase,
   HeartHandshake,
   UserCog,
   MapPin,
@@ -34,7 +33,6 @@ const NAV_ITEMS = [
   { to: "/admin/posts", labelKey: "admin.nav.posts", icon: Newspaper },
   { to: "/admin/projects", labelKey: "admin.nav.projects", icon: FolderKanban },
   { to: "/admin/reports", labelKey: "admin.nav.reports", icon: FileText },
-  { to: "/admin/submissions", labelKey: "admin.nav.submissions", icon: Briefcase },
   { to: "/admin/donations", labelKey: "admin.nav.donations", icon: HeartHandshake },
   { to: "/admin/members", labelKey: "admin.nav.members", icon: UserPlus },
   { to: "/admin/settings", labelKey: "admin.nav.settings", icon: UserCog },

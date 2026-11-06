@@ -8,7 +8,7 @@ import { Pagination } from "../../components/ui/Pagination";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { QueryError } from "../../components/ui/QueryError";
 import {
-  downloadApplicationDossier,
+  downloadApplicationFile,
   useApplications,
   useDeleteApplication,
   useUpdateApplication,
@@ -173,14 +173,24 @@ export function OpportunityApplicationsPage() {
                   <p className="mt-1.5 whitespace-pre-line text-sm text-slate-700 dark:text-slate-200">{a.motivation}</p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => downloadApplicationDossier(a).catch(showError)}
-                  className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
-                >
-                  <Download className="h-4 w-4" aria-hidden />
-                  {t("admin.opportunities.dossier")} : {a.dossierFileName} ({formatFileSize(a.dossierSize, i18n.language)})
-                </button>
+                <div className="mt-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t("admin.opportunities.dossier")}</p>
+                  <ul className="mt-1.5 space-y-1">
+                    {a.files.map((file) => (
+                      <li key={file.id}>
+                        <button
+                          type="button"
+                          onClick={() => downloadApplicationFile(a, file).catch(showError)}
+                          className="inline-flex max-w-full items-center gap-2 text-left text-sm font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
+                        >
+                          <Download className="h-4 w-4 shrink-0" aria-hidden />
+                          <span className="break-all">{file.fileName}</span>
+                          <span className="shrink-0 font-normal text-slate-400">({formatFileSize(file.size, i18n.language)})</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </Card>
             ))}
           </div>

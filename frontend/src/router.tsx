@@ -19,7 +19,6 @@ import { ReportsPage } from "./pages/admin/ReportsPage";
 import { SubscribersPage } from "./pages/admin/SubscribersPage";
 import { AboutPageSettingsPage } from "./pages/admin/AboutPageSettingsPage";
 import { OpportunityApplicationsPage } from "./pages/admin/OpportunityApplicationsPage";
-import { SubmissionsPage } from "./pages/admin/SubmissionsPage";
 import { DonationsPage } from "./pages/admin/DonationsPage";
 import { SettingsPage } from "./pages/admin/SettingsPage";
 import { BranchesPage } from "./pages/admin/BranchesPage";
@@ -166,7 +165,6 @@ export const router = createBrowserRouter([
           { path: "posts", element: <PostsPage /> },
           { path: "projects", element: <ProjectsPage /> },
           { path: "reports", element: <ReportsPage /> },
-          { path: "submissions", element: <SubmissionsPage /> },
           { path: "donations", element: <DonationsPage /> },
           { path: "members", element: <MembersPage /> },
           { path: "settings", element: <SettingsPage /> },

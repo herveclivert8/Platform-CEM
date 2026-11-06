@@ -6,8 +6,6 @@ import { useScopedBranchId } from "./useAdminScope";
 export interface DashboardSummary {
   posts_published: number;
   posts_draft: number;
-  submissions_total: number;
-  submissions_new: number;
   donations_pending: number;
   donations_confirmed: number;
   donations_rejected: number;

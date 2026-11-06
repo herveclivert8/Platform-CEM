@@ -2,18 +2,21 @@
 Modèle OpportunityApplication
 Candidature d'un membre à une opportunité du Club (aujourd'hui : poursuite d'études en Italie).
 Réservée aux membres validés rattachés à une antenne ; consultée par le Super Admin seulement.
-Le dossier de financement est stocké en base, comme les documents de projet : jamais accessible par
-un lien direct, il est servi par l'API au Super Admin.
+Les fichiers joints (CV, projet de Master ou de Doctorat, dossier de financement…) sont stockés en
+base, comme les documents de projet : jamais accessibles par un lien direct, ils sont servis par
+l'API au Super Admin.
 """
 
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer, LargeBinary, String, Text, func
-from sqlalchemy.orm import Mapped, deferred, mapped_column
+from sqlalchemy.orm import Mapped, deferred, mapped_column, relationship
 
 from app.db.base import Base
 
 PROGRAM_ITALY = "ITALY_STUDIES"
+
+MAX_APPLICATION_FILES = 5
 
 STATUS_NEW = "NEW"
 STATUS_IN_REVIEW = "IN_REVIEW"
@@ -41,13 +44,33 @@ class OpportunityApplication(Base):
     major: Mapped[str] = mapped_column(String(255), nullable=False)  # mention
     motivation: Mapped[str] = mapped_column(Text, nullable=False)  # 5 lignes maximum
 
-    # Dossier de financement (PDF, Word, Excel ou PowerPoint)
-    dossier_file_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    dossier_content_type: Mapped[str] = mapped_column(String(150), nullable=False)
-    dossier_size: Mapped[int] = mapped_column(Integer, nullable=False)
-    # Chargé seulement au téléchargement (pas dans les listes)
-    dossier_content: Mapped[bytes] = deferred(mapped_column(LargeBinary, nullable=False))
-
     status: Mapped[str] = mapped_column(String(20), nullable=False, default=STATUS_NEW, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    files: Mapped[list["OpportunityApplicationFile"]] = relationship(
+        back_populates="application",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="OpportunityApplicationFile.position",
+        lazy="selectin",
+    )
+
+
+class OpportunityApplicationFile(Base):
+    """Fichier joint à une candidature (PDF, Word, Excel ou PowerPoint, 10 Mo maximum)."""
+
+    __tablename__ = "opportunity_application_files"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    application_id: Mapped[int] = mapped_column(
+        ForeignKey("opportunity_applications.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    file_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    content_type: Mapped[str] = mapped_column(String(150), nullable=False)
+    size: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Chargé seulement au téléchargement (pas dans les listes)
+    content: Mapped[bytes] = deferred(mapped_column(LargeBinary, nullable=False))
+
+    application: Mapped[OpportunityApplication] = relationship(back_populates="files")

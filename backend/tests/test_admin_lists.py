@@ -36,59 +36,6 @@ async def test_search_escapes_wildcards(client, tana_admin):
     assert response.json()["total"] == 0
 
 
-async def test_submission_follow_up(client, tana_admin, paris_admin, branch_ids):
-    tana = branch_ids["Antananarivo"]
-    created = await client.post(
-        f"/branches/{tana}/submissions",
-        json={"applicant_name": "Hery Test", "email": "hery@example.com", "project_summary": "Atelier de couture"},
-    )
-    assert created.status_code == 201
-    # La réponse publique ne contient que la confirmation
-    assert set(created.json()) == {"id", "created_at"}
-    submission_id = created.json()["id"]
-
-    updated = await client.patch(
-        f"/branches/{tana}/submissions/{submission_id}",
-        headers=tana_admin,
-        json={"status": "IN_REVIEW", "internal_notes": "Rappeler lundi"},
-    )
-    assert updated.status_code == 200, updated.text
-    assert updated.json()["status"] == "IN_REVIEW"
-    assert updated.json()["internal_notes"] == "Rappeler lundi"
-
-    reviewing = await client.get("/submissions", headers=tana_admin, params={"status": "IN_REVIEW", "q": "couture"})
-    assert submission_id in [s["id"] for s in reviewing.json()["items"]]
-
-    forbidden = await client.patch(
-        f"/branches/{tana}/submissions/{submission_id}", headers=paris_admin, json={"status": "ACCEPTED"}
-    )
-    assert forbidden.status_code == 403
-
-
-async def test_submission_honeypot(client, branch_ids):
-    response = await client.post(
-        f"/branches/{branch_ids['Paris']}/submissions",
-        json={"applicant_name": "Bot", "email": "bot@example.com", "project_summary": "Spam", "website": "http://spam"},
-    )
-    assert response.status_code == 400
-
-
-async def test_public_submission_rate_limit(client, branch_ids):
-    body = {"applicant_name": "A", "email": "a@example.com", "project_summary": "Projet"}
-    statuses = [(await client.post(f"/branches/{branch_ids['Lyon']}/submissions", json=body)).status_code for _ in range(6)]
-    assert statuses == [201] * 5 + [429]
-
-
-async def test_admin_submission_entry_not_rate_limited(client, paris_admin, branch_ids):
-    body = {"applicant_name": "Dossier papier", "email": "papier@example.com", "project_summary": "Reçu en main propre"}
-    for _ in range(6):
-        response = await client.post(f"/branches/{branch_ids['Paris']}/submissions", headers=paris_admin, json=body)
-        assert response.status_code == 201
-    # Mais seulement dans sa propre antenne
-    response = await client.post(f"/branches/{branch_ids['Lyon']}/submissions", headers=paris_admin, json=body)
-    assert response.status_code == 403
-
-
 async def test_dashboard_summary_counts_in_database(client, tana_admin, super_admin, branch_ids):
     tana = branch_ids["Antananarivo"]
     before = (await client.get("/dashboard/summary", headers=tana_admin)).json()

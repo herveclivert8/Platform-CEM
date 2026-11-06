@@ -332,7 +332,7 @@ async def _set_paid_until(member_id: int, day: date) -> None:
         await db.commit()
 
 
-async def test_unpaid_member_is_suspended_then_reactivated_by_branch_admin(client, branch_ids, tana_admin, paris_admin):
+async def test_unpaid_member_is_suspended_then_reactivated_by_payment(client, branch_ids, tana_admin):
     tokens, headers = await _active_member(client, branch_ids["Antananarivo"], tana_admin)
     member_id = tokens["user"]["id"]
     today = datetime.now(timezone.utc).date()
@@ -350,7 +350,8 @@ async def test_unpaid_member_is_suspended_then_reactivated_by_branch_admin(clien
     assert (await client.post(f"/members/admin/{member_id}/reactivate", headers=tana_admin)).status_code == 400
     assert (await client.post(f"/members/admin/{member_id}/approve", headers=tana_admin)).status_code == 400
 
-    # Paiement en retard : seul le mois en cours est dû (couvert jusqu'à la prochaine échéance)
+    # Paiement en retard : seul le mois en cours est dû (couvert jusqu'à la prochaine échéance),
+    # et le compte est réactivé aussitôt
     paid = await client.post(
         "/members/me/payments/card",
         headers=headers,
@@ -358,12 +359,24 @@ async def test_unpaid_member_is_suspended_then_reactivated_by_branch_admin(clien
     )
     assert paid.status_code == 201, paid.text
     assert paid.json()["paid_until"] == next_due_after(today).isoformat()
-    # Payé mais pas encore réactivé : toujours sans accès
-    assert paid.json()["membership_status"] == "SUSPENDED"
-    assert paid.json()["has_access"] is False
+    assert (paid.json()["membership_status"], paid.json()["has_access"]) == ("ACTIVE", True)
 
-    assert (await client.post(f"/members/admin/{member_id}/reactivate", headers=paris_admin)).status_code == 403
-    assert (await client.post(f"/members/admin/{member_id}/reactivate", headers=tana_admin)).status_code == 204
+
+async def test_suspended_member_reactivated_when_cash_fee_is_confirmed(client, branch_ids, tana_admin, paris_admin):
+    tokens, headers = await _active_member(client, branch_ids["Antananarivo"], tana_admin)
+    member_id = tokens["user"]["id"]
+    await _set_paid_until(member_id, datetime.now(timezone.utc).date() - timedelta(days=1))
+    assert (await client.get("/members/me", headers=headers)).json()["membership_status"] == "SUSPENDED"
+
+    # Espèces déclarées par le membre : toujours désactivé tant que l'admin n'a pas confirmé
+    declared = await client.post("/members/me/payments/cash", headers=headers, json={"kind": "MONTHLY", "currency": "MGA"})
+    assert declared.status_code == 201, declared.text
+    assert declared.json()["membership_status"] == "SUSPENDED"
+    payment_id = next(p["id"] for p in declared.json()["payments"] if p["status"] == "PENDING")
+
+    assert (await client.post(f"/members/admin/payments/{payment_id}/confirm", headers=paris_admin)).status_code in (403, 404)
+    confirmed = await client.post(f"/members/admin/payments/{payment_id}/confirm", headers=tana_admin)
+    assert confirmed.status_code == 200, confirmed.text
     me = (await client.get("/members/me", headers=headers)).json()
     assert (me["membership_status"], me["has_access"]) == ("ACTIVE", True)
 
@@ -494,7 +507,7 @@ async def test_italy_application(client, branch_ids, paris_admin, super_admin):
         "study_level": "Master 2", "faculty": "EGSS", "major": "Économie",
         "motivation": "Je souhaite poursuivre en Italie.\nMon projet : ...",
     }
-    pdf = {"dossier": ("financement.pdf", b"%PDF-1.4 test", "application/pdf")}
+    pdf = [("files", ("financement.pdf", b"%PDF-1.4 test", "application/pdf"))]
 
     # Membre non validé : refusé
     pending = await _register(client, branch_ids["Paris"])
@@ -506,7 +519,10 @@ async def test_italy_application(client, branch_ids, paris_admin, super_admin):
         "/opportunities/italy/applications", headers=headers, data={**form, "motivation": "a\nb\nc\nd\ne\nf"}, files=pdf
     )
     assert too_long.status_code == 422
-    sent = await client.post("/opportunities/italy/applications", headers=headers, data=form, files=pdf)
+    too_many = [("files", (f"doc{i}.pdf", b"%PDF-1.4 x", "application/pdf")) for i in range(6)]
+    assert (await client.post("/opportunities/italy/applications", headers=headers, data=form, files=too_many)).status_code == 400
+    several = pdf + [("files", ("cv.docx", b"PK\x03\x04 cv", "application/octet-stream"))]
+    sent = await client.post("/opportunities/italy/applications", headers=headers, data=form, files=several)
     assert sent.status_code == 201, sent.text
     assert (await client.post("/opportunities/italy/applications", headers=headers, data=form, files=pdf)).status_code == 409
     assert (await client.get("/opportunities/italy/applications/me", headers=headers)).json()["status"] == "NEW"
@@ -516,8 +532,13 @@ async def test_italy_application(client, branch_ids, paris_admin, super_admin):
     me = (await client.get("/members/me", headers=headers)).json()
     [application] = (await client.get("/opportunities/applications", headers=super_admin, params={"q": me["member_number"]})).json()["items"]
     assert application["member_number"] == me["member_number"] and application["branch_name"] == "Paris"
-    dossier = await client.get(f"/opportunities/applications/{application['id']}/dossier", headers=super_admin)
-    assert dossier.content == b"%PDF-1.4 test"
+    assert [f["file_name"] for f in application["files"]] == ["financement.pdf", "cv.docx"]
+    first, second = (f["id"] for f in application["files"])
+    downloaded = await client.get(f"/opportunities/applications/{application['id']}/files/{first}", headers=super_admin)
+    assert downloaded.content == b"%PDF-1.4 test"
+    downloaded = await client.get(f"/opportunities/applications/{application['id']}/files/{second}", headers=super_admin)
+    assert downloaded.content == b"PK\x03\x04 cv"
+    assert (await client.get(f"/opportunities/applications/{application['id']}/files/{second}", headers=paris_admin)).status_code == 403
     updated = await client.patch(f"/opportunities/applications/{application['id']}", headers=super_admin, json={"status": "ACCEPTED"})
     assert updated.json()["status"] == "ACCEPTED"
     assert (await client.delete(f"/opportunities/applications/{application['id']}", headers=super_admin)).status_code == 204

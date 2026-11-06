@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { Bell, Briefcase, FolderKanban, HeartHandshake, LogOut, Menu } from "lucide-react";
+import { Bell, Briefcase, FolderKanban, HeartHandshake, Home, LogOut, Menu } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useLogout } from "../../hooks/useAuth";
 import { ThemeToggle } from "../layout/ThemeToggle";
@@ -71,6 +71,15 @@ export function Topbar({ onMenuClick, menuOpen }: { onMenuClick: () => void; men
       >
         <Menu className="h-5 w-5" />
       </button>
+      <Link
+        to="/"
+        aria-label={t("admin.topbar.home_page")}
+        title={t("admin.topbar.home_page")}
+        className="inline-flex h-9 items-center gap-2 rounded-lg px-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+      >
+        <Home className="h-4.5 w-4.5" aria-hidden />
+        <span className="hidden sm:inline">{t("admin.topbar.home_page")}</span>
+      </Link>
       <LanguageDropdown />
       <ThemeToggle />
 

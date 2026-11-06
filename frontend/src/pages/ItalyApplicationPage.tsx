@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, CheckCircle2, Lock, Paperclip } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Lock, Paperclip, X } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { buttonClasses } from "../components/ui/buttonStyles";
 import { useCurrentUser } from "../hooks/useAuth";
-import { useApplyItaly, useMyItalyApplication } from "../hooks/useOpportunities";
+import {
+  MAX_APPLICATION_FILE_BYTES,
+  MAX_APPLICATION_FILES,
+  useApplyItaly,
+  useMyItalyApplication,
+} from "../hooks/useOpportunities";
+import { formatFileSize } from "../hooks/useProjectDocuments";
 import { usePageMeta } from "../hooks/usePageMeta";
 import { useAuthStore } from "../store/authStore";
 import { isSupporter, type CurrentUser } from "../types/user";
@@ -24,7 +30,7 @@ function isEligible(user: CurrentUser): boolean {
 }
 
 function ApplicationForm({ user }: { user: CurrentUser }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const apply = useApplyItaly();
   const [lastName, setLastName] = useState(user.lastName);
   const [firstName, setFirstName] = useState(user.firstName);
@@ -34,7 +40,24 @@ function ApplicationForm({ user }: { user: CurrentUser }) {
   const [faculty, setFaculty] = useState("");
   const [major, setMajor] = useState("");
   const [motivation, setMotivation] = useState("");
-  const [dossier, setDossier] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [fileError, setFileError] = useState<string | null>(null);
+
+  const addFiles = (picked: FileList | null) => {
+    if (!picked?.length) return;
+    const tooBig = Array.from(picked).find((file) => file.size > MAX_APPLICATION_FILE_BYTES);
+    if (tooBig) {
+      setFileError(t("opportunities.apply.file_too_big", { name: tooBig.name }));
+      return;
+    }
+    const next = [...files, ...Array.from(picked)];
+    if (next.length > MAX_APPLICATION_FILES) {
+      setFileError(t("opportunities.apply.files_too_many", { count: MAX_APPLICATION_FILES }));
+      return;
+    }
+    setFileError(null);
+    setFiles(next);
+  };
 
   const lines = motivation.split("\n").filter((line) => line.trim()).length;
   const tooLong = lines > MAX_LINES;
@@ -59,8 +82,8 @@ function ApplicationForm({ user }: { user: CurrentUser }) {
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (tooLong || !dossier) return;
-        apply.mutate({ lastName, firstName, phone, email, studyLevel, faculty, major, motivation: motivation.trim(), dossier });
+        if (tooLong || !files.length) return;
+        apply.mutate({ lastName, firstName, phone, email, studyLevel, faculty, major, motivation: motivation.trim(), files });
       }}
       className="grid gap-4 sm:grid-cols-2"
     >
@@ -103,19 +126,55 @@ function ApplicationForm({ user }: { user: CurrentUser }) {
       </div>
       <div className="sm:col-span-2">
         <label htmlFor="apply-dossier" className={labelClass}>{t("opportunities.apply.dossier")}</label>
-        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 px-4 py-3 text-sm text-slate-600 hover:border-emerald-400 dark:border-slate-700 dark:text-slate-300">
-          <Paperclip className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
-          <span className="truncate">{dossier ? dossier.name : t("opportunities.apply.dossier")}</span>
-          <input
-            id="apply-dossier"
-            type="file"
-            required
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-            onChange={(e) => setDossier(e.target.files?.[0] ?? null)}
-            className="sr-only"
-          />
-        </label>
-        <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">{t("opportunities.apply.dossier_hint")}</p>
+        {files.length > 0 && (
+          <ul className="mb-2 space-y-1.5">
+            {files.map((file, index) => (
+              <li
+                key={`${file.name}-${index}`}
+                className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-200"
+              >
+                <Paperclip className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+                <span className="min-w-0 flex-1 truncate">{file.name}</span>
+                <span className="shrink-0 text-xs text-slate-400">{formatFileSize(file.size, i18n.language)}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFiles(files.filter((_, i) => i !== index));
+                    setFileError(null);
+                  }}
+                  aria-label={t("opportunities.apply.file_remove", { name: file.name })}
+                  className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600 dark:hover:bg-slate-800"
+                >
+                  <X className="h-4 w-4" aria-hidden />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {files.length < MAX_APPLICATION_FILES && (
+          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 px-4 py-3 text-sm text-slate-600 hover:border-emerald-400 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-500/20 dark:border-slate-700 dark:text-slate-300">
+            <Paperclip className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+            <span className="truncate">
+              {t(files.length ? "opportunities.apply.file_add_more" : "opportunities.apply.file_add", { count: MAX_APPLICATION_FILES })}
+            </span>
+            <input
+              id="apply-dossier"
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+              onChange={(e) => {
+                addFiles(e.target.files);
+                // Allow picking the same file again after removing it
+                e.target.value = "";
+              }}
+              className="sr-only"
+            />
+          </label>
+        )}
+        {fileError && <p role="alert" className="mt-1.5 text-xs text-red-600 dark:text-red-400">{fileError}</p>}
+        <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+          {t("opportunities.apply.dossier_hint")}
+        </p>
       </div>
 
       {apply.isError && (
@@ -124,7 +183,7 @@ function ApplicationForm({ user }: { user: CurrentUser }) {
         </p>
       )}
       <div className="sm:col-span-2">
-        <Button type="submit" disabled={apply.isPending || tooLong || !dossier}>
+        <Button type="submit" disabled={apply.isPending || tooLong || !files.length}>
           {apply.isPending ? t("opportunities.apply.sending") : t("opportunities.apply.submit")}
         </Button>
       </div>

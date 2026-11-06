@@ -14,7 +14,7 @@
     "opportunities": "Opportunités"
   },
   "hero": {
-    "badge": "Facilitateur de Développement Durable & Éducation",
+    "badge": "Club Excellence Madagascar",
     "title": "Faire émerger l'excellence et le développement durable à Madagascar.",
     "subtitle": "Un réseau international engagé pour l'éducation, l'entrepreneuriat, la recherche, la solidarité et le développement durable, à Madagascar et partout où nos membres agissent.",
     "cta_primary": "Faire un don",
@@ -131,7 +131,6 @@
     "tabs": {
       "projects": "Réalisations & projets",
       "news": "Actualités",
-      "team": "Équipe & Contact",
       "reports": "Rapports & Actualités"
     },
     "filter_all": "Tous",
@@ -146,21 +145,7 @@
     "other_branches": "Découvrir d'autres antennes",
     "no_posts": "Aucune actualité publiée pour cette antenne pour le moment.",
     "inactive_badge": "Antenne inactive",
-    "inactive_notice": "Cette antenne n'est plus active. Ses actualités restent consultables, mais elle ne reçoit plus de dons ni de dossiers de projet.",
-    "inactive_submissions": "Cette antenne ne reçoit plus de dossiers pour le moment.",
-    "contact": {
-      "manager": "Responsable d'antenne",
-      "coming_soon": "Coordonnées à venir.",
-      "apply_title": "Porteur de projet ou artisan ?",
-      "apply_subtitle": "Soumettez votre dossier à l'antenne de {{city}}.",
-      "apply_success": "Votre dossier a bien été transmis à l'antenne locale.",
-      "full_name": "Nom complet",
-      "email": "Email",
-      "summary": "Présentez votre projet en quelques lignes",
-      "too_many": "Trop de dossiers envoyés depuis votre connexion. Réessayez dans une heure.",
-      "sending": "Envoi…",
-      "send": "Envoyer mon dossier"
-    },
+    "inactive_notice": "Cette antenne n'est plus active. Ses actualités restent consultables, mais elle ne reçoit plus de dons.",
     "reports": {
       "title": "Bilans d'action téléchargeables",
       "none": "Aucun bilan publié pour le moment.",
@@ -389,7 +374,6 @@
       "projects": "Projets & réalisations",
       "projects_pending": "En attente de validation",
       "reports": "Bilans annuels",
-      "submissions": "Dossiers Entrepreneurs",
       "donations": "Dons",
       "settings": "Mon compte",
       "my_branch": "Mon antenne",
@@ -419,7 +403,8 @@
       "mark_all_read": "Tout marquer comme lu",
       "no_notifications": "Aucune notification pour le moment.",
       "logout": "Déconnexion",
-      "logout_confirm": "Voulez-vous vraiment vous déconnecter ?"
+      "logout_confirm": "Voulez-vous vraiment vous déconnecter ?",
+      "home_page": "Page d'accueil"
     },
     "dashboard": {
       "good_morning": "Bonjour",
@@ -428,8 +413,6 @@
       "branch_of": "Antenne de {{name}}.",
       "posts_published": "Posts publiés",
       "drafts": "Brouillons",
-      "submissions": "Dossiers reçus",
-      "submissions_new": "Dossiers reçus ({{count}} à traiter)",
       "donations": "Dons confirmés",
       "donations_pending": "Dons confirmés ({{count}} à vérifier)",
       "global_view": "Vue globale",
@@ -486,14 +469,14 @@
       "status_active": "Active",
       "status_pending": "En attente",
       "status_inactive": "Inactive",
-      "delete_confirm": "Supprimer définitivement l'antenne {{name}} ?\n\nSes posts, dossiers entrepreneurs et membres d'équipe seront effacés ; ses dons seront conservés sans antenne.\n\nPour une antenne qui ferme, préférez le bouton « Désactiver » : rien n'est perdu.",
+      "delete_confirm": "Supprimer définitivement l'antenne {{name}} ?\n\nSes posts et membres d'équipe seront effacés ; ses dons seront conservés sans antenne.\n\nPour une antenne qui ferme, préférez le bouton « Désactiver » : rien n'est perdu.",
       "delete_failed": "La suppression a échoué.",
       "edit": "Modifier",
       "deactivate": "Désactiver",
       "reactivate": "Réactiver",
       "activate": "Activer",
       "delete": "Supprimer",
-      "deactivate_confirm": "Désactiver l'antenne {{name}} ?\n\nElle sera retirée de l'annuaire et ne recevra plus ni dons ni dossiers. Sa page et ses actualités restent consultables, et vous pourrez la réactiver à tout moment.",
+      "deactivate_confirm": "Désactiver l'antenne {{name}} ?\n\nElle sera retirée de l'annuaire et ne recevra plus de dons. Sa page et ses actualités restent consultables, et vous pourrez la réactiver à tout moment.",
       "status_failed": "Le changement de statut a échoué.",
       "no_position": "position introuvable : absente de la carte, modifiez la ville ou choisissez l'adresse"
     },
@@ -532,37 +515,6 @@
       "publish": "Publier",
       "title": "Actualités des antennes",
       "subtitle": "Nouvelles publiées dans l'onglet « Actualités » de la page de chaque antenne : événements, nouvelles du terrain. Pour un projet ou une réalisation, utilisez « Projets & réalisations »."
-    },
-    "submissions": {
-      "drawer_title": "Nouveau dossier",
-      "branch_placeholder": "Antenne concernée…",
-      "applicant_placeholder": "Nom complet du porteur de projet",
-      "summary_placeholder": "Résumé du projet",
-      "save_error": "Une erreur est survenue lors de l'enregistrement. Vérifiez l'email et réessayez.",
-      "add": "Ajouter le dossier",
-      "status": {
-        "RECEIVED": "Reçu",
-        "IN_REVIEW": "En cours d'étude",
-        "ACCEPTED": "Accepté",
-        "REJECTED": "Refusé"
-      },
-      "title": "Dossiers Entrepreneurs",
-      "subtitle": "Candidatures de porteurs de projet et artisans soumises à l'antenne.",
-      "new": "Ajouter un dossier",
-      "search": "Rechercher un nom, un email, un projet…",
-      "filter_status": "Filtrer par statut",
-      "all_statuses": "Tous les statuts",
-      "none_match": "Aucun dossier ne correspond à ces critères.",
-      "none": "Aucun dossier reçu pour le moment.",
-      "count_label": "dossiers",
-      "status_label": "Statut du dossier",
-      "notes_placeholder": "Notes internes (visibles uniquement par les admins)",
-      "notes": "Notes :",
-      "add_note": "Ajouter une note",
-      "received_on": "Reçu le {{date}}",
-      "ack_sent": "Accusé de réception envoyé",
-      "delete_confirm": "Supprimer le dossier de {{name}} ?",
-      "drawer_intro": "Enregistrez un dossier reçu hors du site (email, téléphone, rendez-vous…)."
     },
     "editor": {
       "bold": "Gras",
@@ -995,10 +947,6 @@
       "branch_status": "Statut de l'antenne mis à jour",
       "branch_deleted": "Antenne supprimée",
       "account_deleted": "Compte supprimé",
-      "submission_created": "Dossier enregistré",
-      "submission_status": "Statut du dossier mis à jour",
-      "notes_saved": "Notes enregistrées",
-      "submission_deleted": "Dossier supprimé",
       "export_done": "Export téléchargé",
       "subscriber_deleted": "Abonné supprimé",
       "achievement_published": "Publié comme réalisation"
@@ -1266,8 +1214,8 @@
       "completion_pending": "Réalisé : en attente de publication",
       "achievement": "Réalisation publiée"
     },
-    "suspended_text": "Votre cotisation n'a pas été payée à l'échéance du 30 : votre compte est désactivé. Payez la cotisation du mois en cours ; l'administrateur de votre antenne réactivera ensuite votre compte.",
-    "suspended_paid_text": "Votre cotisation du mois est payée. L'administrateur de votre antenne va réactiver votre compte.",
+    "suspended_text": "Votre cotisation n'a pas été payée à l'échéance du 30 : votre compte est désactivé. Payez la cotisation du mois en cours : votre compte sera réactivé dès que le paiement sera confirmé.",
+    "suspended_paid_text": "Votre cotisation du mois est payée : votre compte va être réactivé.",
     "hello": "Bonjour {{name}}",
     "tabs": {
       "dashboard": "Tableau de bord",
@@ -1536,7 +1484,6 @@
           "Adhésion et cotisations : montants, dates, moyen de paiement, numéro de l'expéditeur et référence de la transaction Mobile Money. Les numéros de carte bancaire ne sont jamais enregistrés par le site : ils sont traités directement par le prestataire de paiement.",
           "Contributions : projets proposés et messages publiés dans les discussions.",
           "Dons : montant et, si vous les indiquez, nom, email et téléphone (reçu et remerciements).",
-          "Dossiers de porteur de projet : nom, email et description du projet.",
           "Lettre d'information : adresse email, après confirmation de votre inscription.",
           "Données techniques : adresse IP et navigateur, enregistrés dans le journal de sécurité lors des connexions et des actions des administrateurs."
         ]
@@ -1706,10 +1653,15 @@
       "motivation_hint": "Vos projets, vos engagements et vos moyens. {{lines}}/5 lignes.",
       "motivation_too_long": "5 lignes maximum.",
       "dossier": "Dossier de financement",
-      "dossier_hint": "PDF, Word, Excel ou PowerPoint, 10 Mo maximum. Il peut s'agir d'un projet à réaliser à travers le CEM.",
+      "dossier_hint": "PDF, Word, Excel ou PowerPoint, 10 Mo maximum. Il peut s'agir d'un cv, projet de Master ou Doctorat ou autres",
       "submit": "Envoyer ma candidature",
       "sending": "Envoi…",
-      "error": "La candidature n'a pas pu être envoyée. Veuillez réessayer."
+      "error": "La candidature n'a pas pu être envoyée. Veuillez réessayer.",
+      "file_add": "Choisir un ou plusieurs fichiers ({{count}} maximum)",
+      "file_add_more": "Ajouter un autre fichier ({{count}} maximum)",
+      "file_remove": "Retirer {{name}}",
+      "file_too_big": "{{name}} dépasse 10 Mo.",
+      "files_too_many": "{{count}} fichiers maximum."
     },
     "status": {
       "NEW": "Reçue",

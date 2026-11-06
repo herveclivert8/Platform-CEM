@@ -11,7 +11,6 @@ from app.api.v1.endpoints import (
     transparency,
     newsletter,
     donations,
-    submissions,
     upload,
     settings,
     admin,
@@ -57,7 +56,6 @@ api_router.include_router(badges.router)
 api_router.include_router(donations.router)
 
 # Dossiers porteurs de projet
-api_router.include_router(submissions.router)
 
 # Upload de fichiers
 api_router.include_router(upload.router)

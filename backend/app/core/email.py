@@ -231,21 +231,6 @@ class EmailService:
             html_content=html,
         )
 
-    def send_submission_acknowledgment(
-        self,
-        applicant_email: str,
-        applicant_name: str,
-        branch_name: str,
-    ) -> bool:
-        """Accusé de réception envoyé au porteur de projet après le dépôt de son dossier."""
-        context = dict(applicant_name=applicant_name, branch_name=branch_name, site_url=settings.FRONTEND_URL)
-        return self.send_email(
-            to_email=applicant_email,
-            subject="Nous avons bien reçu votre dossier — Club Excellence Madagascar",
-            html_content=Template(SUBMISSION_ACK_HTML, autoescape=True).render(**context),
-            text_content=Template(SUBMISSION_ACK_TEXT).render(**context),
-        )
-
     def send_donation_thank_you(
         self,
         donor_email: str,
@@ -281,37 +266,6 @@ class EmailService:
 
 # Instance globale
 email_service = EmailService()
-
-
-SUBMISSION_ACK_TEXT = """Bonjour {{ applicant_name }},
-
-Nous avons bien reçu votre dossier de projet, transmis à l'antenne {{ branch_name }} du Club Excellence Madagascar.
-L'équipe de l'antenne va l'étudier et reviendra vers vous à cette adresse email.
-
-Merci pour votre confiance,
-L'équipe du Club Excellence Madagascar
-{{ site_url }}
-"""
-
-SUBMISSION_ACK_HTML = """<!doctype html>
-<html lang="fr">
-<body style="margin:0;padding:24px 12px;background:#f1f5f9;font-family:Helvetica,Arial,sans-serif;color:#0f172a;">
-  <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;">
-    <div style="background:#059669;padding:24px 32px;color:#ffffff;">
-      <p style="margin:0;font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.85;">Club Excellence Madagascar</p>
-      <h1 style="margin:8px 0 0;font-size:22px;">Dossier bien reçu</h1>
-    </div>
-    <div style="padding:24px 32px;font-size:15px;line-height:1.6;">
-      <p>Bonjour {{ applicant_name }},</p>
-      <p>Nous avons bien reçu votre dossier de projet, transmis à l'antenne <strong>{{ branch_name }}</strong>.
-      L'équipe de l'antenne va l'étudier et reviendra vers vous à cette adresse email.</p>
-      <p>Merci pour votre confiance,<br>L'équipe du Club Excellence Madagascar</p>
-      <p><a href="{{ site_url }}" style="color:#059669;">{{ site_url }}</a></p>
-    </div>
-  </div>
-</body>
-</html>
-"""
 
 
 DONATION_THANK_YOU_TEXT = """Bonjour{% if donor_name %} {{ donor_name }}{% endif %},

@@ -7,7 +7,6 @@ from app.models.branch import Branch
 from app.models.donation import Donation, DonationStatus, MobileOperator, PaymentMethod
 from app.models.post import Post, PostImage, Pillar, PostStatus
 from app.models.project import Project, ProjectImage, ProjectPhase, ProjectReviewStatus
-from app.models.project_submission import ProjectSubmission
 from app.models.publication import Publication, PublicationFormat
 from app.models.settings import AssociationSettings
 from app.models.user import User, UserRole
@@ -214,22 +213,6 @@ async def seed() -> None:
             ),
         ]
         db.add_all(publications)
-
-        submissions = [
-            ProjectSubmission(
-                branch_id=branches[3].id,
-                applicant_name="Rivo Rakotondrabe",
-                email="rivo.artisanat@example.mg",
-                project_summary="Coopérative de vannerie souhaitant un accompagnement pour l'export vers la France.",
-            ),
-            ProjectSubmission(
-                branch_id=branches[0].id,
-                applicant_name="Nirina Randria",
-                email="nirina.entreprendre@example.mg",
-                project_summary="Projet de micro-crédit pour jeunes entrepreneurs du quartier d'Analakely.",
-            ),
-        ]
-        db.add_all(submissions)
 
         donations = [
             Donation(

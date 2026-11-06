@@ -322,10 +322,9 @@ Dans **Admin → Coordonnées de paiement** (super admin) : nom du titulaire et 
 
 ## Fonctionnalités
 
-- **Site public** : page d'accueil, annuaire et carte des antennes (`/antennes`), page de chaque antenne et ses actualités, formulaire de dépôt de dossier entrepreneur, dons par carte ou Mobile Money.
+- **Site public** : page d'accueil, annuaire et carte des antennes (`/antennes`), page de chaque antenne et ses actualités, dons par carte ou Mobile Money.
 - **Espace d'administration** (`/admin`) :
   - actualités (le super admin choisit l'antenne de publication) ;
-  - dossiers entrepreneurs : consultation, ajout d'un dossier reçu hors du site, suppression ;
   - dons : vérification et validation des dons Mobile Money, rejet motivé, saisie manuelle, suppression des dons non validés ;
   - paramètres, profil de son antenne ;
   - pour le super admin : couverture de la page d'accueil (photo, bandeau, titre et sous-titre en français et en anglais), antennes, comptes admin, journal d'audit, réseaux sociaux, coordonnées de paiement.

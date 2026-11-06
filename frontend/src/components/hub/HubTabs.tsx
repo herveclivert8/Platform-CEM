@@ -4,10 +4,9 @@ import clsx from "clsx";
 import type { Branch } from "../../types/branch";
 import { ProjectsTab } from "./ProjectsTab";
 import { BranchProjectsTab } from "./BranchProjectsTab";
-import { TeamContactTab } from "./TeamContactTab";
 import { ReportsTab } from "./ReportsTab";
 
-type TabKey = "projects" | "news" | "team" | "reports";
+type TabKey = "projects" | "news" | "reports";
 
 export function HubTabs({ branch }: { branch: Branch }) {
   const { t } = useTranslation();
@@ -16,7 +15,6 @@ export function HubTabs({ branch }: { branch: Branch }) {
   const tabs: { key: TabKey; label: string }[] = [
     { key: "projects", label: t("hub.tabs.projects") },
     { key: "news", label: t("hub.tabs.news") },
-    { key: "team", label: t("hub.tabs.team") },
     { key: "reports", label: t("hub.tabs.reports") },
   ];
 
@@ -48,7 +46,6 @@ export function HubTabs({ branch }: { branch: Branch }) {
       <div className="mt-8 animate-fade-in-up">
         {active === "projects" && <BranchProjectsTab branchId={branch.id} />}
         {active === "news" && <ProjectsTab branchId={branch.id} />}
-        {active === "team" && <TeamContactTab branch={branch} />}
         {active === "reports" && <ReportsTab branchId={branch.id} />}
       </div>
     </div>

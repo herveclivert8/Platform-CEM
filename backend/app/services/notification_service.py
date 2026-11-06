@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 async def get_branch_notification_recipients(db: AsyncSession, branch_id: int | None) -> list[int]:
     """
     Who should be alerted about an event on a given branch (donation received,
-    project submission, ...): every Super Admin, plus the Branch Admin actually
+    project to review, ...): every Super Admin, plus the Branch Admin actually
     assigned to that branch (User.branch_id - the field verify_branch_access
     checks against, not Branch.manager_id which is a separate display field).
     """

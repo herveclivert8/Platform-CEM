@@ -612,6 +612,7 @@
       "title": "Dons",
       "subtitle": "Les dons par carte sont confirmés automatiquement. Les dons Mobile Money déclarés sont à vérifier dans l'historique du compte avant validation.",
       "record_received": "Enregistrer un don reçu",
+      "edit_mobile_money_numbers": "Modifier les numéros Mobile Money",
       "filter_pending": "À vérifier",
       "filter_confirmed": "Confirmés",
       "filter_rejected": "Rejetés",

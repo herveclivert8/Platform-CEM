@@ -1,9 +1,11 @@
 import { useCallback, useState } from "react";
-import { Banknote, CheckCircle2, CreditCard, Landmark, MailCheck, Package, Plus, RotateCcw, Search, ShieldCheck, Smartphone, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Banknote, CheckCircle2, CreditCard, Landmark, MailCheck, Package, Plus, RotateCcw, Search, ShieldCheck, Smartphone, Trash2, Wallet } from "lucide-react";
 import clsx from "clsx";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
+import { buttonClasses } from "../../components/ui/buttonStyles";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { OperatorMark } from "../../components/donation/donationUi";
 import { VerifyDonationDrawer } from "../../components/admin/donations/VerifyDonationDrawer";
@@ -151,9 +153,17 @@ export function DonationsPage() {
             {t("admin.donations.subtitle")}
           </p>
         </div>
-        <Button variant="secondary" icon={<Plus className="h-4 w-4" />} onClick={() => setManualOpen(true)}>
-          {t("admin.donations.record_received")}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {user?.role === "SUPER_ADMIN" && (
+            <Link to="/admin/payment-info" className={buttonClasses({ variant: "ghost", className: "border border-slate-200 dark:border-slate-700" })}>
+              <Wallet className="h-4 w-4" aria-hidden />
+              {t("admin.donations.edit_mobile_money_numbers")}
+            </Link>
+          )}
+          <Button variant="secondary" icon={<Plus className="h-4 w-4" />} onClick={() => setManualOpen(true)}>
+            {t("admin.donations.record_received")}
+          </Button>
+        </div>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">

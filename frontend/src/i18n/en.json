@@ -612,6 +612,7 @@
       "title": "Donations",
       "subtitle": "Card donations are confirmed automatically. Declared Mobile Money donations must be checked in the account history before validation.",
       "record_received": "Record a received donation",
+      "edit_mobile_money_numbers": "Edit Mobile Money numbers",
       "filter_pending": "To verify",
       "filter_confirmed": "Confirmed",
       "filter_rejected": "Rejected",

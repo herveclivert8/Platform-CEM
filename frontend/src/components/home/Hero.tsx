@@ -1,9 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
-import { Button } from "../ui/Button";
 import { buttonClasses } from "../ui/buttonStyles";
-import { useDonationUiStore } from "../../store/donationUiStore";
 import { useHomePage } from "../../hooks/useHomePage";
 import { useAuthStore } from "../../store/authStore";
 import { homePathFor } from "../../types/user";
@@ -13,7 +11,6 @@ export const DEFAULT_HERO_IMAGE =
 
 export function Hero() {
   const { t } = useTranslation();
-  const openDonation = useDonationUiStore((s) => s.open);
   const signedInRole = useAuthStore((s) => (s.isAuthenticated ? s.user?.role : undefined));
   // Custom cover set by the super admin (in French, automatically translated for English
   // visitors); any empty field falls back to the site's default text / photo
@@ -49,14 +46,6 @@ export function Hero() {
               {t(signedInRole ? "nav.my_area" : "hero.cta_member")}
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
-            <Button
-              variant="outline"
-              size="lg"
-              className="border-white/70"
-              onClick={() => openDonation()}
-            >
-              {t("hero.cta_primary")}
-            </Button>
           </div>
         </div>
       </div>

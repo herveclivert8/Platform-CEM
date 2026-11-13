@@ -2,7 +2,8 @@ import type { Currency, MobileOperator } from "./donation";
 import type { MembershipStatus } from "./user";
 
 export type MembershipPaymentKind = "REGISTRATION" | "MONTHLY";
-export type MembershipPaymentMethod = "CARD" | "MOBILE_MONEY" | "CASH";
+/** BANK_TRANSFER: recorded by an admin once the transfer reaches the bank account */
+export type MembershipPaymentMethod = "CARD" | "MOBILE_MONEY" | "CASH" | "BANK_TRANSFER";
 export type MembershipPaymentStatus = "PENDING" | "CONFIRMED" | "REJECTED";
 
 /** Simulated amounts set by the server, per payment kind then per currency. */

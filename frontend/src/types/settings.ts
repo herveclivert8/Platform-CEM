@@ -33,6 +33,11 @@ export interface PaymentInfo {
   mvolaNumber: string | null;
   orangeMoneyNumber: string | null;
   airtelMoneyNumber: string | null;
+  bankAccountHolder: string | null;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankIban: string | null;
+  bankSwift: string | null;
 }
 
 export interface PaymentInfoDto {
@@ -40,6 +45,11 @@ export interface PaymentInfoDto {
   mvola_number: string | null;
   orange_money_number: string | null;
   airtel_money_number: string | null;
+  bank_account_holder: string | null;
+  bank_name: string | null;
+  bank_account_number: string | null;
+  bank_iban: string | null;
+  bank_swift: string | null;
 }
 
 export function mapPaymentInfo(dto: PaymentInfoDto): PaymentInfo {
@@ -48,6 +58,11 @@ export function mapPaymentInfo(dto: PaymentInfoDto): PaymentInfo {
     mvolaNumber: dto.mvola_number,
     orangeMoneyNumber: dto.orange_money_number,
     airtelMoneyNumber: dto.airtel_money_number,
+    bankAccountHolder: dto.bank_account_holder,
+    bankName: dto.bank_name,
+    bankAccountNumber: dto.bank_account_number,
+    bankIban: dto.bank_iban,
+    bankSwift: dto.bank_swift,
   };
 }
 

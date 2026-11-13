@@ -1,6 +1,6 @@
 import { dateLocale } from "../lib/locale";
 
-/** CASH and IN_KIND (material, no amount) are recorded by an admin only */
+/** CASH, BANK_TRANSFER and IN_KIND (material, no amount) are recorded by an admin only */
 export type PaymentMethod = "CARD" | "MOBILE_MONEY" | "BANK_TRANSFER" | "CASH" | "IN_KIND";
 export type DonationStatus = "PENDING" | "CONFIRMED" | "REJECTED";
 export type MobileOperator = "MVOLA" | "ORANGE_MONEY" | "AIRTEL_MONEY";
@@ -151,14 +151,32 @@ export interface MobileMoneyAccount {
   number: string;
 }
 
+/** Bank account (RIB) for a transfer; the admin records the transfer once received. */
+export interface BankTransferAccount {
+  holder: string | null;
+  bankName: string | null;
+  accountNumber: string | null;
+  iban: string | null;
+  swift: string | null;
+}
+
 export interface PaymentOptions {
   card: { enabled: boolean; simulated: boolean };
   mobileMoney: { holder: string | null; accounts: MobileMoneyAccount[] };
+  /** null: no bank account set, transfer not offered */
+  bankTransfer: BankTransferAccount | null;
 }
 
 export interface PaymentOptionsDto {
   card: { enabled: boolean; simulated: boolean };
   mobile_money: { holder: string | null; accounts: MobileMoneyAccount[] };
+  bank_transfer: {
+    holder: string | null;
+    bank_name: string | null;
+    account_number: string | null;
+    iban: string | null;
+    swift: string | null;
+  } | null;
 }
 
 export interface CardDonationInput {
@@ -182,7 +200,7 @@ export interface MobileMoneyDeclarationInput {
   website?: string;
 }
 
-/** A donation received, recorded by an admin: Mobile Money not declared, cash, or material. */
+/** A donation received, recorded by an admin: Mobile Money not declared, cash, bank transfer, or material. */
 export type ManualDonationInput = {
   branchId?: number;
   donorEmail?: string;
@@ -190,6 +208,7 @@ export type ManualDonationInput = {
 } & (
   | { kind: "MOBILE_MONEY"; operator: MobileOperator; senderPhone: string; transactionReference: string; amount: number }
   | { kind: "CASH"; amount: number; currency: Currency }
+  | { kind: "BANK_TRANSFER"; amount: number; currency: Currency; transactionReference?: string }
   | { kind: "IN_KIND"; description: string }
 );
 

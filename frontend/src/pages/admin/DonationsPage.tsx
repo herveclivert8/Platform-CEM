@@ -279,7 +279,7 @@ export function DonationsPage() {
                   </div>
                   <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-500 dark:text-slate-400">
                     <span>{methodLabel(d, t)}</span>
-                    {d.transactionReference && d.paymentMethod === "MOBILE_MONEY" && (
+                    {d.transactionReference && (d.paymentMethod === "MOBILE_MONEY" || d.paymentMethod === "BANK_TRANSFER") && (
                       <span className="font-mono font-semibold text-slate-700 dark:text-slate-200">{d.transactionReference}</span>
                     )}
                     {d.donorPhone && <span className="font-mono">{formatMgPhone(d.donorPhone)}</span>}

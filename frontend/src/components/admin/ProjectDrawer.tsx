@@ -10,7 +10,7 @@ import { RejectDialog } from "./RejectDialog";
 import { ProjectStatusBadge } from "./ProjectStatusBadge";
 import { Button } from "../ui/Button";
 import { ALL_PILLARS, type Pillar } from "../../types/post";
-import type { Project, ProjectInput, ProjectPhase } from "../../types/project";
+import { ACHIEVEMENT_CATEGORIES, type AchievementCategory, type Project, type ProjectInput, type ProjectPhase } from "../../types/project";
 import { apiErrorMessage } from "../../lib/api";
 import {
   useApproveProject,
@@ -83,6 +83,8 @@ function ProjectForm({
   const [summary, setSummary] = useState(project?.summary ?? "");
   const [description, setDescription] = useState(project?.description ?? "");
   const [pillar, setPillar] = useState<Pillar>(project?.pillar ?? "EDUCATION");
+  // Rubric of « Nos réalisations » on the home page; a new project starts with Éducation, like its field
+  const [category, setCategory] = useState<AchievementCategory | null>(project ? project.achievementCategory : "EDUCATION");
   const [beneficiaries, setBeneficiaries] = useState(project?.beneficiaries ?? "");
   const [beneficiariesCount, setBeneficiariesCount] = useState(project?.beneficiariesCount?.toString() ?? "");
   const [goalValue, setGoalValue] = useState(project?.goalValue?.toString() ?? "");
@@ -115,6 +117,7 @@ function ProjectForm({
       description,
       pillar,
       phase,
+      achievement_category: category,
       beneficiaries: beneficiaries.trim(),
       beneficiaries_count: beneficiariesCount ? Number(beneficiariesCount) : null,
       // Sans objectif, pas de barre d'avancement : on n'envoie ni valeur atteinte ni unité seules
@@ -329,6 +332,27 @@ function ProjectForm({
           ))}
         </div>
       </Field>
+
+      {isCompleted && (
+        <Field label={t("admin.projects.field_category")} hint={t("admin.projects.category_hint")}>
+          <div className="grid grid-cols-2 gap-2">
+            {[...ACHIEVEMENT_CATEGORIES, null].map((c) => (
+              <button
+                key={c ?? "none"}
+                type="button"
+                onClick={() => setCategory(c)}
+                className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                  category === c
+                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                    : "border-slate-200 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600"
+                }`}
+              >
+                {c ? t(`projects.categories.${c}`) : t("admin.projects.category_none")}
+              </button>
+            ))}
+          </div>
+        </Field>
+      )}
 
       <div className="grid grid-cols-3 gap-3">
         <div className="col-span-2">

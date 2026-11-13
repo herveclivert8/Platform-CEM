@@ -763,8 +763,8 @@ async def record_cash_payment(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Enregistrer des espèces reçues au guichet (confirmé d'office). Une cotisation prolonge
-    aussitôt l'accès du membre d'un mois. Accessible: Admin de l'antenne du membre + Super Admin.
+    Enregistrer des espèces reçues au guichet ou un virement arrivé sur le compte bancaire
+    (confirmé d'office). Une cotisation prolonge aussitôt l'accès du membre d'un mois. Accessible: Admin de l'antenne du membre + Super Admin.
     """
     member = await _get_member_or_404(db, member_id)
     await _verify_can_manage(user, member.branch_id)
@@ -795,7 +795,8 @@ async def record_cash_payment(
         kind=kind,
         amount=MEMBERSHIP_FEES[kind][currency],
         currency=currency,
-        payment_method=MethodModel.CASH,
+        payment_method=MethodModel(data.method),
+        transaction_reference=data.transaction_reference if data.method == "BANK_TRANSFER" else None,
         status=PaymentStatusModel.CONFIRMED,
         reviewed_by_id=user.id,
         reviewed_at=datetime.now(timezone.utc),
@@ -807,7 +808,7 @@ async def record_cash_payment(
         db, user=user, action="create", resource_type="membership_payment", resource_id=payment.id,
         branch_id=member.branch_id,
         details={
-            "member": member.full_name, "amount": _format_amount(float(payment.amount), currency), "method": "cash",
+            "member": member.full_name, "amount": _format_amount(float(payment.amount), currency), "method": data.method.lower(),
             **({"reactivated": True} if reactivated else {}),
         },
     )

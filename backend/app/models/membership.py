@@ -4,7 +4,9 @@ Paiements des membres : frais d'inscription (une fois) puis cotisation mensuelle
 
 - CARD : payé en ligne via le prestataire de carte (app/services/payments.py), donc CONFIRMED aussitôt ;
 - MOBILE_MONEY : payé hors du site puis déclaré (numéro émetteur + référence SMS), toujours en ariary ;
-- CASH : espèces remises à l'antenne ; le membre annonce son paiement.
+- CASH : espèces remises à l'antenne ; le membre annonce son paiement ;
+- BANK_TRANSFER : virement sur le compte bancaire affiché au membre ; enregistré par un admin à
+  la réception (confirmé d'office), comme les espèces reçues au guichet.
 
 Les paiements MOBILE_MONEY et CASH restent PENDING jusqu'à ce qu'un admin (de l'antenne ou le
 Super Admin) les confirme. Chaque cotisation confirmée prolonge l'accès d'un mois (User.paid_until).
@@ -28,6 +30,7 @@ class MembershipPaymentMethod(str, enum.Enum):
     CARD = "CARD"
     MOBILE_MONEY = "MOBILE_MONEY"
     CASH = "CASH"
+    BANK_TRANSFER = "BANK_TRANSFER"  # Enregistré par un admin uniquement
 
 
 class MembershipPaymentStatus(str, enum.Enum):

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
 import { useProjects } from "../../hooks/useProjects";
-import { PHASE_PATH, type ProjectPhase } from "../../types/project";
+import { PHASE_PATH, type AchievementCategory, type ProjectPhase } from "../../types/project";
 import { ProjectCard } from "./ProjectCard";
 import { Skeleton } from "../ui/Skeleton";
 
@@ -10,6 +10,8 @@ interface ProjectsShowcaseProps {
   phase: ProjectPhase;
   /** Limit to one branch (branch page); all branches otherwise (home page). */
   branchId?: number;
+  /** Limit to one rubric of « Nos réalisations » (home page) */
+  category?: AchievementCategory;
   count?: number;
   title: string;
   /** Shown when there is nothing to display; the block is hidden entirely when omitted. */
@@ -17,14 +19,17 @@ interface ProjectsShowcaseProps {
 }
 
 /** A row of the latest published achievements or ongoing projects, with a « see all » link. */
-export function ProjectsShowcase({ phase, branchId, count = 3, title, emptyText }: ProjectsShowcaseProps) {
+export function ProjectsShowcase({ phase, branchId, category, count = 3, title, emptyText }: ProjectsShowcaseProps) {
   const { t } = useTranslation();
-  const { data, isLoading, isError } = useProjects({ phase, branchId, pageSize: count });
+  const { data, isLoading, isError } = useProjects({ phase, branchId, category, pageSize: count });
 
   if (isError) return null; // secondary block: the dedicated pages report errors
   if (!isLoading && (!data || data.items.length === 0) && !emptyText) return null;
 
-  const seeAll = `/${PHASE_PATH[phase]}${branchId ? `?antenne=${branchId}` : ""}`;
+  const query = new URLSearchParams();
+  if (branchId) query.set("antenne", String(branchId));
+  if (category) query.set("rubrique", category);
+  const seeAll = `/${PHASE_PATH[phase]}${query.size ? `?${query}` : ""}`;
 
   return (
     <div>

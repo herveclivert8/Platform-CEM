@@ -83,7 +83,9 @@ export function useRecordManualDonation() {
           }
         : input.kind === "CASH"
           ? { amount: input.amount, currency: input.currency }
-          : { description: input.description }),
+          : input.kind === "BANK_TRANSFER"
+            ? { amount: input.amount, currency: input.currency, transaction_reference: input.transactionReference || null }
+            : { description: input.description }),
     }),
   );
 }

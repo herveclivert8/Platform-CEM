@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Hero } from "../components/home/Hero";
-import { BentoGrid } from "../components/home/BentoGrid";
+import { DonationAppeal } from "../components/home/DonationAppeal";
 import { NetworkSection } from "../components/home/NetworkSection";
 import { HomeProjectsSection } from "../components/home/HomeProjectsSection";
 import { PartnersCarousel } from "../components/home/PartnersCarousel";
@@ -23,7 +23,8 @@ export function HomePage() {
       <HomeBackdrop />
       <div className="relative z-10">
       <Hero />
-      <BentoGrid />
+      <DonationAppeal />
+      <HomeProjectsSection />
       <Suspense
         fallback={
           <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
@@ -33,7 +34,6 @@ export function HomePage() {
       >
         <MadagascarMap />
       </Suspense>
-      <HomeProjectsSection />
       <NetworkSection />
       <JoinSection />
       <PartnersCarousel />

@@ -16,7 +16,14 @@ export function usePaymentOptions() {
     queryKey: ["payment-options"],
     queryFn: async () => {
       const { data } = await api.get<PaymentOptionsDto>("/donations/payment-options");
-      return { card: data.card, mobileMoney: data.mobile_money };
+      const bank = data.bank_transfer;
+      return {
+        card: data.card,
+        mobileMoney: data.mobile_money,
+        bankTransfer: bank
+          ? { holder: bank.holder, bankName: bank.bank_name, accountNumber: bank.account_number, iban: bank.iban, swift: bank.swift }
+          : null,
+      };
     },
     staleTime: 60_000,
   });

@@ -6,8 +6,12 @@ Ajouter les réalisations historiques du CEM (contenu officiel) à une base exis
 
 Une réalisation peut indiquer sa propre antenne (« branch ») et des photos livrées avec le code
 (app/realisations_assets/, envoyées au stockage du site à l'ajout).
-Sans effet sur une réalisation déjà présente (même titre). Publiées et visibles aussitôt ; la
-traduction anglaise se fait au prochain démarrage du backend (si la traduction automatique est active).
+Chacune est rangée dans une rubrique de « Nos réalisations » sur l'accueil (Éducation, Événementiels,
+Projets entrepreneuriaux).
+Une réalisation déjà présente (même titre, ou ancien titre) n'est pas recréée : seule sa rubrique est
+renseignée si elle manque, et son titre et son résumé sont mis à jour s'ils n'ont pas été modifiés
+depuis l'admin. Publiées et visibles aussitôt ; la traduction anglaise se fait au prochain démarrage du
+backend (si la traduction automatique est active).
 Sur Render : onglet « Shell » du service backend.
 """
 
@@ -25,7 +29,7 @@ from app.core.storage import get_storage_backend
 from app.db.session import AsyncSessionLocal
 from app.models import Branch, Project, ProjectImage, UploadedFile
 from app.models.post import Pillar
-from app.models.project import ProjectPhase, ProjectReviewStatus
+from app.models.project import AchievementCategory, ProjectPhase, ProjectReviewStatus
 
 CONCOURS_2022 = {
     "title": "Concours Général de Mathématiques 2022",
@@ -34,6 +38,7 @@ CONCOURS_2022 = {
         "de l'Éducation Nationale pour distinguer et accompagner les meilleurs lycéens en mathématiques."
     ),
     "pillar": Pillar.EDUCATION,
+    "category": AchievementCategory.EDUCATION,
     "beneficiaries": "Lycéens de terminale S et C de tout Madagascar",
     "location": "7 centres régionaux à Madagascar",
     "start_date": date(2022, 6, 1),
@@ -74,23 +79,46 @@ bourses pour leurs études après le baccalauréat. Le concours a vocation à s'
 """.strip(),
 }
 
+LIVRES_PREVIOUS_DESCRIPTION = """
+<p>Faciliter l'accès des élèves aux ressources pédagogiques est l'une des priorités du Club Excellence
+Madagascar. Ses membres bénévoles ont organisé en France une <strong>collecte de livres scolaires</strong>, puis leur
+envoi à Madagascar.</p>
+
+<p>Les ouvrages ont été distribués aux écoles par l'intermédiaire du <strong>Ministère de l'Éducation
+Nationale</strong>. Au total, <strong>10 000 élèves</strong> ont bénéficié de cette action.</p>
+
+<p>Ce projet a fait connaître le CEM dans le domaine de l'éducation et a ouvert la voie au partenariat avec le
+Ministère, dans le cadre duquel a notamment été organisé le premier Concours Général de Mathématiques à
+Madagascar, en 2022.</p>
+""".strip()
+
 # Année de la collecte à compléter (start_date / end_date) dès qu'elle sera connue
 LIVRES_SCOLAIRES = {
-    "title": "Collecte et envoi de livres scolaires",
+    "title": "Distribution d'environ 6 000 livres scolaires",
     "summary": (
-        "Des livres scolaires collectés en France et distribués à Madagascar par l'intermédiaire du Ministère "
-        "de l'Éducation Nationale : 10 000 élèves touchés."
+        "Environ 6 000 livres scolaires collectés en France et distribués à Madagascar en collaboration avec le "
+        "Ministère de l'Éducation Nationale : 10 000 élèves touchés."
     ),
+    # Texte de la première version du script : remplacé s'il n'a pas été modifié depuis l'admin
+    "previous": {
+        "title": "Collecte et envoi de livres scolaires",
+        "summary": (
+            "Des livres scolaires collectés en France et distribués à Madagascar par l'intermédiaire du Ministère "
+            "de l'Éducation Nationale : 10 000 élèves touchés."
+        ),
+        "description": LIVRES_PREVIOUS_DESCRIPTION,
+    },
     "pillar": Pillar.EDUCATION,
+    "category": AchievementCategory.EDUCATION,
     "beneficiaries": "Élèves des écoles de Madagascar",
     "beneficiaries_count": 10000,
     "location": "Collecte en France, distribution à Madagascar",
     "description": """
 <p>Faciliter l'accès des élèves aux ressources pédagogiques est l'une des priorités du Club Excellence
 Madagascar. Ses membres bénévoles ont organisé en France une <strong>collecte de livres scolaires</strong>, puis leur
-envoi à Madagascar.</p>
+envoi à Madagascar : <strong>environ 6 000 livres</strong>.</p>
 
-<p>Les ouvrages ont été distribués aux écoles par l'intermédiaire du <strong>Ministère de l'Éducation
+<p>Les ouvrages ont été distribués aux écoles en collaboration avec le <strong>Ministère de l'Éducation
 Nationale</strong>. Au total, <strong>10 000 élèves</strong> ont bénéficié de cette action.</p>
 
 <p>Ce projet a fait connaître le CEM dans le domaine de l'éducation et a ouvert la voie au partenariat avec le
@@ -106,6 +134,7 @@ CONFERENCE_2023 = {
         "connaître Madagascar et ouvrir le dialogue sur les liens entre les deux pays."
     ),
     "pillar": Pillar.SOLIDARITY,
+    "category": AchievementCategory.EVENT,
     "beneficiaries": "Public parisien, diaspora malagasy et amis de Madagascar",
     "location": "Mairie du 11e arrondissement, Paris",
     "start_date": date(2023, 4, 22),
@@ -138,7 +167,79 @@ sa population dans des projets utiles, notamment dans l'éducation, le numériqu
 """.strip(),
 }
 
-REALISATIONS = [CONCOURS_2022, LIVRES_SCOLAIRES, CONFERENCE_2023]
+# Commémoration annuelle, le deuxième samedi d'octobre depuis 2022 : end_date = dernière édition
+DEPOT_DE_GERBES = {
+    "title": "Dépôt de gerbes en mémoire des Malagasy morts aux côtés des Français pendant la Première Guerre mondiale",
+    "summary": (
+        "Chaque année depuis 2022, le deuxième samedi d'octobre, un dépôt de gerbes organisé par l'AIMR France "
+        "pour honorer les Malagasy morts aux côtés des Français pendant la Première Guerre mondiale."
+    ),
+    "pillar": Pillar.SOLIDARITY,
+    "category": AchievementCategory.EVENT,
+    "beneficiaries": "Diaspora malagasy, amis de Madagascar et public",
+    "location": "France",
+    "start_date": date(2022, 10, 8),
+    "end_date": date(2026, 10, 10),
+    "branch": "Paris",
+    "description": """
+<p>Chaque année depuis 2022, le <strong>deuxième samedi du mois d'octobre</strong>, a lieu un dépôt de gerbes pour la
+commémoration des Malagasy morts aux côtés des Français pendant la <strong>Première Guerre mondiale</strong>.</p>
+
+<p>Cette cérémonie est organisée par l'<strong>AIMR France</strong>, avec la participation du Club Excellence
+Madagascar. Elle entretient la mémoire de l'histoire commune de Madagascar et de la France.</p>
+""".strip(),
+}
+
+DEBATS_TELEVISES_2024 = {
+    "title": "Débats télévisés sur le marché de capitaux et la création d'un marché financier à Madagascar",
+    "summary": (
+        "Le 24 juin 2024, des débats télévisés en collaboration avec la RTA, la Banky Foiben'i Madagasikara et le "
+        "Trésor Public, sur le marché de capitaux et la création d'un marché financier à Madagascar."
+    ),
+    "pillar": Pillar.EDUCATION,
+    "category": AchievementCategory.EVENT,
+    "beneficiaries": "Téléspectateurs malagasy",
+    "location": "Madagascar",
+    "start_date": date(2024, 6, 24),
+    "end_date": date(2024, 6, 24),
+    "description": """
+<p>Le <strong>24 juin 2024</strong>, le Club Excellence Madagascar a participé à des débats télévisés organisés en
+collaboration avec la <strong>RTA</strong>, la <strong>Banky Foiben'i Madagasikara</strong> et le <strong>Trésor
+Public</strong>.</p>
+
+<p><strong>Thème :</strong> le marché de capitaux et la création d'un marché financier à Madagascar.</p>
+""".strip(),
+}
+
+CONFERENCES_ROME_2024 = {
+    "title": "Conférences à Rome sur la finance décentralisée",
+    "summary": (
+        "En avril 2024, des conférences à Rome sur la finance décentralisée, en collaboration avec le consulat "
+        "de Madagascar en Italie."
+    ),
+    "pillar": Pillar.EDUCATION,
+    "category": AchievementCategory.EVENT,
+    "beneficiaries": "Diaspora malagasy en Italie et public intéressé",
+    "location": "Rome, Italie",
+    "start_date": date(2024, 4, 1),
+    "end_date": date(2024, 4, 30),
+    "branch": "Rome",
+    "description": """
+<p>En <strong>avril 2024</strong>, le Club Excellence Madagascar a organisé des conférences à Rome, en collaboration
+avec le <strong>consulat de Madagascar en Italie</strong>.</p>
+
+<p><strong>Thème :</strong> la finance décentralisée.</p>
+""".strip(),
+}
+
+REALISATIONS = [
+    CONCOURS_2022,
+    LIVRES_SCOLAIRES,
+    CONFERENCE_2023,
+    DEPOT_DE_GERBES,
+    DEBATS_TELEVISES_2024,
+    CONFERENCES_ROME_2024,
+]
 ASSETS_DIR = Path(__file__).parent / "realisations_assets"
 
 
@@ -163,9 +264,22 @@ async def add_realisations(branch_name: str) -> int:
 
         added = 0
         for entry in REALISATIONS:
-            data = {k: v for k, v in entry.items() if k not in ("branch", "photos")}
-            if await db.scalar(select(Project.id).where(Project.title == data["title"])):
-                print(f"Déjà présente, ignorée : {data['title']}")
+            data = {k: v for k, v in entry.items() if k not in ("branch", "photos", "previous", "category")}
+            category = entry["category"].value
+            previous = entry.get("previous", {})
+            titles = [data["title"], *([previous["title"]] if "title" in previous else [])]
+            existing = await db.scalar(select(Project).where(Project.title.in_(titles)))
+            if existing is not None:
+                changes = []
+                if not existing.achievement_category:
+                    existing.achievement_category = category
+                    changes.append("rubrique")
+                # Texte de la version précédente, pas retouché dans l'admin : remplacé par le nouveau
+                for field in ("title", "summary", "description"):
+                    if field in previous and getattr(existing, field) == previous[field]:
+                        setattr(existing, field, data[field])
+                        changes.append(field)
+                print(f"Déjà présente{' (mise à jour : ' + ', '.join(changes) + ')' if changes else ', ignorée'} : {existing.title}")
                 continue
             target = branch
             if entry.get("branch"):
@@ -175,6 +289,7 @@ async def add_realisations(branch_name: str) -> int:
                     branch_id=target.id,
                     images=await _upload_photos(db, entry.get("photos", [])),
                     phase=ProjectPhase.COMPLETED,
+                    achievement_category=category,
                     review_status=ProjectReviewStatus.APPROVED,
                     reviewed_at=datetime.now(timezone.utc),
                     is_visible=True,

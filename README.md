@@ -303,6 +303,8 @@ Il peut aussi enregistrer un paiement reçu sans déclaration (« Enregistrer un
 
 Dans **Admin → Coordonnées de paiement** (super admin) : nom du titulaire et numéros MVola / Orange Money / Airtel Money. Un opérateur sans numéro n'est pas proposé aux donateurs.
 
+Sur la même page, le **compte bancaire** (titulaire, banque, numéro de compte, IBAN, BIC/SWIFT) est affiché aux donateurs et aux membres qui paient par virement. Sans numéro de compte ni IBAN, le virement n'est pas proposé. Le virement reçu est enregistré par un admin : **Dons → Enregistrer un don reçu → Virement bancaire**, ou **Membres → Enregistrer un paiement reçu → Virement**.
+
 > Les données de démo (`app.seed`) contiennent des **numéros fictifs** : remplacez-les par les vrais comptes de l'association avant toute utilisation réelle.
 
 ## Structure du projet
@@ -322,11 +324,11 @@ Dans **Admin → Coordonnées de paiement** (super admin) : nom du titulaire et 
 
 ## Fonctionnalités
 
-- **Site public** : page d'accueil, annuaire et carte des antennes (`/antennes`), page de chaque antenne et ses actualités, dons par carte ou Mobile Money.
+- **Site public** : page d'accueil, annuaire et carte des antennes (`/antennes`), page de chaque antenne et ses actualités, dons par carte, Mobile Money ou virement bancaire.
 - **Espace d'administration** (`/admin`) :
   - actualités (le super admin choisit l'antenne de publication) ;
-  - dons : vérification et validation des dons Mobile Money, rejet motivé, saisie manuelle, suppression des dons non validés ;
+  - dons : vérification et validation des dons Mobile Money, rejet motivé, saisie manuelle (Mobile Money, espèces, virement, matériel), suppression des dons non validés ;
   - paramètres, profil de son antenne ;
-  - pour le super admin : couverture de la page d'accueil (photo, bandeau, titre et sous-titre en français et en anglais), antennes, comptes admin, journal d'audit, réseaux sociaux, coordonnées de paiement.
+  - pour le super admin : couverture de la page d'accueil (photo, bandeau, titre et sous-titre en français et en anglais), antennes, comptes admin, journal d'audit, réseaux sociaux, coordonnées de paiement (numéros Mobile Money et compte bancaire).
 - **Authentification** : email + mot de passe (JWT), mot de passe oublié / réinitialisation, deux niveaux de rôle (super admin, admin d'antenne).
 - **Langues** : français et anglais (site public).

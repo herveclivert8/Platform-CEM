@@ -4,7 +4,7 @@ Schémas Pydantic pour l'adhésion des membres : frais, paiements, validation et
 
 from datetime import date, datetime
 from enum import Enum
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -75,9 +75,19 @@ class CashMembershipPayment(BaseModel):
 
 
 class AdminCashPayment(BaseModel):
-    """Espèces reçues au guichet de l'antenne, enregistrées (et confirmées d'office) par un admin."""
+    """
+    Paiement reçu, enregistré (et confirmé d'office) par un admin : espèces remises au guichet de
+    l'antenne, ou virement arrivé sur le compte bancaire (référence facultative).
+    """
     kind: MembershipPaymentKind
     currency: MembershipCurrency
+    method: Literal["CASH", "BANK_TRANSFER"] = "CASH"
+    transaction_reference: Optional[str] = Field(None, max_length=64)
+
+    @field_validator("transaction_reference")
+    @classmethod
+    def clean_reference(cls, v: Optional[str]) -> Optional[str]:
+        return (v or "").strip() or None
 
 
 class MembershipPayment(BaseModel):

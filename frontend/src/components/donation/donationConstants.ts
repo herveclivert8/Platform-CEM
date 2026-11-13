@@ -15,13 +15,13 @@ export function operatorAccent(operator: MobileOperator): string {
   return OPERATOR_STYLES[operator].accent;
 }
 
-export type DonationMethod = "CARD" | "MOBILE_MONEY";
+export type DonationMethod = "CARD" | "MOBILE_MONEY" | "BANK_TRANSFER";
 
-/** Mobile Money only works in ariary; cards can be charged in any of the three currencies. */
+/** Mobile Money only works in ariary; cards and bank transfers work in any of the three currencies. */
 export const METHODS_BY_CURRENCY: Record<Currency, DonationMethod[]> = {
-  MGA: ["MOBILE_MONEY", "CARD"],
-  EUR: ["CARD"],
-  USD: ["CARD"],
+  MGA: ["MOBILE_MONEY", "CARD", "BANK_TRANSFER"],
+  EUR: ["CARD", "BANK_TRANSFER"],
+  USD: ["CARD", "BANK_TRANSFER"],
 };
 
 export const PRESET_AMOUNTS: Record<Currency, number[]> = {

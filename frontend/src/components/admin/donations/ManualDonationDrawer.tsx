@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { isAxiosError } from "axios";
-import { AlertCircle, Banknote, Coins, Package, Smartphone, type LucideIcon } from "lucide-react";
+import { AlertCircle, Banknote, Coins, Landmark, Package, Smartphone, type LucideIcon } from "lucide-react";
 import clsx from "clsx";
 import { Drawer } from "../Drawer";
 import { Button } from "../../ui/Button";
@@ -16,7 +16,7 @@ const inputClass =
 const labelClass = "mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400";
 
 type DonationKind = "MONEY" | "IN_KIND";
-type MoneyMethod = "MOBILE_MONEY" | "CASH";
+type MoneyMethod = "MOBILE_MONEY" | "CASH" | "BANK_TRANSFER";
 const CASH_CURRENCIES: Currency[] = ["MGA", "EUR", "USD"];
 
 /** Two or three large toggle buttons (kind of donation, payment method). */
@@ -109,7 +109,9 @@ function ManualDonationForm({ defaultBranchId, onDone }: { defaultBranchId?: num
           ? { ...common, kind: "IN_KIND", description: material.trim() }
           : method === "CASH"
             ? { ...common, kind: "CASH", amount: Number(amount), currency }
-            : {
+            : method === "BANK_TRANSFER"
+              ? { ...common, kind: "BANK_TRANSFER", amount: Number(amount), currency, transactionReference: reference.trim() || undefined }
+              : {
                 ...common,
                 kind: "MOBILE_MONEY",
                 operator,
@@ -154,6 +156,7 @@ function ManualDonationForm({ defaultBranchId, onDone }: { defaultBranchId?: num
             options={[
               { value: "MOBILE_MONEY", label: t("admin.donations.method_mobile"), icon: Smartphone },
               { value: "CASH", label: t("admin.donations.method_cash"), icon: Banknote },
+              { value: "BANK_TRANSFER", label: t("admin.donations.method_transfer"), icon: Landmark },
             ]}
           />
         </div>
@@ -166,7 +169,9 @@ function ManualDonationForm({ defaultBranchId, onDone }: { defaultBranchId?: num
               ? "admin.donations.manual_intro_in_kind"
               : method === "CASH"
                 ? "admin.donations.manual_intro_cash"
-                : "admin.donations.manual_intro"
+                : method === "BANK_TRANSFER"
+                  ? "admin.donations.manual_intro_transfer"
+                  : "admin.donations.manual_intro"
           }
           components={{ strong: <strong /> }}
         />
@@ -228,7 +233,7 @@ function ManualDonationForm({ defaultBranchId, onDone }: { defaultBranchId?: num
         </>
       )}
 
-      {kind === "MONEY" && method === "CASH" && (
+      {kind === "MONEY" && (method === "CASH" || method === "BANK_TRANSFER") && (
         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3">
           <div>
             <label className={labelClass}>{t("admin.donations.cash_amount")}</label>
@@ -244,6 +249,13 @@ function ManualDonationForm({ defaultBranchId, onDone }: { defaultBranchId?: num
               ))}
             </select>
           </div>
+        </div>
+      )}
+
+      {kind === "MONEY" && method === "BANK_TRANSFER" && (
+        <div>
+          <label className={labelClass}>{t("admin.donations.transfer_reference")}</label>
+          <input value={reference} maxLength={64} onChange={(e) => setReference(e.target.value)} className={clsx(inputClass, "font-mono")} />
         </div>
       )}
 

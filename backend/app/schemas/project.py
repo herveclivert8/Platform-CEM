@@ -16,6 +16,13 @@ class ProjectPhase(str, Enum):
     COMPLETED = "COMPLETED"
 
 
+class AchievementCategory(str, Enum):
+    """Rubrique de « Nos réalisations » : Éducation, Événementiels, Projets entrepreneuriaux."""
+    EDUCATION = "EDUCATION"
+    EVENT = "EVENT"
+    ENTERPRISE = "ENTERPRISE"
+
+
 class ProjectReviewStatus(str, Enum):
     PENDING = "PENDING"
     APPROVED = "APPROVED"
@@ -28,6 +35,7 @@ class ProjectBase(BaseModel):
     description: str = Field(..., min_length=1)
     pillar: Pillar
     phase: ProjectPhase
+    achievement_category: Optional[AchievementCategory] = None
     beneficiaries: str = Field(..., min_length=1, max_length=255)
     beneficiaries_count: Optional[int] = Field(None, ge=0)
     location: Optional[str] = Field(None, max_length=255)
@@ -76,6 +84,7 @@ class ProjectUpdate(BaseModel):
     description: Optional[str] = Field(None, min_length=1)
     pillar: Optional[Pillar] = None
     phase: Optional[ProjectPhase] = None
+    achievement_category: Optional[AchievementCategory] = None
     beneficiaries: Optional[str] = Field(None, min_length=1, max_length=255)
     beneficiaries_count: Optional[int] = Field(None, ge=0)
     location: Optional[str] = Field(None, max_length=255)
@@ -135,6 +144,7 @@ class Project(ProjectBase):
             description=project.description,
             pillar=val(project.pillar),
             phase=val(project.phase),
+            achievement_category=project.achievement_category,
             beneficiaries=project.beneficiaries,
             beneficiaries_count=project.beneficiaries_count,
             location=project.location,

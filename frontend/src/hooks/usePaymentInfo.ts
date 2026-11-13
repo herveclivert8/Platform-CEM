@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { mapPaymentInfo, type PaymentInfo, type PaymentInfoDto, type PaymentInfoInput } from "../types/settings";
 
-/** Mobile Money accounts shown to donors (editable by the Super Admin). */
+/** Mobile Money accounts and bank account shown to donors and members (editable by the Super Admin). */
 export function usePaymentInfo() {
   return useQuery<PaymentInfo>({
     queryKey: ["payment-info"],
@@ -23,6 +23,11 @@ export function useUpdatePaymentInfo() {
         mvola_number: input.mvolaNumber,
         orange_money_number: input.orangeMoneyNumber,
         airtel_money_number: input.airtelMoneyNumber,
+        bank_account_holder: input.bankAccountHolder,
+        bank_name: input.bankName,
+        bank_account_number: input.bankAccountNumber,
+        bank_iban: input.bankIban,
+        bank_swift: input.bankSwift,
       });
       return mapPaymentInfo(data);
     },

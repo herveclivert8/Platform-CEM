@@ -20,9 +20,10 @@ from app.api.deps import get_current_admin, get_db, get_optional_member_viewer
 from app.core.permissions import verify_branch_access
 from app.models import Branch, Project, ProjectImage, User
 from app.schemas.post import Pillar
-from app.models.project import ProjectReviewStatus as ReviewStatusModel
+from app.models.project import DEFAULT_CATEGORY_BY_PILLAR, ProjectReviewStatus as ReviewStatusModel
 from app.models.user import UserRole
 from app.schemas.project import (
+    AchievementCategory,
     Project as ProjectSchema,
     ProjectAdminListResponse,
     ProjectCreate,
@@ -165,6 +166,7 @@ async def list_projects(
     phase: ProjectPhase | None = Query(None),
     branch_id: int | None = Query(None),
     pillar: Pillar | None = Query(None),
+    category: AchievementCategory | None = Query(None, description="Rubrique de « Nos réalisations »"),
     page: int = Query(1, ge=1),
     page_size: int = Query(12, ge=1, le=100),
     lang: str | None = Query(None, description="« en » : contenus traduits automatiquement"),
@@ -182,6 +184,8 @@ async def list_projects(
         filters.append(Project.branch_id == branch_id)
     if pillar:
         filters.append(Project.pillar == pillar.value)
+    if category:
+        filters.append(Project.achievement_category == category.value)
 
     total = await db.scalar(select(func.count(Project.id)).where(*filters)) or 0
     order = Project.end_date.desc() if phase == ProjectPhase.COMPLETED else Project.created_at.desc()
@@ -303,9 +307,10 @@ async def create_project(
         raise HTTPException(status_code=404, detail="Branch not found")
 
     project = Project(
-        **data.model_dump(exclude={"images", "pillar", "phase", "document_ids"}),
+        **data.model_dump(exclude={"images", "pillar", "phase", "achievement_category", "document_ids"}),
         pillar=data.pillar.value,
         phase=data.phase.value,
+        achievement_category=data.achievement_category.value if data.achievement_category else None,
         author_id=user.id,
         review_status=ReviewStatusModel.APPROVED,
         reviewed_by_id=user.id,
@@ -482,6 +487,9 @@ async def publish_achievement(
         raise HTTPException(status_code=422, detail="La date de fin doit être postérieure à la date de début")
     project.phase = ProjectPhase.COMPLETED.value
     project.end_date = end_date
+    if not project.achievement_category:
+        # Rubrique de l'accueil déduite du domaine d'action (modifiable ensuite dans le formulaire)
+        project.achievement_category = DEFAULT_CATEGORY_BY_PILLAR.get(getattr(project.pillar, "value", project.pillar))
     project.is_visible = True
     project.completion_requested_at = None
     record_audit(

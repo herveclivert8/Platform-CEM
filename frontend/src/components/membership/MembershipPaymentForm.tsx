@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, Banknote, CreditCard, Lock, Smartphone } from "lucide-react";
+import { AlertCircle, Banknote, CreditCard, Landmark, Lock, Smartphone } from "lucide-react";
 import clsx from "clsx";
 import { Button } from "../ui/Button";
 import { CopyButton, Field, OperatorMark, Spinner } from "../donation/donationUi";
 import { fieldClass } from "../donation/donationConstants";
+import { BankAccountDetails } from "../donation/BankAccountDetails";
 import { usePaymentOptions } from "../../hooks/useDonations";
 import { usePayMembership } from "../../hooks/useMembership";
 import { apiErrorMessage } from "../../lib/api";
@@ -22,9 +23,13 @@ const METHOD_ICONS: Record<MembershipPaymentMethod, typeof CreditCard> = {
   CARD: CreditCard,
   MOBILE_MONEY: Smartphone,
   CASH: Banknote,
+  BANK_TRANSFER: Landmark,
 };
 
-/** Pays the registration fee or a monthly fee: card (online), Mobile Money (declared) or cash at the branch. */
+/**
+ * Pays the registration fee or a monthly fee: card (online), Mobile Money (declared), cash at the
+ * branch, or bank transfer (the RIB is shown; an admin records the transfer once received).
+ */
 export function MembershipPaymentForm({ kind, fees, onDone }: MembershipPaymentFormProps) {
   const { t } = useTranslation();
   const { data: options } = usePaymentOptions();
@@ -48,6 +53,7 @@ export function MembershipPaymentForm({ kind, fees, onDone }: MembershipPaymentF
     ...(cardEnabled ? (["CARD"] as const) : []),
     ...(currency === "MGA" && accounts.length > 0 ? (["MOBILE_MONEY"] as const) : []),
     "CASH",
+    ...(options?.bankTransfer ? (["BANK_TRANSFER"] as const) : []),
   ];
   const activeMethod = methods.includes(method) ? method : "CASH";
   const account = accounts.find((a) => a.operator === operator) ?? accounts[0];
@@ -57,6 +63,7 @@ export function MembershipPaymentForm({ kind, fees, onDone }: MembershipPaymentF
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (activeMethod === "BANK_TRANSFER") return; // recorded by an admin once received
     try {
       if (activeMethod === "CARD") {
         // Say which field is wrong (an expiry like "11 / 12" means November 2012, already past)
@@ -114,7 +121,11 @@ export function MembershipPaymentForm({ kind, fees, onDone }: MembershipPaymentF
       </Field>
 
       <Field label={t("membership.method")} hint={currency !== "MGA" ? t("membership.mobile_money_mga_only") : undefined}>
-        <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${methods.length}, minmax(0, 1fr))` }} role="radiogroup">
+        <div
+          className={clsx("grid gap-2", methods.length > 3 && "grid-cols-2 sm:grid-cols-4")}
+          style={methods.length > 3 ? undefined : { gridTemplateColumns: `repeat(${methods.length}, minmax(0, 1fr))` }}
+          role="radiogroup"
+        >
           {methods.map((m) => {
             const Icon = METHOD_ICONS[m];
             return (
@@ -200,6 +211,15 @@ export function MembershipPaymentForm({ kind, fees, onDone }: MembershipPaymentF
         </p>
       )}
 
+      {activeMethod === "BANK_TRANSFER" && options?.bankTransfer && (
+        <div className="space-y-3">
+          <BankAccountDetails account={options.bankTransfer} amount={amount} currency={currency} />
+          <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+            {t("membership.transfer_text")}
+          </p>
+        </div>
+      )}
+
       {error && (
         <div role="alert" className="flex gap-2.5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
@@ -207,6 +227,8 @@ export function MembershipPaymentForm({ kind, fees, onDone }: MembershipPaymentF
         </div>
       )}
 
+      {/* Transfer: nothing to send from here, the admin records it once received */}
+      {activeMethod !== "BANK_TRANSFER" && (
       <Button type="submit" variant="secondary" className="w-full justify-center" disabled={pay.isPending}>
         {pay.isPending ? (
           <>
@@ -222,6 +244,7 @@ export function MembershipPaymentForm({ kind, fees, onDone }: MembershipPaymentF
           t("membership.declare_cash")
         )}
       </Button>
+      )}
     </form>
   );
 }

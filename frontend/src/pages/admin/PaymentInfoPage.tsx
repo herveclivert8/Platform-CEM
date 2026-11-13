@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CreditCard, FlaskConical, Smartphone, Wallet } from "lucide-react";
+import { CreditCard, FlaskConical, Landmark, Smartphone, Wallet } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { OperatorMark } from "../../components/donation/donationUi";
@@ -21,7 +21,25 @@ const OPERATOR_FIELDS: { key: keyof PaymentInfoInput; operator: MobileOperator; 
 ];
 
 
-const EMPTY: PaymentInfoInput = { mobileMoneyHolder: "", mvolaNumber: "", orangeMoneyNumber: "", airtelMoneyNumber: "" };
+const BANK_FIELDS: { key: keyof PaymentInfoInput; labelKey: string; placeholder: string; mono?: boolean }[] = [
+  { key: "bankAccountHolder", labelKey: "admin.donations.pi_bank_holder", placeholder: "CLUB EXCELLENCE MADAGASCAR" },
+  { key: "bankName", labelKey: "admin.donations.pi_bank_name", placeholder: "BFV-SG, BOA, BNI…" },
+  { key: "bankAccountNumber", labelKey: "admin.donations.pi_bank_account_number", placeholder: "00008 00005 00000000000 00", mono: true },
+  { key: "bankIban", labelKey: "admin.donations.pi_bank_iban", placeholder: "MG46 0000 0000 0000 0000 0000 000", mono: true },
+  { key: "bankSwift", labelKey: "admin.donations.pi_bank_swift", placeholder: "BFAVMGMG", mono: true },
+];
+
+const EMPTY: PaymentInfoInput = {
+  mobileMoneyHolder: "",
+  mvolaNumber: "",
+  orangeMoneyNumber: "",
+  airtelMoneyNumber: "",
+  bankAccountHolder: "",
+  bankName: "",
+  bankAccountNumber: "",
+  bankIban: "",
+  bankSwift: "",
+};
 
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white";
@@ -32,6 +50,8 @@ export function PaymentInfoPage() {
   const { data: options } = usePaymentOptions();
   const updatePaymentInfo = useUpdatePaymentInfo();
   const [values, setValues] = useState<PaymentInfoInput>(EMPTY);
+  // Form whose "Save" was clicked last: the error shows under that one
+  const [savedFrom, setSavedFrom] = useState<"mobile" | "bank">("mobile");
 
   const { isDirty, markSaved } = useUnsavedChanges(values);
   const showSuccess = useSuccessToast();
@@ -43,14 +63,20 @@ export function PaymentInfoPage() {
         mvolaNumber: data.mvolaNumber ?? "",
         orangeMoneyNumber: data.orangeMoneyNumber ?? "",
         airtelMoneyNumber: data.airtelMoneyNumber ?? "",
+        bankAccountHolder: data.bankAccountHolder ?? "",
+        bankName: data.bankName ?? "",
+        bankAccountNumber: data.bankAccountNumber ?? "",
+        bankIban: data.bankIban ?? "",
+        bankSwift: data.bankSwift ?? "",
       };
       setValues(loaded);
       markSaved(loaded);
     }
   }, [data, markSaved]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (form: "mobile" | "bank") => async (e: React.FormEvent) => {
     e.preventDefault();
+    setSavedFrom(form);
     try {
       await updatePaymentInfo.mutateAsync(values);
     } catch {
@@ -72,6 +98,7 @@ export function PaymentInfoPage() {
       </p>
 
       <div className="mt-6 grid max-w-4xl grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
+        <div className="min-w-0 space-y-4">
         <Card hoverable={false} className="p-6">
           <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
             <Smartphone className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden /> Mobile Money (Ar)
@@ -83,7 +110,7 @@ export function PaymentInfoPage() {
           {isLoading ? (
             <p className="mt-6 text-sm text-slate-400 dark:text-slate-500">{t("common.loading")}</p>
           ) : (
-            <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+            <form onSubmit={handleSubmit("mobile")} className="mt-5 space-y-4">
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
                   {t("admin.donations.pi_holder")}
@@ -114,7 +141,7 @@ export function PaymentInfoPage() {
                 </div>
               ))}
 
-              {updatePaymentInfo.isError && (
+              {updatePaymentInfo.isError && savedFrom === "mobile" && (
                 <p role="alert" className="text-sm text-red-600 dark:text-red-400">{apiErrorMessage(updatePaymentInfo.error, t("common.error_retry"))}</p>
               )}
 
@@ -124,6 +151,43 @@ export function PaymentInfoPage() {
             </form>
           )}
         </Card>
+
+        <Card hoverable={false} className="p-6">
+          <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+            <Landmark className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden /> {t("admin.donations.pi_bank_title")}
+          </h2>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("admin.donations.pi_bank_hint")}</p>
+
+          {isLoading ? (
+            <p className="mt-6 text-sm text-slate-400 dark:text-slate-500">{t("common.loading")}</p>
+          ) : (
+            <form onSubmit={handleSubmit("bank")} className="mt-5 space-y-4">
+              {BANK_FIELDS.map((field) => (
+                <div key={field.key}>
+                  <label htmlFor={`pi-${field.key}`} className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {t(field.labelKey)}
+                  </label>
+                  <input
+                    id={`pi-${field.key}`}
+                    placeholder={field.placeholder}
+                    value={values[field.key]}
+                    onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.value }))}
+                    className={field.mono ? `${inputClass} font-mono` : inputClass}
+                  />
+                </div>
+              ))}
+
+              {updatePaymentInfo.isError && savedFrom === "bank" && (
+                <p role="alert" className="text-sm text-red-600 dark:text-red-400">{apiErrorMessage(updatePaymentInfo.error, t("common.error_retry"))}</p>
+              )}
+
+              <Button type="submit" variant="secondary" disabled={updatePaymentInfo.isPending || !isDirty}>
+                {updatePaymentInfo.isPending ? "…" : t("common.save")}
+              </Button>
+            </form>
+          )}
+        </Card>
+        </div>
 
         <Card hoverable={false} className="h-fit p-6">
           <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">

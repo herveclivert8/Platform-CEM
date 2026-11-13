@@ -7,6 +7,7 @@ import { AmountStep } from "./AmountStep";
 import { METHODS_BY_CURRENCY, PRESET_AMOUNTS, type DonationMethod } from "./donationConstants";
 import { CardPaymentStep } from "./CardPaymentStep";
 import { MobileMoneyStep } from "./MobileMoneyStep";
+import { BankTransferStep } from "./BankTransferStep";
 import { DonationSuccess } from "./DonationSuccess";
 import { Spinner } from "./donationUi";
 import { usePaymentOptions } from "../../hooks/useDonations";
@@ -27,6 +28,7 @@ function availableMethods(options: PaymentOptions | undefined): DonationMethod[]
   const methods: DonationMethod[] = [];
   if (options.card.enabled) methods.push("CARD");
   if (options.mobileMoney.accounts.length > 0) methods.push("MOBILE_MONEY");
+  if (options.bankTransfer) methods.push("BANK_TRANSFER");
   return methods;
 }
 
@@ -249,6 +251,10 @@ export function DonationModal() {
 
           {options && step === "payment" && selectedMethod === "MOBILE_MONEY" && (
             <MobileMoneyStep amount={amount} branchId={branchId} options={options.mobileMoney} onSuccess={(r) => handleSuccess(r)} />
+          )}
+
+          {options?.bankTransfer && step === "payment" && selectedMethod === "BANK_TRANSFER" && (
+            <BankTransferStep account={options.bankTransfer} amount={amount} currency={selectedCurrency} onClose={onClose} />
           )}
 
           {step === "success" && receipt && (

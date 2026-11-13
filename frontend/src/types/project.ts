@@ -3,6 +3,10 @@ import type { Pillar, PaginatedDto } from "./post";
 export type ProjectPhase = "ONGOING" | "COMPLETED";
 export type ProjectReviewStatus = "PENDING" | "APPROVED" | "REJECTED";
 
+/** Rubric of « Nos réalisations » on the home page (separate from the field of action) */
+export type AchievementCategory = "EDUCATION" | "EVENT" | "ENTERPRISE";
+export const ACHIEVEMENT_CATEGORIES: AchievementCategory[] = ["EDUCATION", "EVENT", "ENTERPRISE"];
+
 export interface Project {
   id: number;
   branchId: number;
@@ -19,6 +23,8 @@ export interface Project {
   description: string;
   pillar: Pillar;
   phase: ProjectPhase;
+  /** null: not shown in the home page rubrics */
+  achievementCategory: AchievementCategory | null;
   beneficiaries: string;
   beneficiariesCount: number | null;
   location: string | null;
@@ -82,6 +88,7 @@ export interface ProjectDto {
   description: string;
   pillar: Pillar;
   phase: ProjectPhase;
+  achievement_category?: AchievementCategory | null;
   beneficiaries: string;
   beneficiaries_count: number | null;
   location: string | null;
@@ -117,6 +124,7 @@ export function mapProject(dto: ProjectDto): Project {
     description: dto.description,
     pillar: dto.pillar,
     phase: dto.phase,
+    achievementCategory: dto.achievement_category ?? null,
     beneficiaries: dto.beneficiaries,
     beneficiariesCount: dto.beneficiaries_count,
     location: dto.location,
@@ -153,6 +161,7 @@ export interface ProjectInput {
   description: string;
   pillar: Pillar;
   phase: ProjectPhase;
+  achievement_category: AchievementCategory | null;
   beneficiaries: string;
   beneficiaries_count: number | null;
   location: string | null;

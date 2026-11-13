@@ -8,7 +8,9 @@ Don, éventuellement fléché vers une antenne. Deux modes de paiement :
   son paiement (numéro émetteur + référence reçue par SMS) ; le don est PENDING jusqu'à ce qu'un
   admin retrouve la transaction dans l'historique du compte et le confirme (ou le rejette).
 
-BANK_TRANSFER n'est plus proposé ; la valeur reste pour les anciens dons.
+Enregistrés par un admin, confirmés d'office : CASH (espèces), IN_KIND (matériel) et BANK_TRANSFER
+(virement reçu sur le compte bancaire affiché aux donateurs ; les plus anciens dons par virement
+datent d'avant la carte et Mobile Money).
 """
 
 import enum
@@ -29,8 +31,8 @@ class DonationStatus(str, enum.Enum):
 class PaymentMethod(str, enum.Enum):
     CARD = "CARD"
     MOBILE_MONEY = "MOBILE_MONEY"
-    BANK_TRANSFER = "BANK_TRANSFER"  # Ancien mode, plus proposé
-    # Enregistrés par un admin uniquement (dons remis en main propre)
+    # Enregistrés par un admin uniquement
+    BANK_TRANSFER = "BANK_TRANSFER"  # Virement reçu sur le compte bancaire
     CASH = "CASH"  # Espèces
     IN_KIND = "IN_KIND"  # Don matériel : pas de montant (amount = 0), voir in_kind_description
 

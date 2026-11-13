@@ -21,6 +21,20 @@ class ProjectPhase(str, enum.Enum):
     COMPLETED = "COMPLETED"
 
 
+class AchievementCategory(str, enum.Enum):
+    """Rubrique de « Nos réalisations » sur la page d'accueil (distincte du domaine d'action)."""
+    EDUCATION = "EDUCATION"  # Éducation
+    EVENT = "EVENT"  # Événementiels (conférences, débats, commémorations…)
+    ENTERPRISE = "ENTERPRISE"  # Projets entrepreneuriaux
+
+
+# Rubrique par défaut d'une réalisation, d'après son domaine d'action (sinon : à choisir par l'admin)
+DEFAULT_CATEGORY_BY_PILLAR = {
+    Pillar.EDUCATION.value: AchievementCategory.EDUCATION.value,
+    Pillar.ENTERPRISE.value: AchievementCategory.ENTERPRISE.value,
+}
+
+
 class ProjectReviewStatus(str, enum.Enum):
     PENDING = "PENDING"
     APPROVED = "APPROVED"
@@ -41,6 +55,8 @@ class Project(Base):
         Enum(Pillar, name="pillar", values_callable=lambda e: [m.value for m in e]),
         nullable=False,
     )
+    # Rubrique de « Nos réalisations » (AchievementCategory) ; NULL = pas affichée dans les rubriques de l'accueil
+    achievement_category: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
     beneficiaries: Mapped[str] = mapped_column(String(255), nullable=False)
     beneficiaries_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     location: Mapped[str | None] = mapped_column(String(255), nullable=True)

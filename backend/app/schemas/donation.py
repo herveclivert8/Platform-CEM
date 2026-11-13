@@ -9,7 +9,7 @@ from pydantic import ConfigDict, BaseModel, EmailStr, Field, field_validator, mo
 class PaymentMethod(str, Enum):
     CARD = "CARD"
     MOBILE_MONEY = "MOBILE_MONEY"
-    BANK_TRANSFER = "BANK_TRANSFER"  # Ancien mode, lecture seule
+    BANK_TRANSFER = "BANK_TRANSFER"  # Virement reçu, enregistré par un admin
     CASH = "CASH"  # Espèces, enregistrées par un admin
     IN_KIND = "IN_KIND"  # Don matériel, enregistré par un admin
 
@@ -81,9 +81,10 @@ class ManualDonationCreate(BaseModel):
     Don reçu, enregistré par un admin (confirmé d'office) :
     - MOBILE_MONEY : paiement reçu sans déclaration du donateur (opérateur, numéro, référence, montant en ariary) ;
     - CASH : espèces remises en main propre (montant et devise) ;
+    - BANK_TRANSFER : virement reçu sur le compte bancaire (montant, devise, référence facultative) ;
     - IN_KIND : don matériel (description de ce qui a été reçu, sans montant).
     """
-    kind: Literal["MOBILE_MONEY", "CASH", "IN_KIND"] = "MOBILE_MONEY"
+    kind: Literal["MOBILE_MONEY", "CASH", "BANK_TRANSFER", "IN_KIND"] = "MOBILE_MONEY"
     branch_id: Optional[int] = None
     donor_email: Optional[EmailStr] = None
     donor_name: Optional[str] = Field(None, max_length=255)
@@ -91,7 +92,7 @@ class ManualDonationCreate(BaseModel):
     operator: Optional[MobileOperator] = None
     sender_phone: Optional[str] = None
     transaction_reference: Optional[str] = None
-    # Mobile Money (ariary) et espèces
+    # Mobile Money (ariary), espèces et virement
     amount: Optional[float] = Field(None, gt=0, le=1_000_000_000)
     currency: Optional["CardCurrency"] = None
     # Don matériel
@@ -106,9 +107,14 @@ class ManualDonationCreate(BaseModel):
                 raise ValueError("Montant minimum : 100 Ar")
             self.sender_phone = normalize_mg_phone(self.sender_phone)
             self.transaction_reference = normalize_transaction_reference(self.transaction_reference)
-        elif self.kind == "CASH":
+        elif self.kind in ("CASH", "BANK_TRANSFER"):
             if not self.amount:
                 raise ValueError("Le montant reçu est requis")
+            if self.kind == "BANK_TRANSFER":
+                # Référence du virement (libre, facultative) : sert à le retrouver sur le relevé
+                self.transaction_reference = (self.transaction_reference or "").strip()[:64] or None
+            else:
+                self.transaction_reference = None
         else:
             self.description = (self.description or "").strip()
             if not self.description:
@@ -227,7 +233,18 @@ class MobileMoneyOption(BaseModel):
     accounts: list[MobileMoneyAccount]
 
 
+class BankTransferOption(BaseModel):
+    """Compte bancaire (RIB) pour un virement ; l'admin enregistre ensuite le virement reçu."""
+    holder: Optional[str] = None
+    bank_name: Optional[str] = None
+    account_number: Optional[str] = None
+    iban: Optional[str] = None
+    swift: Optional[str] = None
+
+
 class PaymentOptions(BaseModel):
-    """Modes de paiement proposés aux donateurs (public)."""
+    """Modes de paiement proposés aux donateurs et aux membres (public)."""
     card: CardOption
     mobile_money: MobileMoneyOption
+    # None : aucun compte bancaire renseigné, le virement n'est pas proposé
+    bank_transfer: Optional[BankTransferOption] = None

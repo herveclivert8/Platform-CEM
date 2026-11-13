@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { mapPaginated, type PaginatedDto, type Pillar } from "../types/post";
-import { mapProject, type ProjectDto, type ProjectPhase } from "../types/project";
+import { mapProject, type AchievementCategory, type ProjectDto, type ProjectPhase } from "../types/project";
 import { useAuthStore } from "../store/authStore";
 import { canSeeMemberContent } from "../types/user";
 
@@ -14,20 +14,22 @@ interface ProjectsParams {
   phase: ProjectPhase;
   branchId?: number;
   pillar?: Pillar;
+  /** Rubric of « Nos réalisations » */
+  category?: AchievementCategory;
   page?: number;
   pageSize?: number;
 }
 
 /** Public listing: validated (published) projects only. */
-export function useProjects({ phase, branchId, pillar, page = 1, pageSize = 12 }: ProjectsParams) {
+export function useProjects({ phase, branchId, pillar, category, page = 1, pageSize = 12 }: ProjectsParams) {
   const memberView = useCanSeeMemberContent();
   return useQuery({
-    queryKey: ["projects", phase, branchId, pillar, page, pageSize, memberView],
+    queryKey: ["projects", phase, branchId, pillar, category, page, pageSize, memberView],
     // Ongoing projects are reserved for members: visitors never request them
     enabled: phase === "COMPLETED" || memberView,
     queryFn: async () => {
       const { data } = await api.get<PaginatedDto<ProjectDto>>("/projects", {
-        params: { phase, branch_id: branchId, pillar, page, page_size: pageSize },
+        params: { phase, branch_id: branchId, pillar, category, page, page_size: pageSize },
       });
       return mapPaginated(data, mapProject);
     },

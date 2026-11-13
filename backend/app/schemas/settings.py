@@ -24,11 +24,16 @@ class SocialLinksUpdate(BaseModel):
 
 
 class PaymentInfoRead(BaseModel):
-    """Comptes Mobile Money affichés aux donateurs"""
+    """Comptes Mobile Money et compte bancaire affichés aux donateurs et aux membres"""
     mobile_money_holder: Optional[str] = None
     mvola_number: Optional[str] = None
     orange_money_number: Optional[str] = None
     airtel_money_number: Optional[str] = None
+    bank_account_holder: Optional[str] = None
+    bank_name: Optional[str] = None
+    bank_account_number: Optional[str] = None
+    bank_iban: Optional[str] = None
+    bank_swift: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -61,6 +66,11 @@ class PaymentInfoUpdate(BaseModel):
     mvola_number: Optional[str] = Field(None, max_length=255)
     orange_money_number: Optional[str] = Field(None, max_length=255)
     airtel_money_number: Optional[str] = Field(None, max_length=255)
+    bank_account_holder: Optional[str] = Field(None, max_length=255)
+    bank_name: Optional[str] = Field(None, max_length=255)
+    bank_account_number: Optional[str] = Field(None, max_length=255)
+    bank_iban: Optional[str] = Field(None, max_length=255)
+    bank_swift: Optional[str] = Field(None, max_length=255)
 
 
 class PartnerItem(BaseModel):

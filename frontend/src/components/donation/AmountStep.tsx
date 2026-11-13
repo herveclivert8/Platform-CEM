@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { BookOpen, CreditCard, Lock, Smartphone } from "lucide-react";
+import { BookOpen, CreditCard, Landmark, Lock, Smartphone } from "lucide-react";
 import clsx from "clsx";
 import { Button } from "../ui/Button";
 import { CardBrandMark, OperatorMark } from "./donationUi";
@@ -12,6 +12,12 @@ import {
   type DonationMethod,
 } from "./donationConstants";
 import { CURRENCY_SYMBOLS, formatAmount, type Currency, type PaymentOptions } from "../../types/donation";
+
+const METHOD_LABELS: Record<DonationMethod, string> = {
+  CARD: "donation.method_card",
+  MOBILE_MONEY: "donation.method_mobile",
+  BANK_TRANSFER: "donation.method_transfer",
+};
 
 interface AmountStepProps {
   options: PaymentOptions;
@@ -100,23 +106,27 @@ export function AmountStep({
                   <span className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
                     {m === "CARD" ? (
                       <CreditCard className="h-4 w-4 text-slate-500" aria-hidden />
-                    ) : (
+                    ) : m === "MOBILE_MONEY" ? (
                       <Smartphone className="h-4 w-4 text-slate-500" aria-hidden />
-                    )}
-                    {t(m === "CARD" ? "donation.method_card" : "donation.method_mobile")}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    {m === "CARD" ? (
-                      <>
-                        <CardBrandMark brand="visa" />
-                        <CardBrandMark brand="mastercard" />
-                      </>
                     ) : (
-                      options.mobileMoney.accounts.map((a) => <OperatorMark key={a.operator} operator={a.operator} size="sm" />)
+                      <Landmark className="h-4 w-4 text-slate-500" aria-hidden />
                     )}
+                    {t(METHOD_LABELS[m])}
                   </span>
+                  {m !== "BANK_TRANSFER" && (
+                    <span className="flex items-center gap-1">
+                      {m === "CARD" ? (
+                        <>
+                          <CardBrandMark brand="visa" />
+                          <CardBrandMark brand="mastercard" />
+                        </>
+                      ) : (
+                        options.mobileMoney.accounts.map((a) => <OperatorMark key={a.operator} operator={a.operator} size="sm" />)
+                      )}
+                    </span>
+                  )}
                   <span className="text-xs text-slate-500 dark:text-slate-400">
-                    {t(m === "CARD" ? "donation.method_card_hint" : "donation.method_mobile_hint")}
+                    {t(`${METHOD_LABELS[m]}_hint`)}
                   </span>
                   <span
                     className={clsx(

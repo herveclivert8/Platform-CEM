@@ -297,10 +297,27 @@ export function useRejectMembershipPayment() {
   );
 }
 
-/** Cash received at the branch counter, recorded (and confirmed) by an admin. */
+/** Cash received at the branch counter or bank transfer received, recorded (and confirmed) by an admin. */
 export function useRecordCashPayment() {
   return useMemberAdminMutation(
-    ({ memberId, kind, currency }: { memberId: number; kind: MembershipPaymentKind; currency: Currency }) =>
-      api.post(`/members/admin/${memberId}/payments/cash`, { kind, currency }),
+    ({
+      memberId,
+      kind,
+      currency,
+      method = "CASH",
+      transactionReference,
+    }: {
+      memberId: number;
+      kind: MembershipPaymentKind;
+      currency: Currency;
+      method?: "CASH" | "BANK_TRANSFER";
+      transactionReference?: string;
+    }) =>
+      api.post(`/members/admin/${memberId}/payments/cash`, {
+        kind,
+        currency,
+        method,
+        transaction_reference: method === "BANK_TRANSFER" ? transactionReference || null : null,
+      }),
   );
 }

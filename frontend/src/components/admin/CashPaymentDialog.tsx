@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banknote } from "lucide-react";
+import { Banknote, Landmark } from "lucide-react";
+import clsx from "clsx";
 import { Button } from "../ui/Button";
 import { useMembershipFees, useRecordCashPayment } from "../../hooks/useMembership";
 import { useErrorToast } from "../../hooks/useErrorToast";
@@ -11,7 +12,9 @@ import type { AdminMember, MembershipPaymentKind } from "../../types/membership"
 const selectClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white";
 
-/** Records cash a member handed over at the branch counter: confirmed right away. */
+type ReceivedMethod = "CASH" | "BANK_TRANSFER";
+
+/** Records cash a member handed over at the branch counter, or a bank transfer received: confirmed right away. */
 export function CashPaymentDialog({ member, onClose }: { member: AdminMember | null; onClose: () => void }) {
   const { t } = useTranslation();
   const { data: fees } = useMembershipFees();
@@ -20,6 +23,8 @@ export function CashPaymentDialog({ member, onClose }: { member: AdminMember | n
   const showSuccess = useSuccessToast();
   const [kind, setKind] = useState<MembershipPaymentKind>("REGISTRATION");
   const [currency, setCurrency] = useState<Currency>("MGA");
+  const [method, setMethod] = useState<ReceivedMethod>("CASH");
+  const [reference, setReference] = useState("");
 
   // Registration fee first; once paid, the monthly fee (only for an approved member)
   const kinds: MembershipPaymentKind[] = member
@@ -30,6 +35,8 @@ export function CashPaymentDialog({ member, onClose }: { member: AdminMember | n
     if (!member) return;
     setKind(member.registrationPaid ? "MONTHLY" : "REGISTRATION");
     setCurrency("MGA");
+    setMethod("CASH");
+    setReference("");
     const onKeyDown = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
@@ -41,10 +48,10 @@ export function CashPaymentDialog({ member, onClose }: { member: AdminMember | n
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     record.mutate(
-      { memberId: member.id, kind, currency },
+      { memberId: member.id, kind, currency, method, transactionReference: reference.trim() || undefined },
       {
         onSuccess: () => {
-          showSuccess(t("admin.members.cash_recorded"), name);
+          showSuccess(t(method === "CASH" ? "admin.members.cash_recorded" : "admin.members.transfer_recorded"), name);
           onClose();
         },
         onError: showError,
@@ -63,14 +70,43 @@ export function CashPaymentDialog({ member, onClose }: { member: AdminMember | n
         className="relative w-full max-w-md space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl animate-fade-in-up dark:border-slate-800 dark:bg-slate-900"
       >
         <h2 id="cash-dialog-title" className="flex items-center gap-2 text-base font-bold tracking-tight text-slate-900 dark:text-white">
-          <Banknote className="h-5 w-5 text-emerald-600" aria-hidden />
-          {t("admin.members.cash_title", { name })}
+          {method === "CASH" ? (
+            <Banknote className="h-5 w-5 text-emerald-600" aria-hidden />
+          ) : (
+            <Landmark className="h-5 w-5 text-emerald-600" aria-hidden />
+          )}
+          {t(method === "CASH" ? "admin.members.cash_title" : "admin.members.transfer_title", { name })}
         </h2>
         {kinds.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-slate-400">{t("admin.members.cash_nothing_due")}</p>
         ) : (
           <>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{t("admin.members.cash_text")}</p>
+            <div className="grid grid-cols-2 gap-2" role="radiogroup">
+              {(["CASH", "BANK_TRANSFER"] as const).map((m) => {
+                const Icon = m === "CASH" ? Banknote : Landmark;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    role="radio"
+                    aria-checked={method === m}
+                    onClick={() => setMethod(m)}
+                    className={clsx(
+                      "flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-semibold transition-colors",
+                      method === m
+                        ? "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300"
+                        : "border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400",
+                    )}
+                  >
+                    <Icon className="h-4 w-4" aria-hidden />
+                    {t(`membership.methods.${m}`)}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              {t(method === "CASH" ? "admin.members.cash_text" : "admin.members.transfer_text")}
+            </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 {t("admin.members.cash_kind")}
@@ -93,6 +129,12 @@ export function CashPaymentDialog({ member, onClose }: { member: AdminMember | n
                 </select>
               </label>
             </div>
+            {method === "BANK_TRANSFER" && (
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+                {t("admin.members.transfer_reference")}
+                <input value={reference} maxLength={64} onChange={(e) => setReference(e.target.value)} className={`${selectClass} mt-1.5 font-mono`} />
+              </label>
+            )}
           </>
         )}
         <div className="flex justify-end gap-2 pt-2">

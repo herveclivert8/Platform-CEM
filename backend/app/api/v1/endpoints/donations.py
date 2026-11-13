@@ -1,10 +1,11 @@
 """
 Endpoints pour les dons.
 
-Deux modes de paiement (voir app/models/donation.py) :
+Trois modes de paiement (voir app/models/donation.py) :
 - carte bancaire : payée en ligne via le prestataire (app/services/payments.py), confirmée aussitôt ;
 - Mobile Money : payé hors du site puis déclaré par le donateur (numéro émetteur + référence
   reçue par SMS) ; un admin retrouve la transaction dans l'historique du compte et valide ou rejette.
+- virement bancaire : le RIB est affiché au donateur ; un admin enregistre le virement reçu.
 
 Un email de remerciement part à chaque confirmation (une seule fois par don).
 """
@@ -43,6 +44,7 @@ from app.schemas.donation import (
     DonationPublic,
     DonationReject,
     ManualDonationCreate,
+    BankTransferOption,
     MobileMoneyAccount,
     MobileMoneyDeclaration,
     MobileMoneyOption,
@@ -113,6 +115,19 @@ def _mobile_money_accounts(settings: AssociationSettings | None) -> list[MobileM
         for operator, field in OPERATOR_NUMBER_FIELDS.items()
         if (number := getattr(settings, field))
     ]
+
+
+def _bank_transfer_option(settings: AssociationSettings | None) -> BankTransferOption | None:
+    """RIB affiché pour un virement ; None tant qu'aucun numéro de compte ni IBAN n'est renseigné."""
+    if settings is None or not (settings.bank_account_number or settings.bank_iban):
+        return None
+    return BankTransferOption(
+        holder=settings.bank_account_holder,
+        bank_name=settings.bank_name,
+        account_number=settings.bank_account_number,
+        iban=settings.bank_iban,
+        swift=settings.bank_swift,
+    )
 
 
 async def _get_branch_or_404(db: AsyncSession, branch_id: int | None) -> Branch | None:
@@ -211,7 +226,7 @@ async def _notify_admins(db: AsyncSession, donation: Donation, branch: Branch | 
 
 @router.get("/payment-options", response_model=PaymentOptions)
 async def get_payment_options(db: AsyncSession = Depends(get_db)):
-    """Modes de paiement proposés aux donateurs. Accessible: Public."""
+    """Modes de paiement proposés aux donateurs et aux membres. Accessible: Public."""
     settings = await db.get(AssociationSettings, SETTINGS_ID)
     provider = get_card_provider()
     return PaymentOptions(
@@ -220,6 +235,7 @@ async def get_payment_options(db: AsyncSession = Depends(get_db)):
             holder=settings.mobile_money_holder if settings else None,
             accounts=_mobile_money_accounts(settings),
         ),
+        bank_transfer=_bank_transfer_option(settings),
     )
 
 
@@ -402,7 +418,7 @@ async def record_manual_donation(
 ):
     """
     Enregistrer un don reçu (confirmé d'office) : paiement Mobile Money reçu sans déclaration du
-    donateur, espèces remises en main propre, ou don matériel.
+    donateur, espèces remises en main propre, virement reçu sur le compte bancaire, ou don matériel.
     Accessible: Admin de la branche (pour son antenne) + Super Admin.
     """
     branch_id = user.branch_id if user.role == UserRole.BRANCH_ADMIN else data.branch_id
@@ -428,12 +444,14 @@ async def record_manual_donation(
             mobile_operator=operator.value,
             transaction_reference=data.transaction_reference,
         )
-    elif data.kind == "CASH":
+    elif data.kind in ("CASH", "BANK_TRANSFER"):
+        method = PaymentMethodModel(data.kind)
         donation = Donation(
             **common,
             amount=data.amount,
-            currency=data.currency.value if data.currency else CURRENCY_BY_METHOD[PaymentMethodModel.CASH],
-            payment_method=PaymentMethodModel.CASH,
+            currency=data.currency.value if data.currency else CURRENCY_BY_METHOD[method],
+            payment_method=method,
+            transaction_reference=data.transaction_reference,
         )
     else:
         donation = Donation(
@@ -526,8 +544,6 @@ async def reopen_donation(
 ):
     """Remettre un don validé ou rejeté "à vérifier" (erreur de manipulation)."""
     donation = await _get_manageable_donation(db, user, donation_id)
-    if donation.payment_method == PaymentMethodModel.BANK_TRANSFER:
-        raise HTTPException(status_code=400, detail="Le virement bancaire n'est plus proposé.")
     if donation.status == DonationStatusModel.CONFIRMED and user.role != UserRole.SUPER_ADMIN:
         # Un don confirmé rouvert redevient supprimable : réservé au Super Admin
         raise HTTPException(status_code=403, detail="Seul le Super Admin peut rouvrir un don confirmé.")

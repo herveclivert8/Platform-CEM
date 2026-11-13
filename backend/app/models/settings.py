@@ -27,6 +27,14 @@ class AssociationSettings(Base):
     orange_money_number: Mapped[str | None] = mapped_column(String(255), nullable=True)
     airtel_money_number: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
+    # Compte bancaire (RIB) affiché aux donateurs et aux membres pour un virement. Sans numéro de
+    # compte ni IBAN, le virement n'est pas proposé. Le virement reçu est enregistré par un admin.
+    bank_account_holder: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    bank_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    bank_account_number: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    bank_iban: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    bank_swift: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
     # Couverture de la page d'accueil. NULL = texte / photo par défaut du site.
     hero_image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     hero_badge_fr: Mapped[str | None] = mapped_column(String(255), nullable=True)

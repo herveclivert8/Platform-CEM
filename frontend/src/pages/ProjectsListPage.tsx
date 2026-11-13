@@ -8,7 +8,7 @@ import { MembersOnlyNotice } from "../components/projects/MembersOnlyNotice";
 import { useBranches } from "../hooks/useBranches";
 import { usePillarLabels } from "../hooks/usePillarLabels";
 import { ALL_PILLARS, type Pillar } from "../types/post";
-import type { ProjectPhase } from "../types/project";
+import { ACHIEVEMENT_CATEGORIES, type AchievementCategory, type ProjectPhase } from "../types/project";
 import { ProjectCard } from "../components/projects/ProjectCard";
 import { Skeleton } from "../components/ui/Skeleton";
 import { Button } from "../components/ui/Button";
@@ -26,8 +26,13 @@ export function ProjectsListPage({ phase }: { phase: ProjectPhase }) {
   const initialBranch = Number(searchParams.get("antenne")) || undefined;
   const [branchId, setBranchId] = useState<number | undefined>(initialBranch);
   const [pillar, setPillar] = useState<Pillar | undefined>(undefined);
+  // Achievements are filtered by rubric (« Voir tout » of a home page rubric), ongoing projects by field
+  const initialCategory = searchParams.get("rubrique") as AchievementCategory | null;
+  const [category, setCategory] = useState<AchievementCategory | undefined>(
+    phase === "COMPLETED" && initialCategory && ACHIEVEMENT_CATEGORIES.includes(initialCategory) ? initialCategory : undefined,
+  );
   const [page, setPage] = useState(1);
-  const { data, isLoading, isError, error, refetch } = useProjects({ phase, branchId, pillar, page, pageSize: PAGE_SIZE });
+  const { data, isLoading, isError, error, refetch } = useProjects({ phase, branchId, pillar, category, page, pageSize: PAGE_SIZE });
 
   const key = phase === "COMPLETED" ? "completed" : "ongoing";
   usePageMeta(t(`projects.${key}_title`), t(`projects.${key}_subtitle`));
@@ -75,6 +80,34 @@ export function ProjectsListPage({ phase }: { phase: ProjectPhase }) {
           ))}
         </select>
         <span className="h-5 w-px bg-slate-200 dark:bg-slate-700" aria-hidden />
+        {phase === "COMPLETED" ? (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                setCategory(undefined);
+                setPage(1);
+              }}
+              className={pillButton(!category)}
+            >
+              {t("projects.all_categories")}
+            </button>
+            {ACHIEVEMENT_CATEGORIES.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => {
+                  setCategory(c);
+                  setPage(1);
+                }}
+                className={pillButton(category === c)}
+              >
+                {t(`projects.categories.${c}`)}
+              </button>
+            ))}
+          </>
+        ) : (
+          <>
         <button
           type="button"
           onClick={() => {
@@ -98,6 +131,8 @@ export function ProjectsListPage({ phase }: { phase: ProjectPhase }) {
             {pillarLabels[p]}
           </button>
         ))}
+          </>
+        )}
       </div>
 
       {isLoading ? (

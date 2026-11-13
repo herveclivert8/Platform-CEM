@@ -48,7 +48,6 @@ export function Navbar() {
     { label: t("nav.home"), to: "/" },
     { label: t("nav.about"), to: "/qui-sommes-nous" },
     { label: t("nav.branches"), to: "/antennes" },
-    { label: t("nav.achievements"), to: "/realisations" },
     { label: t("nav.opportunities"), to: "/opportunites" },
     ...(memberView ? [{ label: t("nav.ongoing"), to: "/projets-en-cours" }] : []),
   ];
